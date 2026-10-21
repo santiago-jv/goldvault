@@ -1,0 +1,6 @@
+.env.local
+.vercel
+*.sql
+tests/
+CLAUDE.md
+.claude/
