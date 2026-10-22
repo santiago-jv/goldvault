@@ -233,6 +233,16 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background:
 .tip .tb{background:var(--grad);border:none;color:var(--ink);font-weight:800;font-size:var(--fs-xs);padding:8px 13px;border-radius:8px;cursor:pointer;flex-shrink:0}
 .tip .tx{background:none;border:none;color:var(--mut);font-size:var(--fs-body);cursor:pointer;flex-shrink:0;padding:4px}
 
+.bank-pill{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-2xs);font-weight:800;padding:2px 8px;border-radius:99px;background:rgba(var(--acc-rgb),.14);color:var(--acc);letter-spacing:.02em}
+.bank-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.bank-row:last-child{border-bottom:none}
+.bank-row .bm{flex:1;min-width:0}
+.bank-row .bt1{font-size:var(--fs-body);font-weight:700;line-height:var(--lh-tight);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bank-row .bt2{font-size:var(--fs-xs);color:var(--mut);margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bank-cat-btn{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:var(--fs-xs);font-weight:700;color:var(--txt);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px}
+.bank-cat-btn:hover{border-color:var(--acc)}
+.code-box{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:var(--fs-xs);color:var(--txt);word-break:break-all;line-height:var(--lh-base);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;margin:8px 0}
+
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
   background:var(--nav-bg);backdrop-filter:blur(18px);border-top:1px solid var(--line);
   display:flex;justify-content:space-around;align-items:center;height:calc(var(--nav) + env(safe-area-inset-bottom));
@@ -461,6 +471,14 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
     <button type="button" class="qbtn" id="micBtn" onclick="startVoiceEntry()" aria-label="Dictar movimiento" style="display:none"><span data-ic="mic" data-s="17"></span></button>
   </form>
   <div id="quickFreq" style="display:none"></div>
+  <div class="card" id="autoBankCard" style="display:none;border-color:rgba(var(--acc-rgb),.45)">
+    <h3>
+      <span style="display:flex;align-items:center;gap:7px"><span data-ic="sparkles" data-s="16" style="color:var(--acc)"></span>Pagos detectados</span>
+      <button class="btn ghost sm" style="width:auto;padding:5px 10px;font-size:var(--fs-xs)" onclick="confirmAllAutoBank()">Confirmar todos</button>
+    </h3>
+    <p class="card-desc" style="margin-bottom:6px">Registrados automáticamente desde tus notificaciones bancarias como gasto pagado. Toca la categoría para cambiarla.</p>
+    <div id="autoBankList"></div>
+  </div>
   <div class="card" id="tipsCard" style="display:none">
     <h3>Próximos pasos</h3>
     <div id="tipsList"></div>
@@ -537,6 +555,11 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
   <div class="card">
     <h3>Sincronización</h3>
     <div id="syncBox"></div>
+  </div>
+  <div class="card" id="bankSyncCard">
+    <h3><span>Lectura automática de bancos</span> <span class="bank-pill">Auto</span></h3>
+    <p class="card-desc">Detecta notificaciones de pagos realizados en <b>Nequi</b>, <b>Nu Bank</b>, <b>Lulo Bank</b>, <b>ARQ</b> y <b>Morse</b> para registrarlos automáticamente como gasto.</p>
+    <div id="bankSyncBox"></div>
   </div>
   <div class="card" id="bioCard" style="display:none">
     <h3>Seguridad</h3>
@@ -1083,10 +1106,12 @@ function enqueue(op){ Q.push(op); saveQ(); paintSync(); flushQueue(); }
 
 const movementToRow = m => ({ id:m.id, space_id:m.space, date:m.date, type:m.type, desc:m.desc||null, amount:Math.round(m.amount)||0,
   category:m.category||null, account:m.account||null, status:m.status||'paid', goal_id:m.goalId||null, source:m.source||null,
-  orig_currency:(m.fx&&m.fx.ccy)||null, orig_amount:(m.fx&&m.fx.amount)||null, fx_rate:(m.fx&&m.fx.rate)||null });
+  orig_currency:(m.fx&&m.fx.ccy)||null, orig_amount:(m.fx&&m.fx.amount)||null, fx_rate:(m.fx&&m.fx.rate)||null,
+  auto_bank:m.autoBank||null, auto_raw:m.autoRaw||null, auto_reviewed:m.autoReviewed!==false });
 const rowToMovement = r => ({ id:r.id, space:r.space_id, date:r.date, type:r.type, desc:r.desc||'', amount:Number(r.amount)||0,
   category:r.category, account:r.account, status:r.status, goalId:r.goal_id, source:r.source,
-  fx: r.orig_currency? {ccy:r.orig_currency, amount:Number(r.orig_amount)||0, rate:Number(r.fx_rate)||0} : undefined });
+  fx: r.orig_currency? {ccy:r.orig_currency, amount:Number(r.orig_amount)||0, rate:Number(r.fx_rate)||0} : undefined,
+  autoBank: r.auto_bank||undefined, autoRaw: r.auto_raw||undefined, autoReviewed: r.auto_reviewed!==false });
 const spaceToRow = s => ({ id:s.id, name:s.name, emoji:s.emoji||'💰', categories:s.categories||[], accounts:s.accounts||[], sources:s.sources||[], frequents:s.frequents||[], budgets:s.budgets||{}, rec_skipped:s.recSkipped||[] });
 const goalToRow = (g,spaceId) => ({ id:g.id, space_id:spaceId, name:g.name, target:Math.round(g.target)||0, achieved_at:g.achievedAt||null });
 
@@ -1230,7 +1255,7 @@ async function syncNow(){
 }
 
 function authInit(){
-  if(!SB_URL || !SB_KEY || !window.supabase){ paintSync(); maybeOnboard(); return; }
+  if(!SB_URL || !SB_KEY || !window.supabase){ paintSync(); paintBankSync(); maybeOnboard(); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY);
   sb.auth.onAuthStateChange((ev, s)=>{
     session = s;
@@ -1239,7 +1264,7 @@ function authInit(){
       if(last && last !== session.user.id){ knownIds = new Set(); saveIds(); }
       localStorage.setItem('mg_uid', session.user.id);
     }
-    paintAuth(); paintSync();
+    paintAuth(); paintSync(); paintBankSync();
     if(session && (ev==='SIGNED_IN' || ev==='INITIAL_SESSION')) syncNow();
     if(!session) maybeOnboard();
   });
@@ -1362,6 +1387,7 @@ function render(){
 
   renderTips();
   paintQuickFreq();
+  paintAutoBankCard();
 
   const pend = act.filter(x=>x.status==='pending' && x.type!=='income');
   $('pendCard').style.display = pend.length ? 'block':'none';
@@ -1534,9 +1560,10 @@ function entryRow(x){
   const sign = x.type==='income'?'+':'−';
   const ic = x.type==='income'? icon('arrow-down-left',18) : x.type==='saving'? icon('landmark',18) : catIcon(x.category);
   const sub = x.type==='income'?(x.source||''):x.type==='saving'?goalName(x.goalId):(x.category||'');
+  const bankBadge = x.autoBank ? ` <span class="bank-pill" style="padding:1px 6px">⚡ ${esc(x.autoBank)}</span>` : '';
   return `<div class="mov" onclick="editEntry('${esc(x.id)}')">
     <div class="ic">${ic}</div>
-    <div class="mid"><div class="t1">${esc(x.desc||sub||'—')}</div><div class="t2">${esc(sub)}${x.account?' · '+esc(x.account):''}${x.fx?' · US$'+x.fx.amount.toLocaleString('es-CO'):''}</div></div>
+    <div class="mid"><div class="t1">${esc(x.desc||sub||'—')}</div><div class="t2">${esc(sub)}${x.account?' · '+esc(x.account):''}${x.fx?' · US$'+x.fx.amount.toLocaleString('es-CO'):''}${bankBadge}</div></div>
     <div><div class="amt ${cls}">${sign} ${money(x.amount)}</div>
     ${x.type!=='income'?`<span class="st ${x.status}">${x.status==='paid'?'Pagado':x.status==='pending'?'Pendiente':'Cancelado'}</span>`:''}</div></div>`;
 }
@@ -1809,6 +1836,7 @@ function save(){
   }
   let saved = null, freqNew = false;
   if(editId){
+    if(F.autoBank) F.autoReviewed = true;
     const i = state.movements.findIndex(x=>x.id===editId); if(i>-1){ state.movements[i]={...F,id:editId}; saved=state.movements[i]; }
   } else {
     saved = {...F, id: genId('mv')};
@@ -2101,20 +2129,49 @@ function localReminderCheck(){
   }catch(e){}
 }
 
-/* ================= PROFILE (nombre + foto) ================= */
+/* ================= PROFILE (nombre + foto + token bancario) ================= */
 let profile = (()=>{ try{ return JSON.parse(localStorage.getItem('mg_profile')||'null') || {}; }catch(e){ return {}; } })();
 const saveProfile = () => localStorage.setItem('mg_profile', JSON.stringify(profile));
+function ensureWebhookToken(){
+  if(!profile.webhook_token){
+    const arr = new Uint8Array(10); crypto.getRandomValues(arr);
+    profile.webhook_token = 'vaq_' + Array.from(arr, b=>b.toString(16).padStart(2,'0')).join('');
+    saveProfile();
+  }
+  return profile.webhook_token;
+}
 function pushProfile(){
   if(!sb || !session) return;
-  enqueue({tb:'profiles', op:'upProfile', row:{user_id:session.user.id, display_name:profile.display_name||null, avatar:profile.avatar||null, updated_at:new Date().toISOString()}});
+  ensureWebhookToken();
+  enqueue({tb:'profiles', op:'upProfile', row:{
+    user_id:session.user.id,
+    display_name:profile.display_name||null,
+    avatar:profile.avatar||null,
+    webhook_token:profile.webhook_token||null,
+    default_space_id:curSpace().id||null,
+    updated_at:new Date().toISOString()
+  }});
 }
 async function pullProfile(){
   if(!sb || !session) return;
-  const {data, error} = await sb.from('profiles').select('display_name,avatar').maybeSingle();
+  const {data, error} = await sb.from('profiles').select('display_name,avatar,webhook_token,default_space_id').maybeSingle();
   if(error) return;
-  if(data && (data.display_name || data.avatar)){ profile = {display_name:data.display_name||undefined, avatar:data.avatar||undefined}; saveProfile(); }
-  else if(profile.display_name || profile.avatar) pushProfile();
+  if(data){
+    profile = {
+      display_name:data.display_name||profile.display_name||undefined,
+      avatar:data.avatar||profile.avatar||undefined,
+      webhook_token:data.webhook_token||profile.webhook_token||undefined,
+      default_space_id:data.default_space_id||curSpace().id||undefined
+    };
+    if(!profile.webhook_token) ensureWebhookToken();
+    saveProfile();
+    if(!data.webhook_token || data.default_space_id !== curSpace().id) pushProfile();
+  } else {
+    ensureWebhookToken();
+    pushProfile();
+  }
   paintProfile();
+  paintBankSync();
 }
 function googleAvatar(){ return session && session.user.user_metadata && session.user.user_metadata.avatar_url; }
 function paintProfile(){
@@ -2165,9 +2222,372 @@ async function onAvatarPick(ev){
 }
 function removeAvatar(){ delete profile.avatar; saveProfile(); pushProfile(); paintProfile(); toast('Foto quitada'); }
 
+/* ================= LECTURA AUTOMÁTICA DE BANCOS (Nequi, Nu, Lulo, ARQ, Morse) ================= */
+let bankGuideOs = /iphone|ipad|ipod/i.test(navigator.userAgent||'') ? 'ios' : 'android';
+const BANK_SAMPLES = [
+  { bank:'Nequi', app:'com.nequi.MobileApp', title:'Nequi', text:'Pagaste $ 28.500,00 en CORRAL GOURMET con tu Nequi' },
+  { bank:'Nu Bank', app:'com.nu.production', title:'Nu', text:'Compra aprobada por $ 64.900,00 en MERCADO EXITO con tu Moradita' },
+  { bank:'Lulo Bank', app:'com.lulobank.app', title:'Lulo Bank', text:'Compraste $ 18.400 en UBER TRIP con tu tarjeta Lulo' },
+  { bank:'ARQ', app:'com.arq.app', title:'ARQ', text:'Compra aprobada por US$ 14.99 en NETFLIX.COM con tu tarjeta ARQ' },
+  { bank:'Morse', app:'com.morse.app', title:'Morse', text:'Pago realizado por $ 35.000 en RAPPI con Morse' }
+];
+
+function parseBankNotification(rawText, rawTitle='', rawApp=''){
+  const full = `${rawApp||''} ${rawTitle||''} ${rawText||''}`.trim();
+  const lower = full.toLowerCase();
+
+  // Ignorar notificaciones que no son pagos (códigos OTP, rechazos, inicios de sesión o ingresos)
+  if(/(clave dinamica|clave dinámica|codigo de verificacion|código de verificación|codigo de seguridad|\botp\b|iniciaste sesion|iniciaste sesión|rechazad[ao]|declinad[ao]|fallid[ao]|fondos insuficientes|saldo insuficiente|recibiste|te enviaron|te transfirieron)/i.test(lower)){
+    return { ok:false, ignored:true, reason:'Notificación informativa o no es un gasto realizado' };
+  }
+  if(!/(pagaste|pago|compraste|compra|enviaste|transferiste|transferencia|retiraste|retiro|aprobada|exitos[ao]|realizaste|spent|paid|payment|purchase|cargo|debito|débito)/i.test(lower)){
+    return { ok:false, ignored:true, reason:'El texto no corresponde a un pago o compra' };
+  }
+
+  let bank = 'Banco';
+  if(/(nequi|com\.nequi)/i.test(lower)) bank = 'Nequi';
+  else if(/(lulobank|lulo\s*bank|\blulo\b|com\.lulobank)/i.test(lower)) bank = 'Lulo Bank';
+  else if(/(\barq\b|com\.arq|littio|co\.littio)/i.test(lower)) bank = 'ARQ';
+  else if(/(\bmorse\b|com\.morse)/i.test(lower)) bank = 'Morse';
+  else if(/(nubank|\bnu\b|moradita|com\.nu\.)/i.test(lower)) bank = 'Nu Bank';
+  else if(/bancolombia/i.test(lower)) bank = 'Bancolombia';
+  else if(/daviplata/i.test(lower)) bank = 'Daviplata';
+
+  const isUsd = /(us\$|\busd\b|\busdc\b|\busdt\b|dolares|dólares)/i.test(lower) && !/\bcop\b/i.test(lower);
+  const bodyAndTitle = `${rawText||''} ${rawTitle||''}`;
+  let mAmt = bodyAndTitle.match(/(?:US\$|COP|\$|USD|por|de|of|paid|spent)\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)/i);
+  if(!mAmt) mAmt = bodyAndTitle.match(/([0-9]{1,3}(?:\.[0-9]{3})+|[0-9]{4,}|[0-9]+\.[0-9]{2})/);
+  if(!mAmt) return { ok:false, ignored:true, reason:'No se detectó un monto válido' };
+
+  let numStr = mAmt[1];
+  let origAmount = 0, amountCop = 0;
+  const rate = fxRate || 4200;
+  if(isUsd){
+    numStr = numStr.replace(',', '.').replace(/[^0-9.]/g, '');
+    origAmount = parseFloat(numStr) || 0;
+    amountCop = Math.round(origAmount * rate);
+  } else {
+    numStr = numStr.replace(/[.,][0-9]{2}$/, '').replace(/[^0-9]/g, '');
+    amountCop = parseInt(numStr, 10) || 0;
+    origAmount = amountCop;
+  }
+  if(amountCop <= 0) return { ok:false, ignored:true, reason:'El monto detectado es 0' };
+
+  let desc = '';
+  const mDesc = String(rawText||'').match(/(?:compra(?:\s+aprobada)?\s+en|pagaste\s+.*?\s+en|pago(?:\s+exitoso|\s+aprobado|\s+realizado)?\s+.*?\s+en|compraste\s+.*?\s+en|en\s+el\s+comercio|\ben\s+|\bat\s+|enviaste\s+.*?\s+a\s+|transferiste\s+.*?\s+a\s+|transferencia(?:\s+exitosa|\s+enviada)?\s+.*?\s+a\s+)([A-Za-zÁÉÍÓÚÑáéíóúñ0-9 ._*&-]{2,40})/i);
+  if(mDesc && mDesc[1]){
+    desc = mDesc[1]
+      .replace(/\s+(con\s+(?:tu|nequi|nu|nubank|lulo|lulobank|arq|morse|tarjeta|billetera)|por\s+\$|por\s+valor|el\s+d[ií]a|a\s+las|exitos[ao]|desde\s+tu).*$/i, '')
+      .replace(/^[ .,:-]+|[ .,:-]+$/g, '')
+      .trim();
+  }
+  if(!desc || desc.length < 2) desc = `Pago ${bank}`;
+
+  let targetCat = 'Otros';
+  if(/(rappi|didi\s*food|uber\s*eats|restaurante|crepes|mcdonald|corral|starbucks|juan\s*valdez|cafe|café|panaderia|almuerzo|cena|pizza|sushi|burger|kfc|subway|frisby|popsy|antojo)/i.test(lower)) targetCat = 'Comida';
+  else if(/(exito|éxito|carulla|jumbo|olimpica|olímpica|d1|tiendas\s*d1|ara|alkosto|makro|pricesmart|mercado|supermercado|fruver|oxxo|farmatodo)/i.test(lower)) targetCat = 'Mercado';
+  else if(/(uber|didi|cabify|indrive|picap|gasolina|terpel|primax|texaco|biomax|peaje|flypass|gopass|transmilenio|metro|civica|cívica|parqueadero|taxi)/i.test(lower)) targetCat = 'Transporte';
+  else if(/(netflix|spotify|youtube|google|apple|icloud|amazon\s*prime|disney|hbo|max|openai|chatgpt|claude|cursor|github|playstation|xbox|steam|canva|adobe|microsoft|suscripcion|suscripción)/i.test(lower)) targetCat = 'Suscripciones';
+  else if(/(cruz\s*verde|drogueria|droguería|la\s*rebaja|pasteur|cafam|colsubsidio|eps|sura|sanitas|medicina|farmacia|consulta|odontolog|smartfit|bodytech|gym|gimnasio)/i.test(lower)) targetCat = 'Salud';
+  else if(/(arriendo|epm|enel|codensa|vanti|acueducto|triple\s*a|claro|movistar|tigo|wom|etb|servicios|administracion|administración)/i.test(lower)) targetCat = 'Vivienda';
+  else if(/(zara|h&m|adidas|nike|falabella|arturo\s*calle|gef|punto\s*blanco|velez|vélez|shein|ropa|calzado)/i.test(lower)) targetCat = 'Ropa';
+  else if(/(cine|cinecolombia|procinal|cinemark|bar|discoteca|boleta|tuboleta|taquillalive|eticket|concierto|juego)/i.test(lower)) targetCat = 'Ocio';
+
+  const sp = curSpace();
+  const matchedCat = (sp.categories||[]).find(c=>normText(c.name)===normText(targetCat))
+    || (sp.categories||[]).find(c=>['otros','general','compras'].includes(normText(c.name)))
+    || (sp.categories||[])[0]
+    || {name:'Otros'};
+
+  let acct = (sp.accounts||[]).find(a=>{
+    const na = normText(a), nb = normText(bank);
+    if(na === nb) return true;
+    if(bank==='Nu Bank' && ['nu','nubank','nu bank','tarjeta nu'].includes(na)) return true;
+    if(bank==='Lulo Bank' && ['lulo','lulo bank','lulobank'].includes(na)) return true;
+    if(bank==='ARQ' && ['arq','littio'].includes(na)) return true;
+    return false;
+  });
+  let acctAdded = false;
+  if(!acct){
+    acct = bank;
+    if(sp.accounts && !sp.accounts.includes(acct)){
+      sp.accounts.push(acct);
+      acctAdded = true;
+    }
+  }
+
+  return {
+    ok: true,
+    bank,
+    desc,
+    amount: amountCop,
+    category: matchedCat.name,
+    account: acct,
+    acctAdded,
+    fx: isUsd ? { ccy:'USD', amount:origAmount, rate } : undefined,
+    raw: String(rawText||'').trim()
+  };
+}
+
+function ingestLocalBankNotification(rawText, rawTitle='', rawApp=''){
+  const p = parseBankNotification(rawText, rawTitle, rawApp);
+  if(!p.ok){
+    toast(p.reason || 'No se detectó un pago válido en la notificación');
+    return null;
+  }
+  const today = todayISO();
+  const dup = spaceMovements().find(m => m.date===today && m.amount===p.amount && m.autoRaw && m.autoRaw===p.raw);
+  if(dup){
+    toast(`Este pago de ${p.bank} ya estaba registrado`);
+    return dup;
+  }
+  const mv = {
+    id: genId('ab'),
+    space: curSpace().id,
+    date: today,
+    type: 'expense',
+    desc: p.desc,
+    amount: p.amount,
+    category: p.category,
+    account: p.account,
+    status: 'paid',
+    fx: p.fx,
+    autoBank: p.bank,
+    autoRaw: p.raw,
+    autoReviewed: false
+  };
+  state.movements.push(mv);
+  persist();
+  pushMovement(mv);
+  if(p.acctAdded) pushSpace(curSpace());
+  render();
+  toast(`⚡ ${p.bank}: ${p.desc} (${money(p.amount)}) registrado`);
+  return mv;
+}
+
+function paintAutoBankCard(){
+  const card = $('autoBankCard'), list = $('autoBankList');
+  if(!card || !list) return;
+  const unrev = spaceMovements().filter(x => x.autoBank && x.autoReviewed===false && x.status!=='cancelled')
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!unrev.length){ card.style.display='none'; list.innerHTML=''; return; }
+  card.style.display='block';
+  list.innerHTML = unrev.slice(0,8).map(x=>`
+    <div class="bank-row">
+      <div class="bm">
+        <div class="bt1" style="flex-wrap:nowrap">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.desc||'Pago')}</span>
+          <b style="color:var(--red);flex-shrink:0">− ${money(x.amount)}</b>
+        </div>
+        <div class="bt2" style="margin-top:6px">
+          <span class="bank-pill">⚡ ${esc(x.autoBank)}</span>
+          <button class="bank-cat-btn" onclick="editEntry('${esc(x.id)}')" title="Cambiar categoría o editar">
+            ${catIcon(x.category)} ${esc(x.category||'Otros')} <span style="color:var(--acc)">✎</span>
+          </button>
+          ${x.fx?`<span>US$${x.fx.amount}</span>`:''}
+        </div>
+      </div>
+      <button class="mini-ic" style="color:var(--green)" onclick="confirmAutoBank('${esc(x.id)}')" title="Confirmar" aria-label="Confirmar">${icon('check',16)}</button>
+      <button class="mini-ic" style="color:var(--red)" onclick="delAutoBank('${esc(x.id)}')" title="Descartar" aria-label="Descartar">${icon('trash-2',15)}</button>
+    </div>`).join('');
+  hydrateIcons(list);
+}
+
+function confirmAutoBank(id){
+  const m = state.movements.find(x=>x.id===id);
+  if(!m) return;
+  m.autoReviewed = true;
+  persist(); pushMovement(m); render();
+  toast('Gasto confirmado ✓');
+}
+function confirmAllAutoBank(){
+  const unrev = spaceMovements().filter(x => x.autoBank && x.autoReviewed===false);
+  unrev.forEach(m=>{ m.autoReviewed = true; pushMovement(m); });
+  persist(); render();
+  toast('Pagos confirmados ✓');
+}
+function delAutoBank(id){
+  const m = state.movements.find(x=>x.id===id);
+  if(!m) return;
+  state.movements = state.movements.filter(x=>x.id!==id);
+  persist(); delMovementCloud(id); render();
+  _undoMv = m;
+  $('undoTxt').textContent = `Descartado: ${m.desc} ${money(m.amount)}`;
+  $('undoBar').classList.add('show');
+  clearTimeout(_undoT); _undoT=setTimeout(hideUndo, 6000);
+}
+
+function bankWebhookUrl(){
+  const tok = ensureWebhookToken();
+  const base = location.hostname==='localhost' || location.hostname==='127.0.0.1'
+    ? 'https://vaultarq.vercel.app'
+    : location.origin;
+  if(session) return `${base}/api/bank?token=${encodeURIComponent(tok)}`;
+  return `${base}/?bank_app={app}&bank_title={title}&bank_notif={text}`;
+}
+
+async function copyBankWebhookUrl(){
+  const url = bankWebhookUrl();
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('Enlace copiado al portapapeles');
+  }catch(e){
+    toast('Copia el enlace del recuadro');
+  }
+}
+
+function setBankGuideOs(os){
+  bankGuideOs = os;
+  paintBankSync();
+}
+
+function downloadMacroDroidTemplate(){
+  const tok = ensureWebhookToken();
+  const webhook = session
+    ? `https://vaultarq.vercel.app/api/bank?token=${encodeURIComponent(tok)}&app={not_app_name}&title={not_title}&text={not_text}`
+    : `https://vaultarq.vercel.app/?bank_app={not_app_name}&bank_title={not_title}&bank_notif={not_text}`;
+  const macro = {
+    macro: {
+      name: "VaultARQ — Nequi, Nu, Lulo, ARQ, Morse",
+      description: "Detecta notificaciones de pago en Nequi, Nu Bank, Lulo Bank, ARQ y Morse y las registra automáticamente en VaultARQ.",
+      isEnabled: true,
+      triggers: [{
+        type: "NotificationTrigger",
+        option: "NotificationReceived",
+        packageNameList: [
+          "com.nequi.MobileApp",
+          "com.nu.production",
+          "com.lulobank.app",
+          "com.lulobank",
+          "com.arq.app",
+          "co.littio.app",
+          "com.morse.app"
+        ],
+        textMatchType: "ContainsAny",
+        keywords: ["Pagaste", "Compra", "Compraste", "Pago", "Transferencia", "Enviaste", "US$", "$"]
+      }],
+      actions: [{
+        type: "HttpRequestAction",
+        method: "GET",
+        urlToOpen: webhook
+      }]
+    }
+  };
+  const blob = new Blob([JSON.stringify(macro, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'VaultARQ-Bancos.macro';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Plantilla descargada');
+}
+
+function testBankSample(idx){
+  const s = BANK_SAMPLES[idx];
+  if(!s) return;
+  const mv = ingestLocalBankNotification(s.text, s.title, s.app);
+  if(mv){
+    go('home');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+
+function testCustomBankNotif(){
+  const inp = $('customBankNotif');
+  if(!inp || !inp.value.trim()){ toast('Pega o escribe el texto de la notificación'); return; }
+  const val = inp.value.trim();
+  const mv = ingestLocalBankNotification(val, '', '');
+  if(mv){
+    inp.value = '';
+    go('home');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+
+function paintBankSync(){
+  const box = $('bankSyncBox');
+  if(!box) return;
+  const url = bankWebhookUrl();
+  const androidUrl = session
+    ? `${url}&app={not_app_name}&title={not_title}&text={not_text}`
+    : url;
+  const iosUrl = session
+    ? `${url}&app=Wallet&text=Pagaste%20[Monto]%20en%20[Comercio]`
+    : url;
+
+  box.innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="bank-pill">⚡ Nequi</span>
+      <span class="bank-pill">⚡ Nu Bank</span>
+      <span class="bank-pill">⚡ Lulo Bank</span>
+      <span class="bank-pill">⚡ ARQ (COP/USD)</span>
+      <span class="bank-pill">⚡ Morse</span>
+    </div>
+
+    <div class="ccy-tog" style="width:100%;margin-bottom:10px">
+      <button class="${bankGuideOs==='android'?'on':''}" onclick="setBankGuideOs('android')" style="flex:1">Android (24/7)</button>
+      <button class="${bankGuideOs==='ios'?'on':''}" onclick="setBankGuideOs('ios')" style="flex:1">iPhone (Atajos)</button>
+    </div>
+
+    ${bankGuideOs==='android' ? `
+      <p class="note-txt" style="margin-top:0;margin-bottom:8px">
+        En Android puedes conectar <b>MacroDroid</b> o <b>Tasker</b> para leer en segundo plano las notificaciones de Nequi, Nu, Lulo, ARQ y Morse y enviarlas directo a tu cuenta sin abrir la app:
+      </p>
+      <ol style="font-size:var(--fs-xs);color:var(--mut);line-height:var(--lh-relaxed);padding-left:18px;margin:0 0 10px">
+        <li>En MacroDroid crea una macro con disparador <b>Notificación recibida</b> y elige <b>Nequi, Nu, Lulo Bank, ARQ y Morse</b>.</li>
+        <li>En Acciones elige <b>Solicitud HTTP (GET)</b> y pega tu enlace personal de abajo.</li>
+      </ol>
+      <div class="code-box">${esc(androidUrl)}</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn sm" style="flex:1" onclick="copyBankWebhookUrl()">Copiar enlace Webhook</button>
+        <button class="btn ghost sm" style="flex:1" onclick="downloadMacroDroidTemplate()">Descargar .macro</button>
+      </div>
+    ` : `
+      <p class="note-txt" style="margin-top:0;margin-bottom:8px">
+        En iPhone la app nativa <b>Atajos (Shortcuts)</b> detecta tus pagos de Apple Pay / Wallet o mensajes/correos de Nequi, Nu, Lulo, ARQ y Morse y los envía automáticamente:
+      </p>
+      <ol style="font-size:var(--fs-xs);color:var(--mut);line-height:var(--lh-relaxed);padding-left:18px;margin:0 0 10px">
+        <li>Abre <b>Atajos → Automatización → Nueva</b> y elige <b>Transacción (Wallet)</b>, <b>Correo</b> o <b>Mensaje</b> de tu banco.</li>
+        <li>Agrega la acción <b>Obtener contenido de URL</b> con tu enlace de abajo pasándole el texto o monto/comercio.</li>
+        <li>Desactiva <i>«Preguntar al ejecutar»</i> para que se registre solo al pagar.</li>
+      </ol>
+      <div class="code-box">${esc(iosUrl)}</div>
+      <button class="btn sm" style="margin-bottom:14px" onclick="copyBankWebhookUrl()">Copiar enlace para Atajos</button>
+    `}
+
+    <div class="lbl2" style="margin-top:6px">Probar lectura automática ahora</div>
+    <p class="note-txt" style="margin-top:0;margin-bottom:8px">Toca un banco para simular una notificación real o pega el texto de una notificación de tu teléfono:</p>
+    <div class="chips" style="padding-bottom:8px">
+      ${BANK_SAMPLES.map((s,i)=>`<div class="chip" onclick="testBankSample(${i})">⚡ ${esc(s.bank)}</div>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <div class="field" style="flex:1;margin-bottom:0">
+        <input type="text" id="customBankNotif" placeholder="Pega aquí una notificación (ej: Pagaste $25.000 en EXITO con Nequi)">
+      </div>
+      <button class="btn sm" style="width:auto;padding:0 16px" onclick="testCustomBankNotif()">Detectar</button>
+    </div>
+  `;
+}
+
+function checkBankUrlParams(){
+  try{
+    const sp = new URLSearchParams(location.search);
+    const notif = sp.get('bank_notif') || sp.get('bank_text') || sp.get('notif');
+    const title = sp.get('bank_title') || '';
+    const app = sp.get('bank_app') || '';
+    if(!notif) return;
+    history.replaceState(null, '', location.pathname);
+    if(Object.keys(state.spaces).length===0) return;
+    setTimeout(()=>{
+      ingestLocalBankNotification(notif, title, app);
+      go('home');
+    }, 350);
+  }catch(e){}
+}
+
 /* ================= REPORTES ================= */
-const APP_VERSION = 'v26';   /* mantener igual a CACHE en sw.js */
-const CACHE_NAME = 'vaultarq-v26';   /* debe coincidir exactamente con CACHE en sw.js */
+const APP_VERSION = 'v27';   /* mantener igual a CACHE en sw.js */
+const CACHE_NAME = 'vaultarq-v27';   /* debe coincidir exactamente con CACHE en sw.js */
 async function openReport(kind){
   const isBug = kind!=='idea';
   const fields=[{key:'message', multiline:true, placeholder: isBug
@@ -2484,7 +2904,7 @@ function paintSpaces(){
       </span>
     </div>`).join('');
 }
-function switchSpace(id){ curSpaceId=id; localStorage.setItem(SPKEY,id); closeSheet(); render(); toast(curSpace().emoji+' '+curSpace().name); }
+function switchSpace(id){ curSpaceId=id; localStorage.setItem(SPKEY,id); pushProfile(); closeSheet(); render(); toast(curSpace().emoji+' '+curSpace().name); }
 async function newSpace(){
   const v = await uiPrompt({title:'Nuevo espacio', message:'Un espacio aparte para separar, por ejemplo, tu negocio o un viaje.', fields:[
     {key:'name', placeholder:'Nombre (ej: Negocio, Casa, Viaje)'},
@@ -2865,6 +3285,7 @@ fillFreqDayOptions();
 if(bioCred()) showLock();          /* bloqueo biométrico antes que nada */
 render();
 paintSync();
+paintBankSync();
 paintReminder();
 paintProfile();
 paintBio();
@@ -2876,6 +3297,7 @@ localReminderCheck();
 syncReminderMsgsToSW();
 postRecurring();                    /* catch-up local; syncNow() lo repite tras sincronizar */
 maybeShowMonthSummary();            /* resumen del mes recién cerrado, una vez por mes */
+checkBankUrlParams();               /* procesa ?bank_notif=... si llega desde Atajos / MacroDroid / Compartir */
 if(SpeechRec) $('micBtn').style.display='grid';
 { /* placeholder rotativo de la entrada rápida */
   const phs = ['Ej: 15 mil mercado en nequi', 'Ej: me pagaron 2.500.000 salario', 'Ej: 50k abono a mi meta'];

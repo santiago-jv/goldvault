@@ -27,6 +27,15 @@
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "bank_title",
+      "text": "bank_notif",
+      "url": "bank_url"
+    }
+  },
   "icons": [
     {
       "src": "icon-192.png",
