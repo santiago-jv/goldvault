@@ -433,18 +433,16 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
-            child: IndexedStack(
-              index: tabIndex,
-              children: [
-                _buildHomeView(c, st),
-                _buildMovementsView(c, st),
-                _buildGoalsView(c, st),
-                _buildSettingsView(c, st),
-              ],
-            ),
+            child: switch (tabIndex) {
+              0 => _buildHomeView(c, st),
+              1 => _buildMovementsView(c, st),
+              2 => _buildGoalsView(c, st),
+              _ => _buildSettingsView(c, st),
+            },
           ),
         ),
       ),
@@ -459,7 +457,9 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
         border: Border(top: BorderSide(color: c.line)),
       ),
       child: SafeArea(
+        top: false,
         child: Center(
+          heightFactor: 1,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: SizedBox(
@@ -593,25 +593,29 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const GoldVaultLogo(fontSize: GVTxt.fsH2),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () => _showSpacesDialog(c, st),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: c.card,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: c.line),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Flexible(child: GoldVaultLogo(fontSize: GVTxt.fsH2)),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => _showSpacesDialog(c, st),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: c.card,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: c.line),
+                        ),
+                        child: Text(st.curSpace.emoji, style: const TextStyle(fontSize: 16)),
                       ),
-                      child: Text(st.curSpace.emoji, style: const TextStyle(fontSize: 16)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               _buildMonthNav(c, st),
             ],
           ),
@@ -907,7 +911,8 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Tendencia', style: GVTxt.h3(c)),
+                    Expanded(child: Text('Tendencia', style: GVTxt.h3(c))),
+                    const SizedBox(width: 8),
                     Text('últimos 6 meses', style: GVTxt.xs(c)),
                   ],
                 ),
@@ -935,9 +940,11 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Distribución por categoría', style: GVTxt.h3(c)),
-                    if (catEntries.isNotEmpty)
+                    Expanded(child: Text('Distribución por categoría', style: GVTxt.h3(c))),
+                    if (catEntries.isNotEmpty) ...[
+                      const SizedBox(width: 8),
                       Text(formatMoney(st.monthExpense), style: GVTxt.xs(c)),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1225,7 +1232,8 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Movimientos', style: GVTxt.h2(c)),
+            Expanded(child: Text('Movimientos', style: GVTxt.h2(c))),
+            const SizedBox(width: 8),
             _buildMonthNav(c, st),
           ],
         ),
@@ -1372,8 +1380,21 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${formatMoney(saved)} ahorrado', style: GVTxt.xs(c)),
-                      Text('Meta: ${formatMoney(g.target)}', style: GVTxt.xs(c, weight: FontWeight.w700, color: c.txt)),
+                      Flexible(
+                        child: Text(
+                          '${formatMoney(saved)} ahorrado',
+                          style: GVTxt.xs(c),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Meta: ${formatMoney(g.target)}',
+                          style: GVTxt.xs(c, weight: FontWeight.w700, color: c.txt),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1791,7 +1812,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: GVTxt.h3(c)),
+              Expanded(child: Text(title, style: GVTxt.h3(c))),
               ?trailing,
             ],
           ),

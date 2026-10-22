@@ -199,29 +199,33 @@ class GoldVaultLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CustomPaint(
-          size: Size(fontSize * 1.1, fontSize * 1.1),
-          painter: _VaultArchPainter(c.acc),
-        ),
-        const SizedBox(width: 8),
-        RichText(
-          text: TextSpan(
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-              color: c.txt,
-            ),
-            children: [
-              const TextSpan(text: 'Gold'),
-              TextSpan(text: 'Vault', style: TextStyle(color: c.acc)),
-            ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomPaint(
+            size: Size(fontSize * 1.1, fontSize * 1.1),
+            painter: _VaultArchPainter(c.acc),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                color: c.txt,
+              ),
+              children: [
+                const TextSpan(text: 'Gold'),
+                TextSpan(text: 'Vault', style: TextStyle(color: c.acc)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
