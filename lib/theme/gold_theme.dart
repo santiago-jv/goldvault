@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -98,7 +99,32 @@ class GVTxt {
   static const double fsXs = 12.0;      // 0.75rem — Etiquetas mayúsculas (.lbl2), notas al pie (.note-txt)
   static const double fs2xs = 11.0;     // 0.6875rem — Micro-etiquetas, badges, barra inferior
 
-  static TextStyle display(GVColors c) => GoogleFonts.plusJakartaSans(
+  static TextStyle _font({
+    required double fontSize,
+    required FontWeight fontWeight,
+    required double height,
+    double? letterSpacing,
+    required Color color,
+  }) {
+    if (kIsWeb) {
+      return GoogleFonts.plusJakartaSans(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        height: height,
+        letterSpacing: letterSpacing,
+        color: color,
+      );
+    }
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: letterSpacing,
+      color: color,
+    );
+  }
+
+  static TextStyle display(GVColors c) => _font(
         fontSize: fsDisplay,
         fontWeight: FontWeight.w800,
         height: 1.1,
@@ -106,7 +132,7 @@ class GVTxt {
         color: c.acc,
       );
 
-  static TextStyle h1(GVColors c) => GoogleFonts.plusJakartaSans(
+  static TextStyle h1(GVColors c) => _font(
         fontSize: fsH1,
         fontWeight: FontWeight.w800,
         height: 1.2,
@@ -114,7 +140,7 @@ class GVTxt {
         color: c.txt,
       );
 
-  static TextStyle h2(GVColors c) => GoogleFonts.plusJakartaSans(
+  static TextStyle h2(GVColors c) => _font(
         fontSize: fsH2,
         fontWeight: FontWeight.w800,
         height: 1.2,
@@ -122,7 +148,7 @@ class GVTxt {
         color: c.txt,
       );
 
-  static TextStyle h3(GVColors c) => GoogleFonts.plusJakartaSans(
+  static TextStyle h3(GVColors c) => _font(
         fontSize: fsH3,
         fontWeight: FontWeight.w700,
         height: 1.25,
@@ -130,7 +156,7 @@ class GVTxt {
       );
 
   static TextStyle body(GVColors c, {FontWeight weight = FontWeight.w600, Color? color}) =>
-      GoogleFonts.plusJakartaSans(
+      _font(
         fontSize: fsBody,
         fontWeight: weight,
         height: 1.4,
@@ -138,7 +164,7 @@ class GVTxt {
       );
 
   static TextStyle sm(GVColors c, {FontWeight weight = FontWeight.w500, Color? color}) =>
-      GoogleFonts.plusJakartaSans(
+      _font(
         fontSize: fsSm,
         fontWeight: weight,
         height: 1.5,
@@ -146,7 +172,7 @@ class GVTxt {
       );
 
   static TextStyle xs(GVColors c, {FontWeight weight = FontWeight.w600, Color? color, double? letterSpacing}) =>
-      GoogleFonts.plusJakartaSans(
+      _font(
         fontSize: fsXs,
         fontWeight: weight,
         height: 1.5,
@@ -155,7 +181,7 @@ class GVTxt {
       );
 
   static TextStyle xs2(GVColors c, {FontWeight weight = FontWeight.w700, Color? color, double? letterSpacing}) =>
-      GoogleFonts.plusJakartaSans(
+      _font(
         fontSize: fs2xs,
         fontWeight: weight,
         height: 1.2,
@@ -183,7 +209,7 @@ class GoldTheme {
         onSurface: c.txt,
       ),
       textTheme: base.textTheme.apply(
-        fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+        fontFamily: kIsWeb ? GoogleFonts.plusJakartaSans().fontFamily : null,
         bodyColor: c.txt,
         displayColor: c.txt,
       ),
@@ -212,9 +238,10 @@ class GoldVaultLogo extends StatelessWidget {
           const SizedBox(width: 8),
           RichText(
             text: TextSpan(
-              style: GoogleFonts.plusJakartaSans(
+              style: GVTxt._font(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w800,
+                height: 1.1,
                 letterSpacing: -0.3,
                 color: c.txt,
               ),

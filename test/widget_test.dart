@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
 import 'package:goldvault/screens/home_and_shells.dart';
 import 'package:goldvault/state/app_state.dart';
@@ -30,6 +31,18 @@ void main() {
     );
     expect(otp.ok, isFalse);
     expect(otp.ignored, isTrue);
+  });
+
+  testWidgets('GoldVaultApp renders StartupSplashScreen immediately and transitions to GoogleLoginScreen', (WidgetTester tester) async {
+    final st = GoldVaultState();
+    await tester.pumpWidget(GoldVaultApp(state: st));
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    st.initialized = true;
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    st.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text('Continuar con Google'), findsOneWidget);
   });
 
   testWidgets('GoldVaultShell renders Home, Movs, Metas, Ajustes and MovementSheet cleanly', (WidgetTester tester) async {

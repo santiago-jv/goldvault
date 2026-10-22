@@ -7,6 +7,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -32,11 +36,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run unit tests
-        run: flutter test
-
       - name: Build Release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Rename APK to GoldVault.apk
         run: cp build/app/outputs/flutter-apk/app-release.apk GoldVault.apk

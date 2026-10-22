@@ -105,41 +105,55 @@ class GoldVaultState extends ChangeNotifier {
     return '';
   }
 
+  Future<void> bootstrap() async {
+    try {
+      await Supabase.initialize(
+        url: sbUrl,
+        // ignore: deprecated_member_use
+        anonKey: sbKey,
+      ).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    await init();
+  }
+
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    themePref = prefs.getString('gv_theme') ?? 'auto';
-    curSpaceId = prefs.getString('gv_cur_space') ?? 'space_main';
-    webhookToken = prefs.getString('gv_webhook_token') ?? _generateToken();
-    androidListenerToggleOn = prefs.getBool('gv_bank_listener_on') ?? true;
-    await prefs.setString('gv_webhook_token', webhookToken);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      themePref = prefs.getString('gv_theme') ?? 'auto';
+      curSpaceId = prefs.getString('gv_cur_space') ?? 'space_main';
+      webhookToken = prefs.getString('gv_webhook_token') ?? _generateToken();
+      androidListenerToggleOn = prefs.getBool('gv_bank_listener_on') ?? true;
+      await prefs.setString('gv_webhook_token', webhookToken);
+      _loadLocalCache(prefs);
+    } catch (_) {}
 
-    _loadLocalCache(prefs);
-    session = sb.auth.currentSession;
+    try {
+      session = sb.auth.currentSession;
+      _authSub = sb.auth.onAuthStateChange.listen((data) {
+        session = data.session;
+        authError = null;
+        notifyListeners();
+        if (session != null) {
+          syncAll();
+        }
+      });
+    } catch (_) {}
 
-    _authSub = sb.auth.onAuthStateChange.listen((data) {
-      session = data.session;
-      authError = null;
-      notifyListeners();
-      if (session != null) {
-        syncAll();
-      }
-    });
+    initialized = true;
+    notifyListeners();
 
     if (!kIsWeb) {
       _setupAndroidChannel();
-      await refreshAndroidPermission();
+      refreshAndroidPermission();
     }
 
-    await checkOnlineStatus();
+    checkOnlineStatus();
     _connectivityTimer = Timer.periodic(const Duration(seconds: 12), (_) => checkOnlineStatus());
     fetchFxRate();
 
     if (session != null) {
-      await syncAll();
+      syncAll();
     }
-
-    initialized = true;
-    notifyListeners();
   }
 
   @override

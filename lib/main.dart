@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/home_and_shells.dart';
 import 'state/app_state.dart';
 import 'theme/gold_theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: GoldVaultState.sbUrl,
-    // ignore: deprecated_member_use
-    anonKey: GoldVaultState.sbKey,
-  );
   final appState = GoldVaultState();
-  await appState.init();
   runApp(GoldVaultApp(state: appState));
+  appState.bootstrap();
 }
 
 class GoldVaultApp extends StatelessWidget {
@@ -31,13 +25,16 @@ class GoldVaultApp extends StatelessWidget {
           theme: GoldTheme.build(Brightness.light),
           darkTheme: GoldTheme.build(Brightness.dark),
           themeMode: state.themeMode,
-          home: _buildRootGate(),
+          home: _buildRootGate(context),
         );
       },
     );
   }
 
-  Widget _buildRootGate() {
+  Widget _buildRootGate(BuildContext context) {
+    if (!state.initialized) {
+      return const _StartupSplashScreen();
+    }
     if (!state.isOnline) {
       return OfflineGuardScreen(state: state);
     }
@@ -48,5 +45,34 @@ class GoldVaultApp extends StatelessWidget {
       return OnboardingScreen(state: state);
     }
     return GoldVaultShell(state: state);
+  }
+}
+
+class _StartupSplashScreen extends StatelessWidget {
+  const _StartupSplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = GVColors.of(context);
+    return Scaffold(
+      backgroundColor: c.bg,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const GoldVaultLogo(fontSize: GVTxt.fsH1),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(c.acc),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
