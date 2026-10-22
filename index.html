@@ -229,8 +229,9 @@ nav button.on{color:var(--txt)}
   background:var(--sheet-bg);border-top:1px solid var(--line);border-radius:18px 18px 0 0;
   padding:10px 18px calc(20px + env(safe-area-inset-bottom));
   max-height:calc(92dvh - var(--kb,0px));overflow-y:auto;overscroll-behavior:contain;
-  transition:transform .3s cubic-bezier(.3,1,.35,1)}
-.sheet.show{transform:translate(-50%,0)}
+  visibility:hidden;pointer-events:none;
+  transition:transform .3s cubic-bezier(.3,1,.35,1), visibility 0s linear .3s}
+.sheet.show{transform:translate(-50%,0);visibility:visible;pointer-events:auto;transition:transform .3s cubic-bezier(.3,1,.35,1), visibility 0s linear 0s}
 body.kb{padding-bottom:0}
 body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado abierto */
 
@@ -282,9 +283,9 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 .btn.danger{background:rgba(181,112,104,.1);color:var(--red);border:1px solid rgba(181,112,104,.35);box-shadow:none}
 .btn.sm{padding:12px;font-size:.85rem;border-radius:10px}
 
-#toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-80px);z-index:500;background:var(--card2);border:1px solid var(--line);
-  color:var(--txt);padding:12px 20px;border-radius:99px;font-weight:700;font-size:.85rem;transition:transform .35s cubic-bezier(.3,1.4,.5,1);box-shadow:0 10px 30px rgba(0,0,0,.5)}
-#toast.show{transform:translate(-50%,0)}
+#toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-150%);opacity:0;pointer-events:none;z-index:500;background:var(--card2);border:1px solid var(--line);
+  color:var(--txt);padding:12px 20px;border-radius:99px;font-weight:700;font-size:.85rem;transition:transform .35s cubic-bezier(.3,1.4,.5,1), opacity .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#toast.show{transform:translate(-50%,0);opacity:1}
 /* El desplazamiento de ocultado se mide en % de su propia altura: con texto largo
    la barra crece a 2-3 líneas y un offset fijo en px dejaba un borde asomado. */
 #undoBar{position:fixed;bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 12px);left:50%;
@@ -988,7 +989,7 @@ function toV4Space(s){
 function toV4Movement(m, spacesMap){
   let goalId = m.goalId || null;
   if(!goalId && m.goal){ const sp=spacesMap[m.space||'space_main']; const g=sp&&sp.goals.find(x=>x.name===m.goal); goalId=g?g.id:null; }
-  return {id:m.id, space:m.space||'space_main', date:m.date, type:m.type, amount:m.amount||0,
+  return {id:m.id, space:m.space||'space_main', date:m.date, type:m.type, desc:m.desc||'', amount:m.amount||0,
     category:m.category||null, account:m.account||null, status:m.status||'paid',
     goalId, source:m.source||null, fx:m.fx};
 }
@@ -1050,10 +1051,10 @@ const saveQ = () => localStorage.setItem(QKEY, JSON.stringify(Q));
 const saveIds = () => localStorage.setItem(IDKEY, JSON.stringify([...knownIds]));
 function enqueue(op){ Q.push(op); saveQ(); paintSync(); flushQueue(); }
 
-const movementToRow = m => ({ id:m.id, space_id:m.space, date:m.date, type:m.type, amount:Math.round(m.amount)||0,
+const movementToRow = m => ({ id:m.id, space_id:m.space, date:m.date, type:m.type, desc:m.desc||null, amount:Math.round(m.amount)||0,
   category:m.category||null, account:m.account||null, status:m.status||'paid', goal_id:m.goalId||null, source:m.source||null,
   orig_currency:(m.fx&&m.fx.ccy)||null, orig_amount:(m.fx&&m.fx.amount)||null, fx_rate:(m.fx&&m.fx.rate)||null });
-const rowToMovement = r => ({ id:r.id, space:r.space_id, date:r.date, type:r.type, amount:Number(r.amount)||0,
+const rowToMovement = r => ({ id:r.id, space:r.space_id, date:r.date, type:r.type, desc:r.desc||'', amount:Number(r.amount)||0,
   category:r.category, account:r.account, status:r.status, goalId:r.goal_id, source:r.source,
   fx: r.orig_currency? {ccy:r.orig_currency, amount:Number(r.orig_amount)||0, rate:Number(r.fx_rate)||0} : undefined });
 const spaceToRow = s => ({ id:s.id, name:s.name, emoji:s.emoji||'💰', categories:s.categories||[], accounts:s.accounts||[], sources:s.sources||[], frequents:s.frequents||[], budgets:s.budgets||{}, rec_skipped:s.recSkipped||[] });
@@ -1565,7 +1566,7 @@ function openSheet(edit){
   $('fDesc').value = F.desc; $('fDate').value = F.date;
   setCcy('COP'); paintSheet(); getFxRate();
   $('overlay').classList.add('show'); $('sheet').classList.add('show');
-  if(!edit) setTimeout(()=>$('fAmount').focus(), 350);
+  if(!edit && !tourActive()) setTimeout(()=>$('fAmount').focus(), 350);
 }
 function closeSheet(){ $('overlay').classList.remove('show'); ['sheet','spSheet','custSheet','monthSheet'].forEach(s=>$(s).classList.remove('show')); }
 function setType(t){ F.type=t; paintSheet(); }
@@ -1594,7 +1595,7 @@ function paintSheet(){
   $('secCat').style.display = g?'block':'none';
   $('secGoal').style.display = a?'block':'none';
   $('secSource').style.display = i?'block':'none';
-  $('segStatus').style.visibility = i?'hidden':'visible';
+  $('segStatus').style.display = i?'none':'flex';
   $('rowFreq').style.display = g?'flex':'none';
   $('lblAccount').textContent = i? 'Cuenta donde entra' : 'Cuenta de pago';
   $('fDesc').placeholder = i? 'Descripción (ej: pago de nómina)' : a? 'Descripción (ej: abono a mi meta)' : 'Descripción';
@@ -2132,8 +2133,8 @@ async function onAvatarPick(ev){
 function removeAvatar(){ delete profile.avatar; saveProfile(); pushProfile(); paintProfile(); toast('Foto quitada'); }
 
 /* ================= REPORTES ================= */
-const APP_VERSION = 'v23';   /* mantener igual a CACHE en sw.js */
-const CACHE_NAME = 'vaultarq-v23';   /* debe coincidir exactamente con CACHE en sw.js */
+const APP_VERSION = 'v24';   /* mantener igual a CACHE en sw.js */
+const CACHE_NAME = 'vaultarq-v24';   /* debe coincidir exactamente con CACHE en sw.js */
 async function openReport(kind){
   const isBug = kind!=='idea';
   const fields=[{key:'message', multiline:true, placeholder: isBug
@@ -2242,6 +2243,13 @@ const TOUR = [
 ];
 let tourIdx=-1, tourOff=null, tourEl=null, tourStep=null;
 function tourActive(){ return $('tour').classList.contains('show'); }
+function scrollSheetIfNeeded(el){
+  const sheet = el.closest('.sheet');
+  if(!sheet){ el.scrollIntoView({block:'center'}); return; }
+  const sr = sheet.getBoundingClientRect(), er = el.getBoundingClientRect();
+  const targetTop = sheet.scrollTop + (er.top - sr.top) - (sr.height/2) + (er.height/2);
+  sheet.scrollTop = Math.max(0, targetTop);
+}
 function startTour(){
   tourIdx=-1; go('home'); window.scrollTo(0,0);
   $('tour').classList.add('show');
@@ -2276,7 +2284,7 @@ function tourNext(){
     /* scroll instantáneo: con behavior:'smooth' se medía a mitad del recorrido y el
        anillo quedaba encuadrando el sitio equivocado. Los repintados posteriores
        cubren layouts que aún se están asentando (transición del sheet, fuentes). */
-    el.scrollIntoView({block:'center'});
+    scrollSheetIfNeeded(el);
     /* El handler del paso se registra AQUÍ, una sola vez por paso: paintTour()
        se llama muchas veces (repintados, scroll, transitionend) y si registraba
        el listener, un solo toque disparaba varios tourNext() y saltaba pasos. */
@@ -2286,8 +2294,8 @@ function tourNext(){
       tourOff=()=>el.removeEventListener('click', handler);
     }
     paintTour();
-    setTimeout(paintTour, 120);
-    setTimeout(paintTour, 360);
+    setTimeout(()=>{ scrollSheetIfNeeded(el); paintTour(); }, 120);
+    setTimeout(()=>{ scrollSheetIfNeeded(el); paintTour(); }, 340);
   }, st.before? 340 : 0);
 }
 function tourReanchor(){ if(tourActive() && tourEl) paintTour(); }
