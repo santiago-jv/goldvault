@@ -369,7 +369,8 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 .onb-foot{display:flex;gap:10px;align-items:stretch}
 
 #shareWrap{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-#authWrap{display:none;position:fixed;inset:0;z-index:300;background:var(--bg);padding:40px 24px;overflow-y:auto}
+#authWrap{display:flex;position:fixed;inset:0;z-index:350;background:var(--bg);align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+#offlineWrap{display:none;position:fixed;inset:0;z-index:460;background:var(--bg);align-items:center;justify-content:center;padding:24px;text-align:center}
 
 #mOverlay{z-index:130}
 #modalSheet{z-index:140;max-width:440px}
@@ -579,7 +580,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
   </div>
   <div class="card" id="installCard" style="display:none">
     <h3>Instalar aplicación</h3>
-    <p class="card-desc">Instálala en tu pantalla de inicio: se abre a pantalla completa y funciona sin conexión.</p>
+    <p class="card-desc">Instálala en tu pantalla de inicio para abrirla a pantalla completa como aplicación nativa.</p>
     <div id="installBody"></div>
   </div>
   <div class="card">
@@ -809,27 +810,29 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
   </div>
 </div>
 
-<!-- ============ LOGIN ============ -->
+<!-- ============ LOGIN (GOOGLE OBLIGATORIO) ============ -->
 <div id="authWrap">
-  <div style="max-width:360px;margin:8dvh auto 0">
-    <button class="btn ghost sm" style="width:auto;padding:8px 14px;margin-bottom:16px;border:none" onclick="closeAuth()">‹ Volver</button>
-    <div class="brand" style="font-size:var(--fs-h1);margin-bottom:6px"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
+  <div class="card" style="max-width:360px;width:100%;margin:0 auto;padding:28px 22px;text-align:center">
+    <div class="brand" style="font-size:var(--fs-h1);justify-content:center;margin-bottom:10px"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:28px;height:28px"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
     <p class="card-desc" style="margin-bottom:22px">
-      Inicia sesión para usar tus datos en todos tus dispositivos.
+      Inicia sesión con tu cuenta de Google para sincronizar tus espacios, metas y lectura automática de bancos en tiempo real.
     </p>
-    <button class="btn" style="background:#fff;color:#1f2937;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:none" onclick="googleLogin()">
+    <button class="btn" style="background:#fff;color:#1f2937;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.08)" onclick="googleLogin()">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuar con Google
     </button>
-    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--mut);font-size:var(--fs-xs);font-weight:700">
-      <span style="flex:1;height:1px;background:var(--line)"></span>o con correo<span style="flex:1;height:1px;background:var(--line)"></span>
-    </div>
-    <div class="field"><input type="text" id="aEmail" placeholder="Correo" inputmode="email" autocomplete="email"></div>
-    <div class="field"><input type="password" id="aPass" placeholder="Contraseña" autocomplete="current-password"></div>
-    <button class="btn" onclick="login()">Entrar</button>
-    <button class="btn ghost sm" style="margin-top:10px" onclick="signup()">Crear cuenta</button>
-    <button class="btn ghost sm" style="margin-top:10px;border:none" onclick="skipAuth()">Seguir sin cuenta (solo este dispositivo)</button>
-    <p id="aMsg" style="color:var(--amber);font-size:var(--fs-sm);margin-top:14px;text-align:center;line-height:var(--lh-relaxed)"></p>
+    <p class="note-txt" style="margin-top:14px">El inicio de sesión con Google y la conexión a internet son obligatorios.</p>
+    <p id="aMsg" style="color:var(--amber);font-size:var(--fs-sm);margin-top:12px;text-align:center;line-height:var(--lh-relaxed)"></p>
+  </div>
+</div>
+
+<!-- ============ OFFLINE SCREEN (INTERNET OBLIGATORIO) ============ -->
+<div id="offlineWrap">
+  <div class="card" style="max-width:350px;width:100%;padding:28px 22px;text-align:center">
+    <div style="color:var(--amber);margin-bottom:14px;display:flex;justify-content:center"><span data-ic="cloud" data-s="44"></span></div>
+    <div style="font-size:var(--fs-h2);font-weight:800;margin-bottom:8px">Sin conexión a internet</div>
+    <p class="card-desc" style="margin-bottom:20px">VaultARQ requiere conexión activa a internet para mantener tus cuentas, movimientos y bancos sincronizados sin errores.</p>
+    <button class="btn sm" onclick="checkOnlineStatus(true)">Reintentar conexión</button>
   </div>
 </div>
 
@@ -1254,8 +1257,28 @@ async function syncNow(){
   await postRecurring();   /* tras sincronizar (y con knownIds ya al día) evita duplicar entre dispositivos */
 }
 
+function checkOnlineStatus(manual){
+  const online = navigator.onLine;
+  const el = $('offlineWrap');
+  if(el) el.style.display = online ? 'none' : 'flex';
+  if(online && manual){ toast('Conexión restablecida ✓'); syncNow(); }
+  else if(!online && manual){ toast('Aún sin conexión a internet'); }
+  return online;
+}
+function requireOnline(){
+  if(!navigator.onLine){
+    checkOnlineStatus(false);
+    toast('Necesitas conexión a internet');
+    return false;
+  }
+  return true;
+}
+
 function authInit(){
-  if(!SB_URL || !SB_KEY || !window.supabase){ paintSync(); paintBankSync(); maybeOnboard(); return; }
+  checkOnlineStatus(false);
+  window.addEventListener('online', ()=>{ checkOnlineStatus(false); syncNow(); });
+  window.addEventListener('offline', ()=>checkOnlineStatus(false));
+  if(!SB_URL || !SB_KEY || !window.supabase){ paintAuth(); paintSync(); paintBankSync(); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY);
   sb.auth.onAuthStateChange((ev, s)=>{
     session = s;
@@ -1266,45 +1289,30 @@ function authInit(){
     }
     paintAuth(); paintSync(); paintBankSync();
     if(session && (ev==='SIGNED_IN' || ev==='INITIAL_SESSION')) syncNow();
-    if(!session) maybeOnboard();
+    if(!session) $('onboard').classList.remove('show');
   });
-  window.addEventListener('online', syncNow);
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncNow(); });
-  setInterval(()=>{ if(Q.length) flushQueue(); }, 15000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ checkOnlineStatus(false); syncNow(); } });
+  setInterval(()=>{ if(Q.length && navigator.onLine) flushQueue(); }, 15000);
 }
-function paintAuth(){ if(session) $('authWrap').style.display='none'; }
-function openAuth(){ if(sb) $('authWrap').style.display='block'; }
-function closeAuth(){ $('authWrap').style.display='none'; }
-async function login(){
-  const email = $('aEmail').value.trim(), pass = $('aPass').value;
-  if(!email || !pass){ $('aMsg').textContent='Escribe correo y contraseña'; return; }
-  $('aMsg').textContent = 'Entrando…';
-  const {error} = await sb.auth.signInWithPassword({email, password:pass});
-  $('aMsg').textContent = error ? errES(error.message) : '';
+function paintAuth(){
+  $('authWrap').style.display = session ? 'none' : 'flex';
 }
-async function signup(){
-  const email = $('aEmail').value.trim(), pass = $('aPass').value;
-  if(!email || pass.length<6){ $('aMsg').textContent='Correo válido y contraseña de mínimo 6 caracteres'; return; }
-  $('aMsg').textContent = 'Creando cuenta…';
-  const {data, error} = await sb.auth.signUp({email, password:pass});
-  if(error){ $('aMsg').textContent = errES(error.message); return; }
-  $('aMsg').textContent = data.session ? '' : 'Revisa tu correo y confirma la cuenta, luego vuelve y toca Entrar.';
-}
+function openAuth(){ if(!session) $('authWrap').style.display='flex'; }
+function closeAuth(){ if(session) $('authWrap').style.display='none'; }
 async function googleLogin(){
-  $('aMsg').textContent = 'Abriendo Google…';
+  if(!requireOnline()) return;
+  $('aMsg').textContent = 'Conectando con Google…';
   const {error} = await sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + location.pathname}});
   if(error) $('aMsg').textContent = errES(error.message);
 }
-function skipAuth(){ closeAuth(); paintSync(); maybeOnboard(); }
 async function logout(){
+  if(!requireOnline()) return;
   if(Q.length && !await uiConfirm({title:'Cerrar sesión', message:'Hay cambios sin subir a la nube. ¿Cerrar sesión igual?', okText:'Cerrar sesión'})) return;
-  await sb.auth.signOut(); paintAuth(); paintSync();
+  await sb.auth.signOut();
+  session = null;
+  paintAuth(); paintSync();
 }
 function errES(m){
-  if(/invalid login/i.test(m)) return 'Correo o contraseña incorrectos';
-  if(/already registered/i.test(m)) return 'Ese correo ya tiene cuenta — usa Entrar';
-  if(/at least 6|too short/i.test(m)) return 'La contraseña debe tener mínimo 6 caracteres';
-  if(/not confirmed|confirm/i.test(m)) return 'Confirma tu correo primero (revisa tu bandeja)';
   if(/rate limit/i.test(m)) return 'Demasiados intentos, espera un momento';
   return m;
 }
@@ -1317,14 +1325,13 @@ function paintSync(){
         <button class="btn ghost sm" style="flex:1" onclick="retryDeadletter()">Reintentar</button>
         <button class="btn ghost sm" style="flex:1;color:var(--red)" onclick="discardDeadletter()">Descartar</button>
       </div></div>` : '';
-  if(!sb){ box.innerHTML = '<p class="card-desc" style="margin-bottom:0">Nube aún no configurada — los datos viven solo en este dispositivo.</p>'+dlBanner; }
-  else if(session){
+  if(session){
     box.innerHTML = `<div class="setrow" style="border:none;padding:4px 0">
       <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">✅ ${esc(session.user.email)}${Q.length?` <small style="color:var(--amber);font-size:var(--fs-xs)">· ${Q.length} por subir</small>`:''}</span>
-      <button class="btn ghost sm" style="width:auto;padding:8px 14px;flex-shrink:0" onclick="logout()">Salir</button></div>`+dlBanner;
+      <button class="btn ghost sm" style="width:auto;padding:8px 14px;flex-shrink:0" onclick="logout()">Cerrar sesión</button></div>`+dlBanner;
   } else {
-    box.innerHTML = `<p class="card-desc">Sin sesión — los datos viven solo en este dispositivo.</p>
-      <button class="btn sm" onclick="openAuth()">Iniciar sesión</button>`+dlBanner;
+    box.innerHTML = `<p class="card-desc" style="margin-bottom:8px">El inicio de sesión con Google es obligatorio.</p>
+      <button class="btn sm" onclick="googleLogin()">Continuar con Google</button>`+dlBanner;
   }
 }
 
@@ -1590,7 +1597,6 @@ function nextSteps(){
   const done = tipsDone(), tips = [];
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   if(!spaceMovements().length) tips.push({id:'first', e:'plus', t:'Registra tu primer movimiento', b:'Empezar', fn:()=>openSheet()});
-  if(sb && !session) tips.push({id:'login', e:'cloud', t:'Inicia sesión para acceder desde cualquier dispositivo', b:'Entrar', fn:()=>openAuth()});
   if(!curSpace().goals.length) tips.push({id:'goal', e:'target', t:'Define tu primera meta de ahorro', b:'Definir', fn:()=>{go('goals');addGoal();}});
   tips.push({id:'customize', e:'sliders-horizontal', t:'Ajusta tus categorías y cuentas', b:'Abrir', fn:()=>openCust()});
   if(spaceMovements().length && !Object.keys(curBudgets()).length) tips.push({id:'budget', e:'sliders-horizontal', t:'Ponle tope mensual a una categoría', b:'Definir', fn:()=>openCust()});
@@ -1798,6 +1804,7 @@ function paintQuickFreq(){
 }
 let _undoMv=null, _undoT=null;
 function quickRegister(i){
+  if(!requireOnline()) return;
   const f=curSpace().frequents[i]; if(!f) return;
   const mv={id:genId('mv'), space:curSpace().id, date:todayISO(), type:'expense', desc:f.desc, category:f.category,
     amount:f.amount, account:f.account, status:'paid'};
@@ -1815,6 +1822,7 @@ function undoQuick(){
   persist(); delMovementCloud(id); hideUndo(); render(); toast('Deshecho');
 }
 function save(){
+  if(!requireOnline()) return;
   F.desc = $('fDesc').value.trim();
   F.date = $('fDate').value || todayISO();
   if(!F.amount){ toast('Escribe el valor'); return; }
@@ -2330,6 +2338,7 @@ function parseBankNotification(rawText, rawTitle='', rawApp=''){
 }
 
 function ingestLocalBankNotification(rawText, rawTitle='', rawApp=''){
+  if(!requireOnline()) return null;
   const p = parseBankNotification(rawText, rawTitle, rawApp);
   if(!p.ok){
     toast(p.reason || 'No se detectó un pago válido en la notificación');
@@ -2422,8 +2431,7 @@ function bankWebhookUrl(){
   const base = location.hostname==='localhost' || location.hostname==='127.0.0.1'
     ? 'https://vaultarq.vercel.app'
     : location.origin;
-  if(session) return `${base}/api/bank?token=${encodeURIComponent(tok)}`;
-  return `${base}/?bank_app={app}&bank_title={title}&bank_notif={text}`;
+  return `${base}/api/bank?token=${encodeURIComponent(tok)}`;
 }
 
 async function copyBankWebhookUrl(){
@@ -2443,9 +2451,7 @@ function setBankGuideOs(os){
 
 function downloadMacroDroidTemplate(){
   const tok = ensureWebhookToken();
-  const webhook = session
-    ? `https://vaultarq.vercel.app/api/bank?token=${encodeURIComponent(tok)}&app={not_app_name}&title={not_title}&text={not_text}`
-    : `https://vaultarq.vercel.app/?bank_app={not_app_name}&bank_title={not_title}&bank_notif={not_text}`;
+  const webhook = `https://vaultarq.vercel.app/api/bank?token=${encodeURIComponent(tok)}&app={not_app_name}&title={not_title}&text={not_text}`;
   const macro = {
     macro: {
       name: "VaultARQ — Nequi, Nu, Lulo, ARQ, Morse",
@@ -2508,12 +2514,8 @@ function paintBankSync(){
   const box = $('bankSyncBox');
   if(!box) return;
   const url = bankWebhookUrl();
-  const androidUrl = session
-    ? `${url}&app={not_app_name}&title={not_title}&text={not_text}`
-    : url;
-  const iosUrl = session
-    ? `${url}&app=Wallet&text=Pagaste%20[Monto]%20en%20[Comercio]`
-    : url;
+  const androidUrl = `${url}&app={not_app_name}&title={not_title}&text={not_text}`;
+  const iosUrl = `${url}&app=Wallet&text=Pagaste%20[Monto]%20en%20[Comercio]`;
 
   box.innerHTML = `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
@@ -2586,8 +2588,8 @@ function checkBankUrlParams(){
 }
 
 /* ================= REPORTES ================= */
-const APP_VERSION = 'v27';   /* mantener igual a CACHE en sw.js */
-const CACHE_NAME = 'vaultarq-v27';   /* debe coincidir exactamente con CACHE en sw.js */
+const APP_VERSION = 'v28';   /* mantener igual a CACHE en sw.js */
+const CACHE_NAME = 'vaultarq-v28';   /* debe coincidir exactamente con CACHE en sw.js */
 async function openReport(kind){
   const isBug = kind!=='idea';
   const fields=[{key:'message', multiline:true, placeholder: isBug
@@ -2866,7 +2868,10 @@ function celebrate(){
 
 /* ================= ONBOARDING & SPACES ================= */
 let onbStep = 0; const ONB_SLIDES = 6;
-function maybeOnboard(){ if(!Object.keys(state.spaces).length) startOnboard(); else $('onboard').classList.remove('show'); }
+function maybeOnboard(){
+  if(!session){ $('onboard').classList.remove('show'); return; }
+  if(!Object.keys(state.spaces).length) startOnboard(); else $('onboard').classList.remove('show');
+}
 function startOnboard(){ onbStep = 0; $('onboard').classList.add('show'); paintOnb(); }
 function replayOnboard(){ onbStep = 0; $('onboard').classList.add('show'); paintOnb(); }
 function paintOnb(){
