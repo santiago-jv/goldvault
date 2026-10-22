@@ -53,9 +53,13 @@ jobs:
           tag_name: v2.0.0-goldvault
           name: "GoldVault v2.0.0 (Flutter Android Nativo + Web)"
           body: |
-            ### GoldVault v2.0.0 — Flutter Nativo
+            ### GoldVault v2.0.0 — Flutter Nativo (Firmado con certificado de producción)
+            - **Certificado RSA-2048 de Producción (`GoldVault Finanzas`)**:
+              - `SHA-1`: `C9:B8:33:6A:70:79:82:C4:C4:15:92:2B:58:D7:23:2D:E8:EA:E3:4F`
+              - `SHA-256`: `FD:8D:63:AE:20:01:7D:46:BC:7E:1F:78:9C:6D:31:6A:66:C7:78:D4:80:99:69:03:83:3B:88:DF:02:9A:9B:49`
             - **Servicio nativo Android (`BankNotificationService`)**: Lee notificaciones de **Nequi, Nu Bank, Lulo Bank, ARQ y Morse** directamente en segundo plano 24/7 sin depender de MacroDroid ni apps de terceros.
-            - **Login con Google obligatorio** y sincronización en tiempo real con Supabase.
-            - **Escala tipográfica estandarizada de 8 niveles** y diseño líquido minimalista.
+            - **Nota de instalación en Android 13/14/15**:
+              1. Si Play Protect muestra aviso por el lector de notificaciones (`BIND_NOTIFICATION_LISTENER_SERVICE`), abre **Play Store → Foto de perfil → Play Protect → ⚙️ → Desactivar temporalmente «Analizar las apps con Play Protect»** e instala `GoldVault.apk`.
+              2. En **GoldVault → Ajustes**, usa el botón **«Paso 1: Abrir Info de App (⋮ → Ajustes restringidos)»** y luego **«Paso 2: Activar permiso de notificaciones»**.
           files: GoldVault.apk
           prerelease: false

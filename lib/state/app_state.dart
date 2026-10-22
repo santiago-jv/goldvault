@@ -185,6 +185,13 @@ class GoldVaultState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> openAndroidAppDetailsSettings() async {
+    if (kIsWeb) return;
+    try {
+      await _bankChannel.invokeMethod('openAppDetailsSettings');
+    } catch (_) {}
+  }
+
   Future<void> setAndroidListenerToggle(bool val) async {
     androidListenerToggleOn = val;
     final prefs = await SharedPreferences.getInstance();

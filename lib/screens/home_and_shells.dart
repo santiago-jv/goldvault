@@ -1556,6 +1556,49 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                         style: GVTxt.xs(c),
                       ),
                       const SizedBox(height: 10),
+                      if (!st.androidPermissionGranted) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: c.card,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: c.line),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'En Android 13 / 14 / 15 ("Ajuste restringido"):',
+                                style: GVTxt.xs(c, weight: FontWeight.w700, color: c.acc),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '1. Toca el botón «Paso 1: Abrir Info de App», toca los 3 puntos (⋮) arriba a la derecha y selecciona «Permitir ajustes restringidos».\n2. Luego toca «Paso 2: Activar permiso de notificaciones» y enciende el interruptor de GoldVault.',
+                                style: GVTxt.xs(c),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                              side: BorderSide(color: c.acc),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () => st.openAndroidAppDetailsSettings(),
+                            icon: Icon(Icons.security_rounded, color: c.acc, size: 17),
+                            label: Text(
+                              'Paso 1: Abrir Info de App (⋮ → Ajustes restringidos)',
+                              style: GVTxt.xs(c, weight: FontWeight.w700, color: c.acc),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -1569,7 +1612,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                           child: Text(
                             st.androidPermissionGranted
                                 ? 'Configurar permiso en Android'
-                                : 'Activar permiso nativo en Android',
+                                : 'Paso 2: Activar permiso de notificaciones',
                             style: GVTxt.sm(c, weight: FontWeight.w800, color: c.ink),
                           ),
                         ),
