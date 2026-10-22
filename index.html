@@ -304,10 +304,13 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 
 .spacechip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 11px;font-size:1.05rem;cursor:pointer;line-height:1}
 .mini-ic{background:none;border:none;font-size:.95rem;cursor:pointer;padding:4px 6px}
-.tplcard{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer;transition:.15s}
+.tplcard{display:flex;gap:14px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:.15s}
+.tplcard:hover{border-color:var(--acc)}
 .tplcard:active{transform:scale(.97);border-color:var(--acc)}
-.tplcard b{font-size:.95rem}
-.tplcard small{color:var(--mut);line-height:1.4;display:block;margin-top:3px;font-size:.75rem}
+.tplcard>span{width:40px;height:40px;border-radius:12px;background:rgba(var(--acc-rgb),.12);border:1px solid rgba(var(--acc-rgb),.24);display:grid;place-items:center;flex-shrink:0}
+.tplcard>div{flex:1;min-width:0}
+.tplcard b{font-size:.95rem;display:block}
+.tplcard small{color:var(--mut);line-height:1.45;display:block;margin-top:4px;font-size:.78rem}
 
 #onboard{display:none;position:fixed;inset:0;z-index:320;background:var(--bg);flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom))}
 #onboard.show{display:flex}
@@ -2133,8 +2136,8 @@ async function onAvatarPick(ev){
 function removeAvatar(){ delete profile.avatar; saveProfile(); pushProfile(); paintProfile(); toast('Foto quitada'); }
 
 /* ================= REPORTES ================= */
-const APP_VERSION = 'v24';   /* mantener igual a CACHE en sw.js */
-const CACHE_NAME = 'vaultarq-v24';   /* debe coincidir exactamente con CACHE en sw.js */
+const APP_VERSION = 'v25';   /* mantener igual a CACHE en sw.js */
+const CACHE_NAME = 'vaultarq-v25';   /* debe coincidir exactamente con CACHE en sw.js */
 async function openReport(kind){
   const isBug = kind!=='idea';
   const fields=[{key:'message', multiline:true, placeholder: isBug

@@ -1,4 +1,4 @@
-const CACHE = 'vaultarq-v24';
+const CACHE = 'vaultarq-v25';
 const SHELL = [
   './',
   './index.html',
