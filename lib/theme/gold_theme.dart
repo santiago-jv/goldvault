@@ -88,16 +88,16 @@ class GVColors {
   }
 }
 
-/// Escala tipográfica estricta de 8 niveles estandarizada en toda la aplicación
+/// Strict 8-tier typographic scale standardized across the entire application
 class GVTxt {
-  static const double fsDisplay = 36.0; // 2.25rem — Monto principal Hero e input de monto
-  static const double fsH1 = 24.0;      // 1.50rem — Títulos pantalla completa (Onboarding / Login)
-  static const double fsH2 = 20.0;      // 1.25rem — Títulos principales de vista (.brand)
-  static const double fsH3 = 16.0;      // 1.00rem — Títulos de tarjetas y modales
-  static const double fsBody = 15.0;    // 0.9375rem — Cuerpo principal, filas, inputs, botones
-  static const double fsSm = 13.0;      // 0.8125rem — Subtítulos descriptivos (.card-desc), placeholders, chips
-  static const double fsXs = 12.0;      // 0.75rem — Etiquetas mayúsculas (.lbl2), notas al pie (.note-txt)
-  static const double fs2xs = 11.0;     // 0.6875rem — Micro-etiquetas, badges, barra inferior
+  static const double fsDisplay = 36.0; // 2.25rem — Hero balance & amount input
+  static const double fsH1 = 24.0;      // 1.50rem — Full-screen titles (Onboarding / Login)
+  static const double fsH2 = 20.0;      // 1.25rem — Main view headers & brand title
+  static const double fsH3 = 16.0;      // 1.00rem — Card & modal section titles
+  static const double fsBody = 15.0;    // 0.9375rem — Primary body text, list rows, inputs, buttons
+  static const double fsSm = 13.0;      // 0.8125rem — Subtitles, descriptions, placeholders, chips
+  static const double fsXs = 12.0;      // 0.75rem — Uppercase labels, footnotes, helper captions
+  static const double fs2xs = 11.0;     // 0.6875rem — Micro-labels, badges, bottom navigation bar
 
   static TextStyle _font({
     required double fontSize,

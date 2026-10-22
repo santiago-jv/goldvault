@@ -36,7 +36,7 @@ class GoldVaultState extends ChangeNotifier {
   String? avatarUrl;
   String webhookToken = '';
 
-  // Estado nativo de Android (NotificationListenerService)
+  // Native Android state (NotificationListenerService)
   bool androidPermissionGranted = false;
   bool androidListenerToggleOn = true;
 

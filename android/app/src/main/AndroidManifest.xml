@@ -27,7 +27,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep link para Google OAuth de Supabase en Android nativo -->
+            <!-- Deep link for Supabase Google OAuth callback on native Android -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -42,7 +42,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Servicio Nativo de Android para leer notificaciones de Nequi, Nu, Lulo, ARQ y Morse -->
+        <!-- Native Android NotificationListenerService for Nequi, Nu, Lulo, ARQ, and Morse -->
         <service
             android:name=".BankNotificationService"
             android:label="GoldVault — Lectura automática de bancos"

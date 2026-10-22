@@ -60,7 +60,7 @@ class BankNotificationService : NotificationListenerService() {
 
         val token = prefs.getString("flutter.gv_webhook_token", null)
 
-        // Notificar a la UI de Flutter si está abierta en primer plano
+        // Notify the Flutter foreground UI if active
         val broadcast = Intent(ACTION_BANK_EVENT).apply {
             setPackage(applicationContext.packageName)
             putExtra("pkg", pkg)
@@ -69,7 +69,7 @@ class BankNotificationService : NotificationListenerService() {
         }
         sendBroadcast(broadcast)
 
-        // Si el usuario ya tiene token sincronizado, registrar directo en Supabase en segundo plano
+        // If a webhook token is synced, persist directly to Supabase in the background
         if (!token.isNullOrBlank()) {
             thread {
                 try {

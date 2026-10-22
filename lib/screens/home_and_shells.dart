@@ -1425,7 +1425,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
         Text('Ajustes', style: GVTxt.h2(c)),
         const SizedBox(height: 14),
 
-        // Apariencia
+        // Appearance
         _settingsCard(
           c: c,
           title: 'Apariencia',
@@ -1447,7 +1447,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
           ),
         ),
 
-        // Perfil y Sincronización Google
+        // Google Profile & Cloud Sync
         _settingsCard(
           c: c,
           title: 'Cuenta de Google y Sincronización',
@@ -1621,7 +1621,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                   ),
                 ),
               ] else ...[
-                // En Web (iOS / Desktop): Botón de descarga de la App Nativa de Android (.APK) + Atajos iOS
+                // On Web (iOS / Desktop): Native Android APK download button + iOS Shortcuts webhook
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

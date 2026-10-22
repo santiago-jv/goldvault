@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Obtener tasa USD->COP actualizada si la notificación menciona USD/US$
+    // Fetch live USD->COP exchange rate when the notification mentions USD/US$
     let fxRate = Number(q.fx || body.fx) || 4200;
     if (/us\$|usd|usdc|usdt/i.test(`${title} ${text}`)) {
       try {
