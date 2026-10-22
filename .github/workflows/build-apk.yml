@@ -1,0 +1,61 @@
+name: Build GoldVault Android APK
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run unit tests
+        run: flutter test
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK to GoldVault.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk GoldVault.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoldVault-APK
+          path: GoldVault.apk
+
+      - name: Create/Update GitHub Release (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0-goldvault
+          name: "GoldVault v2.0.0 (Flutter Android Nativo + Web)"
+          body: |
+            ### GoldVault v2.0.0 — Flutter Nativo
+            - **Servicio nativo Android (`BankNotificationService`)**: Lee notificaciones de **Nequi, Nu Bank, Lulo Bank, ARQ y Morse** directamente en segundo plano 24/7 sin depender de MacroDroid ni apps de terceros.
+            - **Login con Google obligatorio** y sincronización en tiempo real con Supabase.
+            - **Escala tipográfica estandarizada de 8 niveles** y diseño líquido minimalista.
+          files: GoldVault.apk
+          prerelease: false
