@@ -48,6 +48,27 @@
   --grid:#272b33; --chart-txt:#858c98;
   --conf1:#cbb187; --conf2:#9a8256; --conf3:#8fa3b8; --conf4:#7ea88c; --conf5:#c2a24e; --conf6:#ecedf0;
   --r:14px; --nav:70px;
+  /* ================= ESCALA TIPOGRÁFICA ESTÁNDAR (8 niveles) =================
+     --fs-display : 2.25rem (36px) — Montos gigantes (Hero disponible, Input de registro)
+     --fs-h1      : 1.5rem  (24px) — Títulos de pantalla completa (Onboarding, Auth)
+     --fs-h2      : 1.25rem (20px) — Marca / Título de vista (.brand)
+     --fs-h3      : 1rem    (16px) — Títulos de tarjeta (.card h3), títulos de Sheet/Modal y metas
+     --fs-body    : 0.9375rem (15px) — Texto primario, inputs, botones principales, filas (.mov .t1, .setrow)
+     --fs-sm      : 0.8125rem (13px) — Subtítulos, mini-párrafos de ayuda, chips, botones secundarios (.btn.sm)
+     --fs-xs      : 0.75rem (12px) — Etiquetas uppercase (.lbl2, .day-h), notas al pie, leyendas
+     --fs-2xs     : 0.6875rem (11px) — Micro-badges (.st), barra de navegación inferior, celdas de categoría
+  ========================================================================== */
+  --fs-display:2.25rem;
+  --fs-h1:1.5rem;
+  --fs-h2:1.25rem;
+  --fs-h3:1rem;
+  --fs-body:.9375rem;
+  --fs-sm:.8125rem;
+  --fs-xs:.75rem;
+  --fs-2xs:.6875rem;
+  --lh-tight:1.2;
+  --lh-base:1.4;
+  --lh-relaxed:1.55;
 }
 /* Grafito claro + latón: mismo acento, oscurecido para contraste ≥4.5:1 sobre fondos claros (WCAG AA) */
 :root[data-theme="light"]{
@@ -106,31 +127,31 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background:
 @keyframes pop{0%{transform:scale(.94);opacity:0}100%{transform:scale(1);opacity:1}}
 
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.brand{font-size:1.3rem;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.brand{font-size:var(--fs-h2);line-height:var(--lh-tight);font-weight:800;letter-spacing:-.015em;display:flex;align-items:center;gap:9px}
 .brand .mark{color:var(--brass);width:21px;height:21px;flex-shrink:0}
 .ic{display:inline-block;vertical-align:-.15em;flex-shrink:0}
-.brand b{font-weight:800;letter-spacing:-.01em}
+.brand b{font-weight:800;letter-spacing:-.015em}
 .brand span{background:var(--brass-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .month-nav{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px}
-.month-nav button{background:none;border:none;color:var(--mut);font-size:1.05rem;padding:6px 10px;border-radius:10px;cursor:pointer}
+.month-nav button{background:none;border:none;color:var(--mut);font-size:var(--fs-body);padding:6px 10px;border-radius:10px;cursor:pointer;line-height:0}
 .month-nav button:active{background:var(--card2)}
-#monthLabel{font-weight:700;font-size:.9rem;min-width:86px;text-align:center;text-transform:capitalize}
+#monthLabel,#monthLabel2{font-weight:700;font-size:var(--fs-sm);min-width:86px;text-align:center;text-transform:capitalize}
 
 .hero{background:var(--hero-grad);border:1px solid var(--line);
   border-radius:16px;padding:22px 20px;margin-bottom:14px;box-shadow:0 20px 44px -26px rgba(0,0,0,.9);animation:pop .3s ease}
-.hero .lbl{font-size:.72rem;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.09em}
-.hero .big{font-size:2.2rem;font-weight:800;letter-spacing:-.03em;margin:4px 0 16px;
+.hero .lbl{font-size:var(--fs-xs);font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.hero .big{font-size:var(--fs-display);line-height:1.1;font-weight:800;letter-spacing:-.03em;margin:6px 0 16px;
   background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero-row{display:flex;gap:8px}
 .hero-pill{flex:1;background:var(--pill-bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.hero-pill .lbl{font-size:.62rem;letter-spacing:.07em}
-.hero-pill .val{font-weight:800;font-size:.95rem;margin-top:3px;color:var(--txt)}
+.hero-pill .lbl{font-size:var(--fs-2xs);font-weight:700;letter-spacing:.06em}
+.hero-pill .val{font-weight:800;font-size:var(--fs-body);margin-top:4px;color:var(--txt)}
 
 /* entrada rápida (texto + voz) */
 .quickbar{display:flex;gap:8px;margin:14px 0 0;align-items:center}
 .quickbar input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;
-  padding:12px 14px;color:var(--txt);font-size:.88rem;font-family:inherit}
-.quickbar input::placeholder{color:var(--placeholder)}
+  padding:12px 14px;color:var(--txt);font-size:var(--fs-body);font-family:inherit}
+.quickbar input::placeholder{color:var(--placeholder);font-size:var(--fs-sm)}
 .qbtn{width:44px;height:44px;flex:none;border-radius:14px;background:var(--card);border:1px solid var(--line);
   color:var(--mut);display:grid;place-items:center;cursor:pointer;transition:.15s}
 .qbtn:active{transform:scale(.94)}
@@ -141,78 +162,82 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background:
 #quickFreq{display:flex;gap:8px;overflow-x:auto;margin:12px 0 14px;padding-bottom:2px;scrollbar-width:none}
 #quickFreq::-webkit-scrollbar{display:none}
 .qf-chip{flex:none;display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:9px 13px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--txt);white-space:nowrap}
-.qf-chip small{color:var(--mut);font-weight:700}
+  border-radius:14px;padding:9px 13px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--txt);white-space:nowrap}
+.qf-chip small{color:var(--mut);font-weight:700;font-size:var(--fs-xs)}
 .qf-chip.done{opacity:.55}
 .qf-chip .ck{color:var(--green);line-height:0}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
-.card h3{font-size:.95rem;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.card h3 small{color:var(--mut);font-weight:600;font-size:.75rem}
+.card h3{font-size:var(--fs-h3);line-height:var(--lh-tight);font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card h3 small{color:var(--mut);font-weight:600;font-size:var(--fs-xs)}
+/* clases estandarizadas para textos descriptivos y notas */
+.card-desc{font-size:var(--fs-sm);color:var(--mut);line-height:var(--lh-relaxed);margin-bottom:12px}
+.note-txt{font-size:var(--fs-xs);color:var(--mut);line-height:var(--lh-relaxed);margin-top:8px}
+.sheet-h{font-size:var(--fs-h3);line-height:var(--lh-tight);font-weight:800;margin-bottom:10px}
 
 .catrow{display:flex;align-items:center;gap:10px;margin-bottom:11px}
-.catrow .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:1rem;flex-shrink:0;background:var(--card2);border:1px solid var(--line)}
+.catrow .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:var(--fs-h3);flex-shrink:0;background:var(--card2);border:1px solid var(--line)}
 .catrow .mid{flex:1;min-width:0}
-.catrow .nm{font-size:.83rem;font-weight:600;display:flex;justify-content:space-between;margin-bottom:5px}
+.catrow .nm{font-size:var(--fs-sm);font-weight:600;display:flex;justify-content:space-between;margin-bottom:5px}
 .catrow .nm b{font-weight:700}
 .bar{height:7px;border-radius:99px;background:var(--card2);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:99px;background:var(--grad);transition:width .5s ease}
 
 .accgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .accbox{background:var(--card2);border-radius:16px;padding:12px}
-.accbox .nm{font-size:.75rem;color:var(--mut);font-weight:600}
-.accbox .vl{font-weight:800;font-size:1rem;margin-top:3px}
+.accbox .nm{font-size:var(--fs-xs);color:var(--mut);font-weight:600}
+.accbox .vl{font-weight:800;font-size:var(--fs-h3);margin-top:4px}
 
 .mov{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .mov:last-child{border-bottom:none}
 .mov .ic{width:40px;height:40px;border-radius:9px;display:grid;place-items:center;font-size:1.1rem;background:var(--card2);border:1px solid var(--line);flex-shrink:0}
 .mov .mid{flex:1;min-width:0}
-.mov .t1{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mov .t2{font-size:.74rem;color:var(--mut);margin-top:2px}
-.mov .amt{font-weight:800;font-size:.92rem;text-align:right}
+.mov .t1{font-weight:700;font-size:var(--fs-body);line-height:var(--lh-tight);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mov .t2{font-size:var(--fs-xs);color:var(--mut);margin-top:3px;line-height:var(--lh-base)}
+.mov .amt{font-weight:800;font-size:var(--fs-body);text-align:right}
 .mov .amt.g{color:var(--red)} .mov .amt.i{color:var(--green)} .mov .amt.a{color:var(--blue)}
-.mov .st{font-size:.66rem;font-weight:700;border-radius:99px;padding:2px 8px;margin-top:3px;display:inline-block}
+.mov .st{font-size:var(--fs-2xs);font-weight:700;border-radius:99px;padding:2px 8px;margin-top:3px;display:inline-block}
 .st.paid{background:rgba(var(--green-rgb),.14);color:var(--green)}
 .st.pending{background:rgba(var(--amber-rgb),.14);color:var(--amber)}
 .st.cancelled{background:rgba(var(--acc-rgb),.1);color:var(--mut)}
-.day-h{font-size:.72rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 4px}
-.empty{text-align:center;color:var(--mut);padding:40px 20px;font-size:.9rem}
-.empty .e{font-size:2.4rem;display:block;margin-bottom:10px}
+.day-h{font-size:var(--fs-xs);font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 4px}
+.empty{text-align:center;color:var(--mut);padding:40px 20px;font-size:var(--fs-sm);line-height:var(--lh-relaxed)}
+.empty .e{font-size:2.25rem;display:block;margin-bottom:10px}
 
 .meta-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
 .meta-card.done{border-color:rgba(195,169,124,.55);box-shadow:0 0 0 1px rgba(195,169,124,.18)}
 .meta-card .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.meta-card .nm{font-weight:800;font-size:1rem}
-.meta-card .pc{font-weight:800;font-size:.9rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.meta-card .nums{display:flex;justify-content:space-between;font-size:.75rem;color:var(--mut);margin-top:8px}
+.meta-card .nm{font-weight:800;font-size:var(--fs-h3)}
+.meta-card .pc{font-weight:800;font-size:var(--fs-body);background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.meta-card .nums{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-xs);color:var(--mut);margin-top:8px}
 .meta-card .bar{height:10px}
-.meta-card input{background:none;border:none;border-bottom:1px dashed var(--line);color:var(--txt);font-weight:700;width:110px;text-align:right;font-size:.8rem}
+.meta-card input{background:none;border:none;border-bottom:1px dashed var(--line);color:var(--txt);font-weight:700;width:110px;text-align:right;font-size:var(--fs-sm);font-family:inherit}
 
 /* charts */
 .chart{width:100%;display:block}
-.legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:.7rem;color:var(--mut);font-weight:600}
+.legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:var(--fs-xs);color:var(--mut);font-weight:600}
 .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:6px}
 .donut-wrap{display:flex;align-items:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.dleg{display:flex;align-items:center;gap:7px;font-size:.73rem;margin-bottom:6px}
+.dleg{display:flex;align-items:center;gap:7px;font-size:var(--fs-xs);margin-bottom:6px}
 .dleg i{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0}
 .dleg span{flex:1;color:var(--mut);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dleg b{font-size:.7rem;font-weight:800}
+.dleg b{font-size:var(--fs-xs);font-weight:800}
 
-.bwarn{display:flex;align-items:center;gap:9px;font-size:.78rem;font-weight:600;padding:8px 10px;border-radius:9px;margin-bottom:8px}
+.bwarn{display:flex;align-items:center;gap:9px;font-size:var(--fs-sm);font-weight:600;padding:8px 10px;border-radius:9px;margin-bottom:8px}
 .bwarn.amber{background:rgba(var(--amber-rgb),.12);color:var(--amber)}
 .bwarn.red{background:rgba(var(--red-rgb),.12);color:var(--red)}
 .tip{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
 .tip:last-child{border-bottom:none}
 .tip .te{flex-shrink:0;line-height:0;color:var(--acc)}
-.tip .tt{flex:1;font-size:.83rem;font-weight:600;line-height:1.35}
-.tip .tb{background:var(--grad);border:none;color:var(--ink);font-weight:800;font-size:.74rem;padding:8px 13px;border-radius:8px;cursor:pointer;flex-shrink:0}
-.tip .tx{background:none;border:none;color:var(--mut);font-size:.95rem;cursor:pointer;flex-shrink:0;padding:4px}
+.tip .tt{flex:1;font-size:var(--fs-sm);font-weight:600;line-height:var(--lh-base)}
+.tip .tb{background:var(--grad);border:none;color:var(--ink);font-weight:800;font-size:var(--fs-xs);padding:8px 13px;border-radius:8px;cursor:pointer;flex-shrink:0}
+.tip .tx{background:none;border:none;color:var(--mut);font-size:var(--fs-body);cursor:pointer;flex-shrink:0;padding:4px}
 
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
   background:var(--nav-bg);backdrop-filter:blur(18px);border-top:1px solid var(--line);
   display:flex;justify-content:space-around;align-items:center;height:calc(var(--nav) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);z-index:50}
-nav button{background:none;border:none;color:var(--mut);font-size:.62rem;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;width:60px}
+nav button{background:none;border:none;color:var(--mut);font-size:var(--fs-2xs);font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;width:60px}
 nav button .i{line-height:0;display:block}
 .fab>span{line-height:0;display:block}
 .seg button .ic{vertical-align:-.2em;margin-right:1px}
@@ -247,88 +272,90 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 .grip{width:42px;height:5px;border-radius:99px;background:var(--line);margin:4px auto 14px}
 
 .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4px;margin-bottom:16px}
-.seg button{flex:1;background:none;border:none;color:var(--mut);font-weight:700;font-size:.85rem;padding:10px 4px;border-radius:12px;cursor:pointer;transition:.15s}
+.seg button{flex:1;background:none;border:none;color:var(--mut);font-weight:700;font-size:var(--fs-sm);padding:10px 4px;border-radius:12px;cursor:pointer;transition:.15s}
 .seg button.on{background:var(--grad);color:var(--ink);box-shadow:0 4px 14px -6px rgba(var(--acc-rgb),.5)}
-.seg.mini button{padding:8px 4px;font-size:.78rem}
+.seg.mini button{padding:8px 4px;font-size:var(--fs-xs)}
 
 .amount-w{text-align:center;margin:6px 0 16px}
-.amount-w .cur{font-size:1rem;color:var(--mut);font-weight:700;vertical-align:top}
-#fAmount{background:none;border:none;color:var(--txt);font-size:2.6rem;font-weight:800;width:70%;text-align:center;outline:none;letter-spacing:-.02em}
+.amount-w .amt-row{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-top:4px;cursor:text}
+.amount-w .cur{font-size:var(--fs-h2);color:var(--mut);font-weight:700}
+#fAmount{background:none;border:none;color:var(--txt);font-size:var(--fs-display);font-weight:800;width:1.2ch;max-width:80%;field-sizing:content;text-align:center;outline:none;letter-spacing:-.02em;font-family:inherit;padding:0}
 #fAmount::placeholder{color:var(--placeholder)}
 
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none;margin:0 -2px}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex-shrink:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 13px;font-size:.79rem;font-weight:600;color:var(--txt);cursor:pointer;display:flex;gap:6px;align-items:center;transition:.15s}
+.chip{flex-shrink:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 13px;font-size:var(--fs-sm);font-weight:600;color:var(--txt);cursor:pointer;display:flex;gap:6px;align-items:center;transition:.15s}
 .chip:active{transform:scale(.95)}
 .chip.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.14)}
-.lbl2{font-size:.72rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px}
+.lbl2{font-size:var(--fs-xs);font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px}
 
 .catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .catbtn{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:.15s}
 .catbtn .e{font-size:1.25rem;display:block}
-.catbtn .n{font-size:.6rem;font-weight:700;color:var(--mut);margin-top:4px;display:block}
+.catbtn .n{font-size:var(--fs-2xs);font-weight:700;color:var(--mut);margin-top:4px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
 .catbtn.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.14)}
 .catbtn.on .n{color:var(--txt)}
 
 .field{margin-bottom:12px}
 .field input[type=text],.field input[type=password],.field input[type=date],.field select,.field textarea{
   width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--txt);
-  padding:13px 14px;font-size:.95rem;outline:none;font-family:inherit;appearance:none}
-.field textarea{resize:vertical;line-height:1.5;min-height:96px}
+  padding:13px 14px;font-size:var(--fs-body);outline:none;font-family:inherit;appearance:none}
+.field input::placeholder,.field textarea::placeholder{color:var(--placeholder);font-size:var(--fs-sm)}
+.field textarea{resize:vertical;line-height:var(--lh-relaxed);min-height:96px}
 .field input:focus,.field textarea:focus{border-color:var(--acc)}
 .row2{display:flex;gap:10px}.row2>*{flex:1}
-.btn{width:100%;background:var(--grad);border:none;color:var(--ink);font-weight:800;font-size:.95rem;padding:15px;border-radius:11px;cursor:pointer;box-shadow:0 10px 26px -14px rgba(var(--acc-rgb),.6);transition:transform .12s;font-family:inherit;letter-spacing:.01em}
+.btn{width:100%;background:var(--grad);border:none;color:var(--ink);font-weight:800;font-size:var(--fs-body);padding:15px;border-radius:11px;cursor:pointer;box-shadow:0 10px 26px -14px rgba(var(--acc-rgb),.6);transition:transform .12s;font-family:inherit;letter-spacing:.01em}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--card);color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:700}
 .btn.danger{background:rgba(181,112,104,.1);color:var(--red);border:1px solid rgba(181,112,104,.35);box-shadow:none}
-.btn.sm{padding:12px;font-size:.85rem;border-radius:10px}
+.btn.sm{padding:12px;font-size:var(--fs-sm);border-radius:10px}
 
 #toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-150%);opacity:0;pointer-events:none;z-index:500;background:var(--card2);border:1px solid var(--line);
-  color:var(--txt);padding:12px 20px;border-radius:99px;font-weight:700;font-size:.85rem;transition:transform .35s cubic-bezier(.3,1.4,.5,1), opacity .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  color:var(--txt);padding:12px 20px;border-radius:99px;font-weight:700;font-size:var(--fs-sm);transition:transform .35s cubic-bezier(.3,1.4,.5,1), opacity .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #toast.show{transform:translate(-50%,0);opacity:1}
 /* El desplazamiento de ocultado se mide en % de su propia altura: con texto largo
    la barra crece a 2-3 líneas y un offset fijo en px dejaba un borde asomado. */
 #undoBar{position:fixed;bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 12px);left:50%;
   transform:translate(-50%,calc(100% + var(--nav) + 24px));opacity:0;pointer-events:none;
   z-index:85;display:flex;align-items:center;gap:14px;background:var(--card2);border:1px solid var(--line);
-  color:var(--txt);padding:11px 16px;border-radius:14px;font-weight:600;font-size:.8rem;max-width:calc(100vw - 32px);
+  color:var(--txt);padding:11px 16px;border-radius:14px;font-weight:600;font-size:var(--fs-sm);max-width:calc(100vw - 32px);
   transition:transform .35s cubic-bezier(.3,1.4,.5,1), opacity .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #undoBar.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
 #undoTxt{flex:1;min-width:0}
-#undoBar button{background:none;border:none;color:var(--acc);font-weight:800;font-size:.8rem;cursor:pointer;padding:4px}
+#undoBar button{background:none;border:none;color:var(--acc);font-weight:800;font-size:var(--fs-sm);cursor:pointer;padding:4px}
 
-.setrow{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:.9rem;font-weight:600}
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:var(--fs-body);font-weight:600}
 .setrow:last-child{border-bottom:none}
 .filters{display:flex;gap:8px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
 .filters::-webkit-scrollbar{display:none}
 
-.spacechip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 11px;font-size:1.05rem;cursor:pointer;line-height:1}
-.mini-ic{background:none;border:none;font-size:.95rem;cursor:pointer;padding:4px 6px}
+.spacechip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 11px;font-size:var(--fs-h3);cursor:pointer;line-height:1}
+.mini-ic{background:none;border:none;font-size:var(--fs-body);cursor:pointer;padding:4px 6px}
 .tplcard{display:flex;gap:14px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:.15s}
 .tplcard:hover{border-color:var(--acc)}
 .tplcard:active{transform:scale(.97);border-color:var(--acc)}
 .tplcard>span{width:40px;height:40px;border-radius:12px;background:rgba(var(--acc-rgb),.12);border:1px solid rgba(var(--acc-rgb),.24);display:grid;place-items:center;flex-shrink:0}
 .tplcard>div{flex:1;min-width:0}
-.tplcard b{font-size:.95rem;display:block}
-.tplcard small{color:var(--mut);line-height:1.45;display:block;margin-top:4px;font-size:.78rem}
+.tplcard b{font-size:var(--fs-body);line-height:var(--lh-tight);display:block}
+.tplcard small{color:var(--mut);line-height:var(--lh-base);display:block;margin-top:4px;font-size:var(--fs-sm)}
 
 #onboard{display:none;position:fixed;inset:0;z-index:320;background:var(--bg);flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom))}
 #onboard.show{display:flex}
 .onb-top{display:flex;justify-content:space-between;align-items:center}
-.onb-skip{background:none;border:none;color:var(--mut);font-weight:700;font-size:.85rem;cursor:pointer}
+.onb-skip{background:none;border:none;color:var(--mut);font-weight:700;font-size:var(--fs-sm);cursor:pointer}
 .onb-body{flex:1;position:relative;overflow:hidden}
 .onb-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;opacity:0;transform:translateY(18px);transition:opacity .45s ease,transform .45s ease;pointer-events:none;padding:0 6px}
 .onb-slide.on{opacity:1;transform:none;pointer-events:auto}
 .onb-emoji{margin-bottom:24px;animation:float 3s ease-in-out infinite;color:var(--acc);line-height:0}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-.onb-h{font-size:1.55rem;font-weight:800;margin-bottom:12px;letter-spacing:-.02em;line-height:1.15}
+.onb-h{font-size:var(--fs-h1);font-weight:800;margin-bottom:12px;letter-spacing:-.02em;line-height:var(--lh-tight)}
 .onb-h span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.onb-p{color:var(--mut);font-size:.98rem;line-height:1.55;max-width:300px}
+.onb-p{color:var(--mut);font-size:var(--fs-body);line-height:var(--lh-relaxed);max-width:300px}
 .onb-tpl{width:100%;max-width:340px}
 .onb-dots{display:flex;gap:8px;justify-content:center;margin:18px 0}
 .onb-dot{width:8px;height:8px;border-radius:99px;background:var(--line);transition:.3s;cursor:pointer}
 .onb-dot.on{background:var(--acc);width:22px}
-.onb-back{background:none;border:none;color:var(--mut);font-weight:700;font-size:.85rem;cursor:pointer}
+.onb-back{background:none;border:none;color:var(--mut);font-weight:700;font-size:var(--fs-sm);cursor:pointer}
 .onb-foot{display:flex;gap:10px;align-items:stretch}
 
 #shareWrap{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
@@ -336,15 +363,15 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 
 #mOverlay{z-index:130}
 #modalSheet{z-index:140;max-width:440px}
-#modalSheet h3{font-size:1.05rem;margin-bottom:4px}
+#modalSheet h3{font-size:var(--fs-h3);line-height:var(--lh-tight);font-weight:800;margin-bottom:6px}
 .emoji-row{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}
 .emoji-row button{background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:1.15rem;padding:5px 9px;cursor:pointer;line-height:1}
 .emoji-row button.on{border-color:var(--acc);background:rgba(var(--acc-rgb),.14)}
 
 .ccy-tog{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;margin-bottom:10px}
-.ccy-tog button{background:none;border:none;color:var(--mut);font-weight:800;font-size:.72rem;padding:5px 13px;border-radius:9px;cursor:pointer}
+.ccy-tog button{background:none;border:none;color:var(--mut);font-weight:800;font-size:var(--fs-xs);padding:6px 13px;border-radius:9px;cursor:pointer}
 .ccy-tog button.on{background:var(--grad);color:var(--ink)}
-#fxHint{font-size:.8rem;color:var(--acc2);font-weight:700;height:1.1em;margin-top:2px}
+#fxHint{font-size:var(--fs-xs);color:var(--acc2);font-weight:700;height:1.2em;margin-top:4px}
 
 .sw{position:relative;width:46px;height:27px;flex-shrink:0}
 .sw input{opacity:0;width:0;height:0}
@@ -369,13 +396,13 @@ body.kb nav{transform:translate(-50%,120%)}   /* la barra estorba con el teclado
 #tourTip{position:fixed;left:50%;transform:translateX(-50%);width:min(320px,calc(100% - 32px));
   background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;
   box-shadow:0 24px 60px rgba(0,0,0,.75);pointer-events:auto;transition:top .22s ease}
-#tourTxt{font-size:.85rem;line-height:1.5;font-weight:600}
+#tourTxt{font-size:var(--fs-sm);line-height:var(--lh-relaxed);font-weight:600}
 #tourTxt b{color:var(--acc)}
 #tourFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
-#tourStep{font-size:.68rem;color:var(--mut);font-weight:800;letter-spacing:.05em}
-.tour-skip{background:none;border:none;color:var(--mut);font-weight:700;font-size:.75rem;cursor:pointer;padding:0}
+#tourStep{font-size:var(--fs-2xs);color:var(--mut);font-weight:800;letter-spacing:.05em}
+.tour-skip{background:none;border:none;color:var(--mut);font-weight:700;font-size:var(--fs-xs);cursor:pointer;padding:0}
 #tourNext{width:auto;padding:9px 15px}
-.tour-hint{font-size:.68rem;color:var(--acc);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.tour-hint{font-size:var(--fs-2xs);color:var(--acc);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 /* accesibilidad: foco visible para navegación por teclado / lector de pantalla */
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
@@ -500,7 +527,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
       <button data-th="light" onclick="setThemePref('light')" style="flex:1">Claro</button>
       <button data-th="dark" onclick="setThemePref('dark')" style="flex:1">Oscuro</button>
     </div>
-    <p style="font-size:.72rem;color:var(--mut);margin-top:8px;line-height:1.5">Automático sigue el tema de tu dispositivo.</p>
+    <p class="note-txt">Automático sigue el tema de tu dispositivo.</p>
   </div>
   <div class="card">
     <h3>Perfil</h3>
@@ -513,28 +540,28 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
   </div>
   <div class="card" id="bioCard" style="display:none">
     <h3>Seguridad</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:12px;line-height:1.5">Pide tu huella o rostro para abrir la app en este dispositivo.</p>
+    <p class="card-desc">Pide tu huella o rostro para abrir la app en este dispositivo.</p>
     <div id="bioBox"></div>
   </div>
   <div class="card">
     <h3>Personalización</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px;line-height:1.5">Categorías, cuentas y fuentes de ingreso de este espacio — hazlas tuyas.</p>
+    <p class="card-desc">Categorías, cuentas y fuentes de ingreso de este espacio — hazlas tuyas.</p>
     <button class="btn sm" onclick="openCust()" style="margin-bottom:10px">Personalizar este espacio</button>
     <button class="btn ghost sm" onclick="openSpaces()">Gestionar espacios</button>
   </div>
   <div class="card">
     <h3>Recordatorios</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:12px;line-height:1.5">Recibe un recordatorio diario para mantener tu registro al día.</p>
+    <p class="card-desc">Recibe un recordatorio diario para mantener tu registro al día.</p>
     <div id="remBox"></div>
   </div>
   <div class="card" id="installCard" style="display:none">
     <h3>Instalar aplicación</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px;line-height:1.5">Instálala en tu pantalla de inicio: se abre a pantalla completa y funciona sin conexión.</p>
+    <p class="card-desc">Instálala en tu pantalla de inicio: se abre a pantalla completa y funciona sin conexión.</p>
     <div id="installBody"></div>
   </div>
   <div class="card">
     <h3>Compartir</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px;line-height:1.5">Comparte tu progreso con una tarjeta lista para redes, o difunde la app.</p>
+    <p class="card-desc">Comparte tu progreso con una tarjeta lista para redes, o difunde la app.</p>
     <button class="btn sm" onclick="openShare('summary')" style="margin-bottom:10px">Tarjeta de progreso</button>
     <button class="btn ghost sm" onclick="shareApp()">Compartir VaultARQ</button>
   </div>
@@ -543,24 +570,24 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
     <button class="btn sm" onclick="exportXLSX()" style="margin-bottom:10px">Exportar a Excel (.xlsx)</button>
     <button class="btn ghost sm" onclick="document.getElementById('impFile').click()">Importar desde Excel</button>
     <input type="file" id="impFile" accept=".xlsx,.xls" style="display:none" onchange="importXLSX(event)">
-    <p style="font-size:.74rem;color:var(--mut);margin-top:10px;line-height:1.5">
+    <p class="note-txt" style="margin-top:10px">
       Con sesión iniciada tus datos se sincronizan en la nube en todos tus dispositivos. El Excel sigue sirviendo como respaldo extra.
     </p>
   </div>
   <div class="card">
     <h3>Gastos frecuentes</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px">Aparecen como chips al registrar. Marca "Guardar como frecuente" al crear un gasto para añadirlo.</p>
+    <p class="card-desc">Aparecen como chips al registrar. Marca "Guardar como frecuente" al crear un gasto para añadirlo.</p>
     <div id="freqList"></div>
   </div>
   <div class="card">
     <h3>Reportar un problema</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px;line-height:1.5">¿Algo no funciona o se te ocurre una mejora? Cuéntanos: lo revisamos y lo arreglamos.</p>
+    <p class="card-desc">¿Algo no funciona o se te ocurre una mejora? Cuéntanos: lo revisamos y lo arreglamos.</p>
     <button class="btn sm" onclick="openReport('bug')" style="margin-bottom:10px">Reportar un problema</button>
     <button class="btn ghost sm" onclick="openReport('idea')">Sugerir una mejora</button>
   </div>
   <div class="card">
     <h3>Ayuda</h3>
-    <p style="font-size:.74rem;color:var(--mut);margin-bottom:10px;line-height:1.5">¿Se te olvidó cómo funciona algo? Repite la introducción cuando quieras.</p>
+    <p class="card-desc">¿Se te olvidó cómo funciona algo? Repite la introducción cuando quieras.</p>
     <button class="btn sm" onclick="startTour()" style="margin-bottom:10px">Tutorial guiado paso a paso</button>
     <button class="btn ghost sm" onclick="replayOnboard()">Ver la presentación otra vez</button>
   </div>
@@ -594,7 +621,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
       <button data-c="COP" class="on" onclick="setCcy('COP')">COP</button>
       <button data-c="USD" onclick="setCcy('USD')">USD</button>
     </div>
-    <div><span class="cur" id="curLbl">COP $</span><input id="fAmount" inputmode="numeric" placeholder="0" oninput="fmtAmount(this)"></div>
+    <div class="amt-row" onclick="document.getElementById('fAmount').focus()"><span class="cur" id="curLbl">COP $</span><input id="fAmount" inputmode="numeric" placeholder="0" oninput="fmtAmount(this)"></div>
     <div id="fxHint"></div>
   </div>
 
@@ -633,12 +660,12 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
     </div>
   </div>
 
-  <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--mut);font-weight:600;margin-bottom:14px" id="rowFreq">
+  <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--mut);font-weight:600;margin-bottom:14px" id="rowFreq">
     <input type="checkbox" id="fSaveFreq" style="width:17px;height:17px;accent-color:var(--acc)" onchange="document.getElementById('freqDayRow').style.display=this.checked?'block':'none'"> Guardar como frecuente
   </label>
   <div id="freqDayRow" style="display:none;margin:-6px 0 14px">
     <div class="lbl2" style="margin:0 0 8px">¿Se repite cada mes?</div>
-    <select id="fFreqDay" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:13px 14px;font-size:.95rem;font-family:inherit;appearance:none"></select>
+    <select id="fFreqDay" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:13px 14px;font-size:var(--fs-body);font-family:inherit;appearance:none"></select>
   </div>
 
   <button class="btn" id="btnSave" onclick="save()">Guardar</button>
@@ -648,10 +675,10 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
 <!-- ============ MONTH PICKER SHEET ============ -->
 <div class="sheet" id="monthSheet">
   <div class="grip"></div>
-  <h3 style="font-size:1rem;margin-bottom:10px">Ir a un mes</h3>
+  <h3 class="sheet-h">Ir a un mes</h3>
   <div class="month-nav" style="justify-content:center;margin-bottom:14px;width:fit-content">
     <button onclick="shiftPickerYear(-1)" aria-label="Año anterior"><span data-ic="chevron-left" data-s="17"></span></button>
-    <div id="pickerYear" style="min-width:64px;font-weight:800"></div>
+    <div id="pickerYear" style="min-width:64px;font-weight:800;font-size:var(--fs-body);text-align:center"></div>
     <button onclick="shiftPickerYear(1)" aria-label="Año siguiente"><span data-ic="chevron-right" data-s="17"></span></button>
   </div>
   <div class="catgrid" id="pickerMonths" style="grid-template-columns:repeat(3,1fr)"></div>
@@ -660,8 +687,8 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
 <!-- ============ SPACES SHEET ============ -->
 <div class="sheet" id="spSheet">
   <div class="grip"></div>
-  <h3 style="font-size:1rem;margin-bottom:4px">Tus espacios</h3>
-  <p style="color:var(--mut);font-size:.75rem;margin-bottom:10px">Cada espacio tiene sus propias categorías, cuentas, metas y movimientos.</p>
+  <h3 class="sheet-h" style="margin-bottom:4px">Tus espacios</h3>
+  <p class="card-desc">Cada espacio tiene sus propias categorías, cuentas, metas y movimientos.</p>
   <div id="spList"></div>
   <button class="btn ghost sm" style="margin-top:12px" onclick="newSpace()">＋ Nuevo espacio</button>
 </div>
@@ -669,7 +696,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
 <!-- ============ CUSTOMIZE SHEET ============ -->
 <div class="sheet" id="custSheet">
   <div class="grip"></div>
-  <h3 style="font-size:1rem;margin-bottom:10px">Personalizar "<span id="custName"></span>"</h3>
+  <h3 class="sheet-h">Personalizar "<span id="custName"></span>"</h3>
   <div class="lbl2">Categorías</div>
   <div class="chips" style="flex-wrap:wrap" id="custCats"></div>
   <div class="lbl2">Presupuestos mensuales <small style="text-transform:none;font-weight:600;color:var(--mut)">— opcional, por categoría</small></div>
@@ -678,13 +705,13 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
   <div class="chips" style="flex-wrap:wrap" id="custAccts"></div>
   <div class="lbl2">Fuentes de ingreso</div>
   <div class="chips" style="flex-wrap:wrap" id="custSources"></div>
-  <p style="color:var(--mut);font-size:.72rem;margin-top:12px;line-height:1.5">Las metas se gestionan en la pestaña Metas y los gastos frecuentes se guardan al registrar un gasto.</p>
+  <p class="note-txt" style="margin-top:12px">Las metas se gestionan en la pestaña Metas y los gastos frecuentes se guardan al registrar un gasto.</p>
 </div>
 
 <!-- ============ ONBOARDING ============ -->
 <div id="onboard">
   <div class="onb-top">
-    <div class="brand" style="font-size:1rem"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
+    <div class="brand" style="font-size:var(--fs-h3)"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
     <button class="onb-skip" onclick="onbSkip()">Saltar intro ›</button>
   </div>
   <div class="onb-body" id="onbBody">
@@ -740,7 +767,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
 <div class="sheet" id="modalSheet">
   <div class="grip"></div>
   <h3 id="mTitle"></h3>
-  <p id="mMsg" style="color:var(--mut);font-size:.82rem;margin-bottom:12px;line-height:1.5;display:none"></p>
+  <p id="mMsg" class="card-desc" style="display:none"></p>
   <div id="mFields"></div>
   <button class="btn" id="mOk" onclick="modalOk()">Guardar</button>
   <button class="btn ghost sm" style="margin-top:10px" onclick="modalCancel()">Cancelar</button>
@@ -763,15 +790,15 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
 <div id="authWrap">
   <div style="max-width:360px;margin:8dvh auto 0">
     <button class="btn ghost sm" style="width:auto;padding:8px 14px;margin-bottom:16px;border:none" onclick="closeAuth()">‹ Volver</button>
-    <div class="brand" style="font-size:1.4rem;margin-bottom:6px"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
-    <p style="color:var(--mut);font-size:.85rem;margin-bottom:22px;line-height:1.5">
+    <div class="brand" style="font-size:var(--fs-h1);margin-bottom:6px"><svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/></svg><b>Vault<span>ARQ</span></b></div>
+    <p class="card-desc" style="margin-bottom:22px">
       Inicia sesión para usar tus datos en todos tus dispositivos.
     </p>
     <button class="btn" style="background:#fff;color:#1f2937;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:none" onclick="googleLogin()">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuar con Google
     </button>
-    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--mut);font-size:.72rem;font-weight:700">
+    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--mut);font-size:var(--fs-xs);font-weight:700">
       <span style="flex:1;height:1px;background:var(--line)"></span>o con correo<span style="flex:1;height:1px;background:var(--line)"></span>
     </div>
     <div class="field"><input type="text" id="aEmail" placeholder="Correo" inputmode="email" autocomplete="email"></div>
@@ -779,7 +806,7 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
     <button class="btn" onclick="login()">Entrar</button>
     <button class="btn ghost sm" style="margin-top:10px" onclick="signup()">Crear cuenta</button>
     <button class="btn ghost sm" style="margin-top:10px;border:none" onclick="skipAuth()">Seguir sin cuenta (solo este dispositivo)</button>
-    <p id="aMsg" style="color:var(--amber);font-size:.8rem;margin-top:14px;text-align:center;line-height:1.5"></p>
+    <p id="aMsg" style="color:var(--amber);font-size:var(--fs-sm);margin-top:14px;text-align:center;line-height:var(--lh-relaxed)"></p>
   </div>
 </div>
 
@@ -790,10 +817,10 @@ button:focus-visible, .chip:focus-visible, .catbtn:focus-visible{outline-offset:
       <path d="M3.5 21V11.5a8.5 8.5 0 0 1 17 0V21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
       <path d="M9 21v-9.2a3 3 0 0 1 6 0V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".45"/>
     </svg>
-    <div style="font-size:1.15rem;font-weight:800;margin-bottom:6px">VaultARQ está bloqueado</div>
-    <p style="color:var(--mut);font-size:.84rem;line-height:1.5;margin-bottom:20px">Verifica tu identidad para continuar.</p>
+    <div style="font-size:var(--fs-h2);font-weight:800;margin-bottom:6px">VaultARQ está bloqueado</div>
+    <p class="card-desc" style="margin-bottom:20px">Verifica tu identidad para continuar.</p>
     <button class="btn" onclick="tryUnlock()">Desbloquear</button>
-    <p id="lockMsg" style="color:var(--amber);font-size:.78rem;margin-top:12px"></p>
+    <p id="lockMsg" style="color:var(--amber);font-size:var(--fs-sm);margin-top:12px"></p>
   </div>
 </div>
 
@@ -1260,18 +1287,18 @@ function paintSync(){
   const box = $('syncBox'); if(!box) return;
   const dl = loadDeadletter();
   const dlBanner = dl.length ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(194,162,78,.1);border:1px solid rgba(194,162,78,.3);border-radius:10px">
-      <p style="font-size:.78rem;color:var(--amber);font-weight:700;margin-bottom:8px">${dl.length} cambio${dl.length>1?'s':''} no se pudo guardar en la nube</p>
+      <p style="font-size:var(--fs-sm);color:var(--amber);font-weight:700;margin-bottom:8px">${dl.length} cambio${dl.length>1?'s':''} no se pudo guardar en la nube</p>
       <div style="display:flex;gap:8px">
         <button class="btn ghost sm" style="flex:1" onclick="retryDeadletter()">Reintentar</button>
         <button class="btn ghost sm" style="flex:1;color:var(--red)" onclick="discardDeadletter()">Descartar</button>
       </div></div>` : '';
-  if(!sb){ box.innerHTML = '<p style="font-size:.78rem;color:var(--mut);line-height:1.5">Nube aún no configurada — los datos viven solo en este dispositivo.</p>'+dlBanner; }
+  if(!sb){ box.innerHTML = '<p class="card-desc" style="margin-bottom:0">Nube aún no configurada — los datos viven solo en este dispositivo.</p>'+dlBanner; }
   else if(session){
     box.innerHTML = `<div class="setrow" style="border:none;padding:4px 0">
-      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">✅ ${esc(session.user.email)}${Q.length?` <small style="color:var(--amber)">· ${Q.length} por subir</small>`:''}</span>
+      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">✅ ${esc(session.user.email)}${Q.length?` <small style="color:var(--amber);font-size:var(--fs-xs)">· ${Q.length} por subir</small>`:''}</span>
       <button class="btn ghost sm" style="width:auto;padding:8px 14px;flex-shrink:0" onclick="logout()">Salir</button></div>`+dlBanner;
   } else {
-    box.innerHTML = `<p style="font-size:.78rem;color:var(--mut);margin-bottom:10px;line-height:1.5">Sin sesión — los datos viven solo en este dispositivo.</p>
+    box.innerHTML = `<p class="card-desc">Sin sesión — los datos viven solo en este dispositivo.</p>
       <button class="btn sm" onclick="openAuth()">Iniciar sesión</button>`+dlBanner;
   }
 }
@@ -1403,10 +1430,10 @@ function render(){
   hydrateIcons();
   $('freqList').innerHTML = curSpace().frequents.map((f,i)=>`
     <div class="setrow" style="cursor:pointer" onclick="editFrequent(${i})">
-      <span>${catIcon(f.category)} ${esc(f.desc)} <small style="color:var(--mut)">· ${money(f.amount)}${f.day?` · día ${f.day} (${f.mode==='auto'?'auto':'confirma'})`:''}</small></span>
+      <span>${catIcon(f.category)} ${esc(f.desc)} <small style="color:var(--mut);font-size:var(--fs-xs)">· ${money(f.amount)}${f.day?` · día ${f.day} (${f.mode==='auto'?'auto':'confirma'})`:''}</small></span>
       <button style="background:none;border:none;color:var(--red);cursor:pointer;line-height:0" onclick="event.stopPropagation();delFrequent(${i})" aria-label="Eliminar">${icon('x',15)}</button>
     </div>`).join('')
-    || '<p style="font-size:.75rem;color:var(--mut)">Aún no tienes gastos frecuentes.</p>';
+    || '<p class="note-txt" style="margin-top:0">Aún no tienes gastos frecuentes.</p>';
 }
 const catIcon = name => (curSpace().categories.find(c=>c.name===name)||TEMPLATES.basic.categories.find(c=>c.name===name)||{icon:'✨'}).icon;
 
@@ -1566,6 +1593,7 @@ function openSheet(edit){
   if(!edit){ F = blankF(); editId = null; editOrig = null; $('btnDel').style.display='none'; $('fSaveFreq').checked=false; $('freqDayRow').style.display='none'; $('fFreqDay').value=''; }
   F.ccy = 'COP';
   $('fAmount').value = F.amount? F.amount.toLocaleString('es-CO'):'';
+  $('fAmount').style.width = Math.max(1.2, ($('fAmount').value||'0').length * 0.95) + 'ch';
   $('fDesc').value = F.desc; $('fDate').value = F.date;
   setCcy('COP'); paintSheet(); getFxRate();
   $('overlay').classList.add('show'); $('sheet').classList.add('show');
@@ -1588,6 +1616,7 @@ function updateFxHint(){
 function fmtAmount(el){
   const n = parseInt(el.value.replace(/\D/g,''))||0; F.amount = n;
   el.value = n? n.toLocaleString('es-CO') : '';
+  el.style.width = Math.max(1.2, (el.value||'0').length * 0.95) + 'ch';
   updateFxHint();
 }
 function paintSheet(){
@@ -1602,9 +1631,9 @@ function paintSheet(){
   $('rowFreq').style.display = g?'flex':'none';
   $('lblAccount').textContent = i? 'Cuenta donde entra' : 'Cuenta de pago';
   $('fDesc').placeholder = i? 'Descripción (ej: pago de nómina)' : a? 'Descripción (ej: abono a mi meta)' : 'Descripción';
-  $('freqChips').innerHTML = curSpace().frequents.map((f,ix)=>`<div class="chip" onclick="pickFrequent(${ix})">${catIcon(f.category)} ${esc(f.desc)}</div>`).join('') || '<span style="font-size:.75rem;color:var(--mut)">Marca "Guardar como frecuente" al crear un gasto y aparecerá aquí.</span>';
+  $('freqChips').innerHTML = curSpace().frequents.map((f,ix)=>`<div class="chip" onclick="pickFrequent(${ix})">${catIcon(f.category)} ${esc(f.desc)}</div>`).join('') || '<span class="note-txt" style="margin-top:0">Marca "Guardar como frecuente" al crear un gasto y aparecerá aquí.</span>';
   $('catGrid').innerHTML = curSpace().categories.map((c,i)=>`<div class="catbtn ${F.category===c.name?'on':''}" onclick="setCat(${i})"><span class="e">${esc(c.icon)}</span><span class="n">${esc(c.name)}</span></div>`).join('');
-  $('goalChips').innerHTML = curSpace().goals.map((m,i)=>`<div class="chip ${F.goalId===m.id?'on':''}" onclick="setGoalId(${i})">${esc(m.name)}</div>`).join('') || '<span style="font-size:.75rem;color:var(--mut)">Crea tu primera meta en la pestaña Metas</span>';
+  $('goalChips').innerHTML = curSpace().goals.map((m,i)=>`<div class="chip ${F.goalId===m.id?'on':''}" onclick="setGoalId(${i})">${esc(m.name)}</div>`).join('') || '<span class="note-txt" style="margin-top:0">Crea tu primera meta en la pestaña Metas</span>';
   $('sourceChips').innerHTML = curSpace().sources.map((f,i)=>`<div class="chip ${F.source===f?'on':''}" onclick="setSource(${i})">${esc(f)}</div>`).join('');
   $('acctChips').innerHTML = curSpace().accounts.map((c,i)=>`<div class="chip ${F.account===c?'on':''}" onclick="setAcct(${i})">${esc(c)}</div>`).join('');
   $('btnSave').textContent = editId? 'Actualizar' : 'Guardar';
@@ -1617,6 +1646,7 @@ function pickFrequent(ix){
   const f = curSpace().frequents[ix];
   F.desc=f.desc; F.category=f.category; F.amount=f.amount; F.account=f.account;
   $('fDesc').value=f.desc; $('fAmount').value=f.amount.toLocaleString('es-CO');
+  $('fAmount').style.width = Math.max(1.2, ($('fAmount').value||'0').length * 0.95) + 'ch';
   setCcy('COP');   /* los frecuentes están en pesos: evita que se conviertan como USD */
   paintSheet();
 }
@@ -2002,9 +2032,9 @@ function hourOpts(sel, allowNone){
 }
 function paintReminder(){
   const box=$('remBox'); if(!box) return;
-  if(!('Notification' in window)){ box.innerHTML='<p style="font-size:.78rem;color:var(--mut)">Tu navegador no soporta notificaciones.</p>'; return; }
+  if(!('Notification' in window)){ box.innerHTML='<p class="card-desc" style="margin-bottom:0">Tu navegador no soporta notificaciones.</p>'; return; }
   const r=reminderState(), perm=Notification.permission;
-  const S = 'background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-family:inherit;font-weight:700';
+  const S = 'background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-family:inherit;font-size:var(--fs-sm);font-weight:700';
   box.innerHTML=`<div class="setrow" style="border:none;padding:4px 0">
       <span>Recordatorio diario</span>
       <label class="sw"><input type="checkbox" ${r.on?'checked':''} onchange="toggleReminder(this.checked)"><span></span></label>
@@ -2019,8 +2049,8 @@ function paintReminder(){
         <select onchange="setReminderHour(1,this.value)" style="${S}">${hourOpts(r.hours[1], true)}</select>
       </div>
     </div>
-    ${perm==='denied'?'<p style="font-size:.72rem;color:var(--amber);margin-top:8px;line-height:1.5">Las notificaciones están bloqueadas — actívalas en los ajustes del sitio en tu navegador.</p>':''}
-    <p style="font-size:.72rem;color:var(--mut);margin-top:8px;line-height:1.5">El mensaje cambia cada vez, y avisa si te acercas al tope de algún presupuesto. <b>En segundo plano solo funciona con la app instalada</b>, y de forma confiable en Android/Chrome — en otros sistemas (incluido iPhone) es más limitado; el aviso al abrir la app funciona siempre como respaldo.</p>
+    ${perm==='denied'?'<p class="note-txt" style="color:var(--amber);margin-top:8px">Las notificaciones están bloqueadas — actívalas en los ajustes del sitio en tu navegador.</p>':''}
+    <p class="note-txt" style="margin-top:8px">El mensaje cambia cada vez, y avisa si te acercas al tope de algún presupuesto. <b>En segundo plano solo funciona con la app instalada</b>, y de forma confiable en Android/Chrome — en otros sistemas (incluido iPhone) es más limitado; el aviso al abrir la app funciona siempre como respaldo.</p>
     ${lastReminderShownTxt()}`;
 }
 function lastReminderShownTxt(){
@@ -2029,7 +2059,7 @@ function lastReminderShownTxt(){
     if(!shown || !shown.slots || !shown.slots.length) return '';
     const hs = shown.slots.slice().sort((a,b)=>a-b).map(h=>String(h).padStart(2,'0')+':00').join(', ');
     const esHoy = shown.date===todayISO();
-    return `<p style="font-size:.72rem;color:var(--mut);margin-top:6px;line-height:1.5">Último aviso mostrado: ${esHoy?'hoy':shown.date} a las ${hs}.</p>`;
+    return `<p class="note-txt" style="margin-top:6px">Último aviso mostrado: ${esHoy?'hoy':shown.date} a las ${hs}.</p>`;
   }catch(e){ return ''; }
 }
 async function toggleReminder(on){
@@ -2092,12 +2122,12 @@ function paintProfile(){
   const av = profile.avatar || googleAvatar();
   const pic = av
     ? `<img src="${esc(av)}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--acc)">`
-    : `<div style="width:56px;height:56px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:1.3rem;color:var(--acc)">${(myName().trim()[0]||'V').toUpperCase()}</div>`;
+    : `<div style="width:56px;height:56px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:var(--fs-h2);color:var(--acc)">${(myName().trim()[0]||'V').toUpperCase()}</div>`;
   box.innerHTML=`<div style="display:flex;align-items:center;gap:14px">
       ${pic}
       <div style="flex:1;min-width:0">
-        <div style="font-weight:800;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(myName())}</div>
-        <div style="font-size:.72rem;color:var(--mut);margin-top:2px">Se usa en tus tarjetas para compartir</div>
+        <div style="font-weight:800;font-size:var(--fs-h3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(myName())}</div>
+        <div style="font-size:var(--fs-sm);color:var(--mut);margin-top:2px">Se usa en tus tarjetas para compartir</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:12px">
@@ -2136,8 +2166,8 @@ async function onAvatarPick(ev){
 function removeAvatar(){ delete profile.avatar; saveProfile(); pushProfile(); paintProfile(); toast('Foto quitada'); }
 
 /* ================= REPORTES ================= */
-const APP_VERSION = 'v25';   /* mantener igual a CACHE en sw.js */
-const CACHE_NAME = 'vaultarq-v25';   /* debe coincidir exactamente con CACHE en sw.js */
+const APP_VERSION = 'v26';   /* mantener igual a CACHE en sw.js */
+const CACHE_NAME = 'vaultarq-v26';   /* debe coincidir exactamente con CACHE en sw.js */
 async function openReport(kind){
   const isBug = kind!=='idea';
   const fields=[{key:'message', multiline:true, placeholder: isBug
@@ -2190,7 +2220,7 @@ async function paintBio(){
       <span>Pedir huella / rostro al abrir</span>
       <label class="sw"><input type="checkbox" ${on?'checked':''} onchange="toggleBio(this.checked)"><span></span></label>
     </div>
-    <p style="font-size:.72rem;color:var(--mut);margin-top:8px;line-height:1.5">Es un bloqueo de <b>este dispositivo</b>: protege que alguien abra la app si te dejan el teléfono desbloqueado. No reemplaza tu inicio de sesión.</p>`;
+    <p class="note-txt" style="margin-top:8px">Es un bloqueo de <b>este dispositivo</b>: protege que alguien abra la app si te dejan el teléfono desbloqueado. No reemplaza tu inicio de sesión.</p>`;
 }
 async function toggleBio(on){
   if(!on){ localStorage.removeItem('mg_bio'); paintBio(); toast('Bloqueo desactivado'); return; }
@@ -2385,15 +2415,15 @@ function paintMonthSummaryCard(s, dismissible){
   $('msTitle').textContent = 'Resumen de ' + monthLabelOf(s.ym);
   $('monthSummaryCard').style.display='block';
   $('monthSummaryCard').querySelector('.mini-ic').style.display = dismissible? 'inline-flex':'none';
-  const streakTxt = s.streak>=2 ? `<p style="font-size:.78rem;color:var(--mut);margin-top:10px">Llevas <b style="color:var(--txt)">${s.streak} días</b> seguidos registrando.</p>` : '';
-  const budgetTxt = s.budgetCats ? `<p style="font-size:.78rem;color:var(--mut);margin-top:6px">Cumpliste ${s.withinBudget} de ${s.budgetCats} presupuesto${s.budgetCats>1?'s':''}.</p>` : '';
+  const streakTxt = s.streak>=2 ? `<p class="card-desc" style="margin-top:10px;margin-bottom:0">Llevas <b style="color:var(--txt)">${s.streak} días</b> seguidos registrando.</p>` : '';
+  const budgetTxt = s.budgetCats ? `<p class="card-desc" style="margin-top:6px;margin-bottom:0">Cumpliste ${s.withinBudget} de ${s.budgetCats} presupuesto${s.budgetCats>1?'s':''}.</p>` : '';
   const topTxt = s.increases.length ? `<div class="lbl2" style="margin-top:12px">Lo que más subió</div>` +
     s.increases.map(x=>`<div class="setrow" style="border:none;padding:5px 0"><span>${esc(x.cat)}</span><span style="color:var(--red);font-weight:700">+${money(x.delta)}</span></div>`).join('') : '';
   $('monthSummaryBody').innerHTML = `
     <div class="hero-row" style="margin-bottom:4px">
-      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Ingresos</div><div class="val">${money(s.inc)}</div><div style="font-size:.68rem;margin-top:2px">${deltaTxt(s.inc,s.incPrev)}</div></div>
-      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Gastos</div><div class="val">${money(s.exp)}</div><div style="font-size:.68rem;margin-top:2px">${deltaTxt(s.exp,s.expPrev)}</div></div>
-      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Ahorro</div><div class="val">${money(s.sav)}</div><div style="font-size:.68rem;margin-top:2px">${deltaTxt(s.sav,s.savPrev)}</div></div>
+      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Ingresos</div><div class="val">${money(s.inc)}</div><div style="font-size:var(--fs-2xs);margin-top:2px">${deltaTxt(s.inc,s.incPrev)}</div></div>
+      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Gastos</div><div class="val">${money(s.exp)}</div><div style="font-size:var(--fs-2xs);margin-top:2px">${deltaTxt(s.exp,s.expPrev)}</div></div>
+      <div class="hero-pill" style="background:var(--card2)"><div class="lbl">Ahorro</div><div class="val">${money(s.sav)}</div><div style="font-size:var(--fs-2xs);margin-top:2px">${deltaTxt(s.sav,s.savPrev)}</div></div>
     </div>
     ${streakTxt}${budgetTxt}${topTxt}
     <button class="btn sm" style="margin-top:12px" onclick="openShare('month')">Compartir resumen</button>`;
@@ -2498,7 +2528,7 @@ function paintCust(){
       <span>${esc(x.icon)} ${esc(x.name)}</span>
       <span style="color:${b?'var(--txt)':'var(--mut)'};font-weight:700">${b?money(b):'Sin tope'}</span>
     </div>`;
-  }).join('') || '<p style="font-size:.75rem;color:var(--mut)">Añade una categoría primero.</p>';
+  }).join('') || '<p class="card-desc" style="margin-bottom:0">Añade una categoría primero.</p>';
   $('custAccts').innerHTML = c.accounts.map((x,i)=>`<div class="chip">${esc(x)}<b style="color:var(--red);margin-left:6px;cursor:pointer" onclick="delAcct(${i})">✕</b></div>`).join('')
     + `<div class="chip" style="border-style:dashed" onclick="addAcct()">＋ Añadir</div>`;
   $('custSources').innerHTML = c.sources.map((x,i)=>`<div class="chip">${esc(x)}<b style="color:var(--red);margin-left:6px;cursor:pointer" onclick="delSource(${i})">✕</b></div>`).join('')
@@ -2556,17 +2586,17 @@ function paintInstallCard(){
   if(deferredInstall){
     body.innerHTML = `<button class="btn sm" onclick="installApp()">Instalar aplicación</button>`;
   } else if(info.isIOS && info.isSafari){
-    body.innerHTML = `<ol style="font-size:.78rem;color:var(--txt);line-height:2;padding-left:18px;margin:0">
+    body.innerHTML = `<ol style="font-size:var(--fs-sm);color:var(--txt);line-height:2;padding-left:18px;margin:0">
       <li>Toca <b>Compartir</b> ${icon('share-2',14)} en la barra de Safari.</li>
       <li>Elige <b>«Agregar a inicio»</b>.</li>
       <li>Confirma con <b>«Agregar»</b> arriba a la derecha.</li>
     </ol>`;
   } else if(info.isIOS && !info.isSafari){
-    body.innerHTML = `<p style="font-size:.78rem;color:var(--mut);line-height:1.6">En iPhone/iPad solo Safari puede instalarla. Abre <b>vaultarq.vercel.app</b> en Safari y usa Compartir → «Agregar a inicio».</p>`;
+    body.innerHTML = `<p class="card-desc" style="margin-bottom:0">En iPhone/iPad solo Safari puede instalarla. Abre <b>vaultarq.vercel.app</b> en Safari y usa Compartir → «Agregar a inicio».</p>`;
   } else if(info.isAndroid){
-    body.innerHTML = `<p style="font-size:.78rem;color:var(--mut);line-height:1.6">Toca el menú <b>⋮</b> de tu navegador y elige <b>«Instalar app»</b> o <b>«Agregar a pantalla de inicio»</b>. Si no aparece, recarga la página e inténtalo de nuevo.</p>`;
+    body.innerHTML = `<p class="card-desc" style="margin-bottom:0">Toca el menú <b>⋮</b> de tu navegador y elige <b>«Instalar app»</b> o <b>«Agregar a pantalla de inicio»</b>. Si no aparece, recarga la página e inténtalo de nuevo.</p>`;
   } else {
-    body.innerHTML = `<p style="font-size:.78rem;color:var(--mut);line-height:1.6">Busca el ícono de instalación en la barra de direcciones, o abre el menú del navegador y elige <b>«Instalar VaultARQ»</b>.</p>`;
+    body.innerHTML = `<p class="card-desc" style="margin-bottom:0">Busca el ícono de instalación en la barra de direcciones, o abre el menú del navegador y elige <b>«Instalar VaultARQ»</b>.</p>`;
   }
 }
 async function shareApp(){
