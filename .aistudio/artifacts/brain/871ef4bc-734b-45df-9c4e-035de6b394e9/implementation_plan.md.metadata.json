@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan to fix Google OAuth redirect back to the native Android APK using an automatic web-to-APK deep link bridge with a manual fallback button, plus direct custom-scheme support in MainActivity.",
+  "updatedAt":  "2026-10-24T07:05:59.387949351Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

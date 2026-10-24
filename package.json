@@ -1,0 +1,12 @@
+{
+  "name": "goldvault",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "node server.mjs --build-bridge",
+    "start": "node server.mjs",
+    "lint": "node --check server.mjs"
+  }
+}

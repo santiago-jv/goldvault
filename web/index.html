@@ -37,7 +37,72 @@
         for (let r of registrations) { r.unregister(); }
       });
     }
+
+    (function() {
+      var search = window.location.search || '';
+      var hash = window.location.hash || '';
+      var params = new URLSearchParams(search);
+      var hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+
+      var isApkBridge = params.get('apk_redirect') === '1' ||
+                        hashParams.get('apk_redirect') === '1' ||
+                        window.location.pathname.indexOf('/apk-callback') === 0;
+
+      var hasAuthPayload = params.has('code') ||
+                           params.has('error') ||
+                           hashParams.has('access_token') ||
+                           hashParams.has('error');
+
+      if (isApkBridge) {
+        var deepLink = 'goldvault://login-callback' + search + hash;
+        var intentPath = 'login-callback' + search + hash;
+        var intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
+
+        document.head.insertAdjacentHTML('beforeend',
+          '<style>' +
+          '.gv-bridge-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0e0f12;color:#ece7dd;}' +
+          '.gv-bridge-card{width:100%;max-width:360px;background:#14161b;border:1px solid rgba(236,231,221,0.12);border-radius:18px;padding:28px 22px;text-align:center;box-sizing:border-box;}' +
+          '.gv-bridge-logo{font-size:24px;font-weight:800;letter-spacing:-0.4px;margin-bottom:12px;}' +
+          '.gv-bridge-logo span{color:#d9b87a;}' +
+          '.gv-bridge-desc{font-size:13px;line-height:1.5;color:#8b867c;margin:0 0 22px 0;}' +
+          '.gv-bridge-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:#d9b87a;color:#17130b;font-weight:800;font-size:15px;border-radius:11px;text-decoration:none;border:none;cursor:pointer;box-sizing:border-box;margin-bottom:12px;}' +
+          '.gv-bridge-btn-sec{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;background:transparent;color:#ece7dd;font-weight:600;font-size:13px;border-radius:11px;text-decoration:none;border:1px solid rgba(236,231,221,0.14);box-sizing:border-box;}' +
+          '</style>'
+        );
+
+        document.body.innerHTML =
+          '<div class="gv-bridge-wrap">' +
+            '<div class="gv-bridge-card">' +
+              '<div class="gv-bridge-logo">Gold<span>Vault</span></div>' +
+              '<p class="gv-bridge-desc">' +
+                (hasAuthPayload
+                  ? 'Autenticacion completada. Redirigiendo de vuelta a la aplicacion GoldVault en tu telefono...'
+                  : 'Conectando con la aplicacion GoldVault...') +
+              '</p>' +
+              '<a id="gv-open-apk" class="gv-bridge-btn" href="' + deepLink + '">Abrir en la app GoldVault</a>' +
+              '<a id="gv-open-intent" class="gv-bridge-btn-sec" href="' + intentUrl + '">Reintentar apertura directa</a>' +
+            '</div>' +
+          '</div>';
+
+        // Trigger immediate deep link redirect back to the APK
+        try {
+          window.location.replace(deepLink);
+        } catch (_) {}
+
+        setTimeout(function() {
+          try {
+            window.location.href = intentUrl;
+          } catch (_) {}
+        }, 650);
+
+        return;
+      }
+
+      var s = document.createElement('script');
+      s.src = 'flutter_bootstrap.js';
+      s.async = true;
+      document.body.appendChild(s);
+    })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "app.goldvault/bank_notifications"
     private var methodChannel: MethodChannel? = null
+    private var pendingAuthDeepLink: String? = null
 
     private val bankReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -36,6 +37,11 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "isNotificationServiceEnabled" -> {
                     result.success(isNotificationListenerEnabled())
+                }
+                "getInitialAuthDeepLink" -> {
+                    val link = pendingAuthDeepLink
+                    pendingAuthDeepLink = null
+                    result.success(link)
                 }
                 "openNotificationSettings" -> {
                     try {
@@ -67,11 +73,32 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        captureAuthIntent(intent, notifyImmediately = false)
         val filter = IntentFilter(BankNotificationService.ACTION_BANK_EVENT)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(bankReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(bankReceiver, filter)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        captureAuthIntent(intent, notifyImmediately = true)
+    }
+
+    private fun captureAuthIntent(intent: Intent?, notifyImmediately: Boolean) {
+        val dataUri = intent?.data ?: return
+        val scheme = dataUri.scheme?.lowercase() ?: ""
+        val host = dataUri.host?.lowercase() ?: ""
+        if (scheme == "goldvault" || scheme == "io.supabase.goldvault" || host == "goldvault-app.vercel.app") {
+            val fullUrl = dataUri.toString()
+            if (notifyImmediately && methodChannel != null) {
+                methodChannel?.invokeMethod("onAuthDeepLink", fullUrl)
+            } else {
+                pendingAuthDeepLink = fullUrl
+            }
         }
     }
 

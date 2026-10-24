@@ -179,8 +179,56 @@ class GoldVaultState extends ChangeNotifier {
         if (text.isNotEmpty || title.isNotEmpty) {
           ingestBankNotification(rawText: text, rawTitle: title, rawApp: pkg);
         }
+      } else if (call.method == 'onAuthDeepLink' && call.arguments != null) {
+        final rawUrl = call.arguments.toString();
+        await handleAuthDeepLink(rawUrl);
       }
     });
+    _checkInitialAuthDeepLink();
+  }
+
+  Future<void> _checkInitialAuthDeepLink() async {
+    if (kIsWeb) return;
+    try {
+      final initialLink = await _bankChannel.invokeMethod<String>('getInitialAuthDeepLink');
+      if (initialLink != null && initialLink.isNotEmpty) {
+        await handleAuthDeepLink(initialLink);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> handleAuthDeepLink(String rawUrl) async {
+    if (rawUrl.isEmpty) return;
+    try {
+      final uri = Uri.parse(rawUrl);
+      final hasCode = uri.queryParameters.containsKey('code');
+      final hasToken = uri.fragment.contains('access_token=');
+      final hasError = uri.queryParameters.containsKey('error') || uri.fragment.contains('error=');
+
+      if (hasError) {
+        final errDesc = uri.queryParameters['error_description'] ?? 'Autenticación cancelada o inválida';
+        authError = errDesc;
+        notifyListeners();
+        return;
+      }
+
+      if (hasCode || hasToken) {
+        final response = await sb.auth.getSessionFromUrl(uri);
+        session = response.session;
+        authError = null;
+        notifyListeners();
+        await syncAll();
+      }
+    } catch (_) {
+      // Fallback: if Supabase SDK already processed the deep link internally, refresh session
+      final current = sb.auth.currentSession;
+      if (current != null) {
+        session = current;
+        authError = null;
+        notifyListeners();
+        await syncAll();
+      }
+    }
   }
 
   Future<void> refreshAndroidPermission() async {
@@ -287,9 +335,13 @@ class GoldVaultState extends ChangeNotifier {
           redirectTo: Uri.base.origin,
         );
       } else {
+        // Use the authorized web origin with ?apk_redirect=1 so Supabase never falls back
+        // to the web app even if goldvault:// is not manually added in Supabase Redirect URLs.
+        // The web index.html immediately bounces the auth code/token to goldvault://login-callback.
         await sb.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: 'goldvault://login-callback',
+          redirectTo: '$prodWebUrl/?apk_redirect=1',
+          authScreenLaunchMode: LaunchMode.externalApplication,
         );
       }
     } catch (e) {
