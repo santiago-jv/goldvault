@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
@@ -7,6 +8,31 @@ import 'package:goldvault/state/app_state.dart';
 import 'package:goldvault/theme/gold_theme.dart';
 
 void main() {
+  test('Only Android exposes notification listener controls', () {
+    final state = GoldVaultState();
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      state.dispose();
+    });
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    expect(state.supportsBankNotifications, isFalse);
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    expect(state.supportsBankNotifications, isTrue);
+  });
+
+  testWidgets('Onboarding choices remain reachable on a short screen', (tester) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final state = GoldVaultState();
+    addTearDown(state.dispose);
+    await tester.pumpWidget(MaterialApp(home: OnboardingScreen(state: state)));
+    await tester.ensureVisible(find.text('Desde cero'));
+    expect(find.text('Configuración recomendada'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   test('BankNotificationParser parses Nequi, Nu, Lulo, ARQ, Morse and ignores OTP', () {
     final sp = SpaceModel.fromTemplate('complete', first: true);
     for (final s in kBankSamples) {
@@ -85,3 +111,4 @@ void main() {
     expect(find.text('CATEGORÍA'), findsOneWidget);
   });
 }
+

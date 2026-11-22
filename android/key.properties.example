@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties (gitignored) for local release APK signing.
+# Do NOT commit key.properties or any .jks/.keystore file to Git.
+storeFile=/absolute/path/to/goldvault-release.jks
+storePassword=CHANGE_ME
+keyAlias=goldvault
+keyPassword=CHANGE_ME
