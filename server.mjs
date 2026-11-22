@@ -271,13 +271,13 @@ async function handleBankWebhook(req, res, urlObj) {
 
   if (!token) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: false, error: 'Falta el parámetro token (ej: /api/bank?token=vaq_...)' }));
+    res.end(JSON.stringify({ ok: false, error: 'Missing required token parameter (example: /api/bank?token=vaq_...)' }));
     return;
   }
 
   if (!text && !title) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: false, error: 'Falta el texto de la notificación (parámetro text o body)' }));
+    res.end(JSON.stringify({ ok: false, error: 'Missing notification content (provide text or body parameter)' }));
     return;
   }
 
@@ -315,7 +315,7 @@ async function handleBankWebhook(req, res, urlObj) {
     res.end(JSON.stringify(data));
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: false, error: err?.message || 'Error interno' }));
+    res.end(JSON.stringify({ ok: false, error: err?.message || 'Internal server error' }));
   }
 }
 

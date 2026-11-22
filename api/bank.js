@@ -59,14 +59,14 @@ module.exports = async function handler(req, res) {
     if (!token) {
       return res.status(400).json({
         ok: false,
-        error: 'Falta el parámetro token (ej: /api/bank?token=vaq_...)'
+        error: 'Missing required token parameter (example: /api/bank?token=vaq_...)'
       });
     }
 
     if (!text && !title) {
       return res.status(400).json({
         ok: false,
-        error: 'Falta el texto de la notificación (parámetro text o body)'
+        error: 'Missing notification content (provide text or body parameter)'
       });
     }
 
@@ -105,7 +105,7 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({
       ok: false,
-      error: err && err.message ? err.message : 'Error interno procesando la notificación'
+      error: err && err.message ? err.message : 'Internal server error while processing bank notification'
     });
   }
 };
