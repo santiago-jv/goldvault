@@ -1,6 +1,6 @@
 # GoldVault
 
-**GoldVault** is a cross-platform personal finance platform built with **Flutter (Dart)** and **Kotlin**, backed by **Supabase (PostgreSQL + Google OAuth)** and deployed on **Vercel** (Web PWA) and **GitHub Releases** (Native Android APK).
+**GoldVault** is a cross-platform personal finance platform built with **Flutter (Dart)**, **Kotlin** (Android), and **Swift** (iOS), backed by **Supabase (PostgreSQL + Google OAuth)** and deployed on **Vercel** (Web PWA) and **GitHub Releases** (Native Android APK).
 
 ## Key Features
 
@@ -8,8 +8,10 @@
   - Uses Android's native `NotificationListenerService` to monitor notifications 24/7 in the background—without third-party automation apps—for **Nequi**, **Nu Bank**, **Lulo Bank**, **ARQ**, and **Morse**.
   - Automatically parses payment amounts (including automatic USD-to-COP FX conversion for ARQ/USD transactions), merchant descriptions, categories, and bank accounts, while filtering out OTP codes, login alerts, and declined transactions.
   - Syncs directly to Supabase via the `public.ingest_bank_notification` PostgreSQL RPC (`SECURITY DEFINER`) even when the Flutter UI is closed.
-- **Mandatory Google Authentication & Online Sync**:
-  - Enforces Google OAuth (`supabase_flutter`) and active internet connectivity (`OfflineGuardScreen`) to ensure real-time cloud consistency across devices.
+- **Native iOS Project (`ios/`) & iOS Shortcuts Webhook (`api/bank.js`)**:
+  - Configured with bundle ID `app.goldvault.goldvault`, OAuth deep link schemes (`goldvault://` and `io.supabase.goldvault://`), obsidian launch screen, App Store-compliant opaque icons, and personal webhook URL for Apple Pay / iOS Shortcuts.
+- **Mandatory Google Authentication & Resilient Cloud Sync**:
+  - Enforces Google OAuth (`supabase_flutter`) with automatic sync recovery: failed cloud mutations are persisted in a local pending queue and flushed in causal order before pulling remote state, preventing unsynced edits from being overwritten and preventing initial sync failures from routing existing users to onboarding.
 - **Standardized 8-Tier Typographic System (`GVTxt`)**:
   - Strict typographic hierarchy (`display`, `h1`, `h2`, `h3`, `body`, `sm`, `xs`, `xs2`) across light (*Warm Ivory*) and dark (*Obsidian + Liquid Gold*) themes.
 - **Spaces, Goals, Budgets & Natural Language Quick Entry**:
@@ -19,34 +21,58 @@
 
 ```text
 ├── android/
-│   └── app/src/main/kotlin/app/goldvault/goldvault/
-│       ├── BankNotificationService.kt   # Native Android 24/7 NotificationListenerService
-│       └── MainActivity.kt              # MethodChannel bridge & Android 13+ settings helper
+│   ├── app/src/main/kotlin/app/goldvault/goldvault/
+│   │   ├── BankNotificationService.kt   # Native Android 24/7 NotificationListenerService
+│   │   └── MainActivity.kt              # MethodChannel bridge & Android 13+ settings helper
+│   └── key.properties.example           # Template for local Android release signing
+├── ios/
+│   └── Runner/                          # Native iOS runner, OAuth URL schemes, launch screen & icons
 ├── api/
 │   └── bank.js                          # Serverless webhook endpoint for iOS Shortcuts / Apple Pay
 ├── lib/
 │   ├── main.dart                        # App entry point & root state gate
 │   ├── models/models.dart               # Domain models & BankNotificationParser
-│   ├── screens/home_and_shells.dart     # UI screens, navigation shell & modals
-│   ├── state/app_state.dart             # Reactive state & Supabase synchronization
+│   ├── screens/account_screens.dart     # Login, Offline guard, Sync error recovery & Onboarding
+│   ├── screens/home_and_shells.dart     # Main navigation shell, tabs & sync banner
+│   ├── screens/movement_sheet.dart      # Movement creation/editing bottom sheet
+│   ├── state/app_state.dart             # Reactive state, pending sync queue & Supabase adapter
 │   ├── theme/gold_theme.dart            # Color palettes, 8-tier typography & vector logo
 │   └── widgets/charts.dart              # CustomPainter 6-month trend & category donut charts
+├── scripts/
+│   └── check_release_version.py         # Verifies release tag vX.Y.Z matches pubspec.yaml
 └── test/
+    ├── sync_recovery_test.dart          # Sync failure recovery & platform UI test suite
     └── widget_test.dart                 # Unit & widget layout test suite
 ```
+
+## Android Release Signing
+
+Release signing credentials are never committed to Git. Configure signing via one of:
+
+- **Local builds**: Copy `android/key.properties.example` to `android/key.properties` (gitignored) and populate `storeFile`, `storePassword`, `keyAlias`, and `keyPassword`.
+- **GitHub Actions releases**: Configure these repository secrets in GitHub Settings:
+  - `ANDROID_KEYSTORE_BASE64` (base64-encoded `.jks` keystore)
+  - `KEYSTORE_PASSWORD`
+  - `KEY_ALIAS`
+  - `KEY_PASSWORD`
+
+Tag builds (`vX.Y.Z`) enforce `REQUIRE_RELEASE_SIGNING=true` and verify the APK signature with `apksigner verify` to guarantee no debug-signed release is ever published.
 
 ## Development & Build Commands
 
 ```bash
 # Run static analysis and unit/widget tests
-flutter analyze
+flutter analyze --no-fatal-infos
 flutter test
 
 # Build Web production bundle (deployed to Vercel)
 flutter build web --release --pwa-strategy=none
 
 # Build Native Android Release APK
-flutter build apk --release
+flutter build apk --release --no-tree-shake-icons
+
+# Build Native iOS Release (unsigned verification)
+flutter build ios --release --no-codesign
 ```
 
 ## Production Links

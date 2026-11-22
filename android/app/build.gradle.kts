@@ -1,7 +1,40 @@
+import java.util.Properties
+import org.gradle.api.GradleException
+
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
+fun signingProp(propKey: String, envKey: String): String? {
+    val fromFile = keystoreProperties.getProperty(propKey)?.trim()
+    if (!fromFile.isNullOrEmpty()) return fromFile
+    val fromEnv = System.getenv(envKey)?.trim()
+    if (!fromEnv.isNullOrEmpty()) return fromEnv
+    return null
+}
+
+val releaseStorePath = signingProp("storeFile", "ANDROID_KEYSTORE_PATH")
+val releaseStorePassword = signingProp("storePassword", "KEYSTORE_PASSWORD")
+val releaseKeyAlias = signingProp("keyAlias", "KEY_ALIAS")
+val releaseKeyPassword = signingProp("keyPassword", "KEY_PASSWORD")
+val releaseStoreFile = releaseStorePath?.let { path ->
+    val direct = file(path)
+    if (direct.exists()) direct else rootProject.file(path)
+}
+val hasReleaseSigning = releaseStoreFile != null &&
+    releaseStoreFile.exists() &&
+    !releaseStorePassword.isNullOrEmpty() &&
+    !releaseKeyAlias.isNullOrEmpty() &&
+    !releaseKeyPassword.isNullOrEmpty()
+val requireReleaseSigning = System.getenv("REQUIRE_RELEASE_SIGNING")
+    ?.equals("true", ignoreCase = true) == true
 
 android {
     namespace = "app.goldvault.goldvault"
@@ -22,13 +55,12 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val keystoreFile = file("goldvault-release.jks")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "GoldVault2026!"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "goldvault"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "GoldVault2026!"
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
@@ -38,11 +70,18 @@ android {
 
     buildTypes {
         release {
-            val keystoreFile = file("goldvault-release.jks")
-            signingConfig = if (keystoreFile.exists()) {
-                signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            } else if (requireReleaseSigning) {
+                throw GradleException(
+                    "Release signing is required (REQUIRE_RELEASE_SIGNING=true) but keystore credentials are missing. " +
+                        "Configure android/key.properties or set ANDROID_KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, and KEY_PASSWORD."
+                )
             } else {
-                signingConfigs.getByName("debug")
+                logger.warn(
+                    "WARNING: Release keystore credentials not configured; falling back to debug signing for non-release verification build."
+                )
+                signingConfig = signingConfigs.getByName("debug")
             }
             isMinifyEnabled = false
             isShrinkResources = false
