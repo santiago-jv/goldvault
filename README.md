@@ -65,6 +65,16 @@ Release signing credentials are never committed to Git. Configure signing via on
 
 Tag builds (`vX.Y.Z`) enforce `REQUIRE_RELEASE_SIGNING=true` and verify the APK signature with `apksigner verify` to guarantee no debug-signed release is ever published.
 
+## Automatic Vercel Web Deployment (GitHub Actions)
+
+The `deploy-web` job in `.github/workflows/build-apk.yml` takes the compiled Flutter Web bundle (`build/web`) together with the `/api/bank` serverless function and deploys via `vercel pull` → `vercel build` → `vercel deploy --prebuilt` (preview URLs on pull requests, `--prod` on `master`/`main`, tags, and manual dispatch).
+
+Configure these repository secrets in GitHub Settings:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
 ## Development & Build Commands
 
 ```bash

@@ -355,6 +355,10 @@ const server = http.createServer(async (req, res) => {
 if (process.argv.includes('--build-bridge')) {
   const outDir = path.join(__dirname, 'build', 'web');
   const webDir = path.join(__dirname, 'web');
+  if (fs.existsSync(path.join(outDir, 'flutter_bootstrap.js'))) {
+    console.log('Compiled Flutter web bundle detected in build/web; preserving build output');
+    process.exit(0);
+  }
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
