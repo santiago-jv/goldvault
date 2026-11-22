@@ -9,21 +9,179 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
+class CloudSnapshot {
+  final List<Map<String, dynamic>> spaces;
+  final List<Map<String, dynamic>> goals;
+  final List<Map<String, dynamic>> movements;
+  final Map<String, dynamic>? profile;
+
+  const CloudSnapshot({
+    required this.spaces,
+    required this.goals,
+    required this.movements,
+    this.profile,
+  });
+}
+
+abstract class GoldVaultCloudAdapter {
+  Future<CloudSnapshot> fetchAll();
+  Future<void> upsertProfile(Map<String, dynamic> row);
+  Future<void> upsertSpace(Map<String, dynamic> row);
+  Future<void> upsertGoal(Map<String, dynamic> row);
+  Future<void> deleteGoal(String goalId);
+  Future<void> upsertMovement(Map<String, dynamic> row);
+  Future<void> deleteMovement(String movementId);
+}
+
+class SupabaseCloudAdapter implements GoldVaultCloudAdapter {
+  final SupabaseClient Function() _clientProvider;
+
+  SupabaseCloudAdapter(this._clientProvider);
+
+  SupabaseClient get _sb => _clientProvider();
+
+  @override
+  Future<CloudSnapshot> fetchAll() async {
+    final resSpaces = await _sb.from('spaces').select();
+    final resGoals = await _sb.from('goals').select();
+    final resMovs = await _sb.from('movements').select();
+    final resProf = await _sb
+        .from('profiles')
+        .select('display_name,avatar,webhook_token,default_space_id')
+        .maybeSingle();
+
+    return CloudSnapshot(
+      spaces: (resSpaces as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      goals: (resGoals as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      movements: (resMovs as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      profile: resProf != null ? Map<String, dynamic>.from(resProf as Map) : null,
+    );
+  }
+
+  @override
+  Future<void> upsertProfile(Map<String, dynamic> row) async {
+    await _sb.from('profiles').upsert(row, onConflict: 'user_id');
+  }
+
+  @override
+  Future<void> upsertSpace(Map<String, dynamic> row) async {
+    await _sb.from('spaces').upsert(row, onConflict: 'user_id,id');
+  }
+
+  @override
+  Future<void> upsertGoal(Map<String, dynamic> row) async {
+    await _sb.from('goals').upsert(row, onConflict: 'user_id,id');
+  }
+
+  @override
+  Future<void> deleteGoal(String goalId) async {
+    await _sb.from('goals').delete().eq('id', goalId);
+  }
+
+  @override
+  Future<void> upsertMovement(Map<String, dynamic> row) async {
+    await _sb.from('movements').upsert(row, onConflict: 'user_id,id');
+  }
+
+  @override
+  Future<void> deleteMovement(String movementId) async {
+    await _sb.from('movements').delete().eq('id', movementId);
+  }
+}
+
+class PendingSyncOp {
+  final String kind;
+  final String entityId;
+  final Map<String, dynamic> payload;
+  final String queuedAt;
+
+  const PendingSyncOp({
+    required this.kind,
+    required this.entityId,
+    required this.payload,
+    required this.queuedAt,
+  });
+
+  String get entityFamily {
+    if (kind.endsWith('_space')) return 'space';
+    if (kind.endsWith('_goal')) return 'goal';
+    if (kind.endsWith('_movement')) return 'movement';
+    return 'profile';
+  }
+
+  int get flushPriority {
+    switch (kind) {
+      case 'upsert_space':
+        return 0;
+      case 'upsert_goal':
+        return 1;
+      case 'upsert_movement':
+        return 2;
+      case 'delete_movement':
+        return 3;
+      case 'delete_goal':
+        return 4;
+      case 'upsert_profile':
+      default:
+        return 5;
+    }
+  }
+
+  factory PendingSyncOp.fromJson(Map<String, dynamic> j) => PendingSyncOp(
+        kind: (j['kind'] ?? 'upsert_profile').toString(),
+        entityId: (j['entityId'] ?? 'profile').toString(),
+        payload: j['payload'] is Map
+            ? Map<String, dynamic>.from(j['payload'] as Map)
+            : <String, dynamic>{},
+        queuedAt: (j['queuedAt'] ?? DateTime.now().toIso8601String()).toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'kind': kind,
+        'entityId': entityId,
+        'payload': payload,
+        'queuedAt': queuedAt,
+      };
+}
+
 class GoldVaultState extends ChangeNotifier {
   static const String sbUrl = 'https://spjvxvmhosptezmteypm.supabase.co';
   static const String sbKey = 'sb_publishable_uXP3oxhMoUXdsMDdIv71Cg_L1SA4C6B';
   static const String prodWebUrl = 'https://goldvault-app.vercel.app';
   static const MethodChannel _bankChannel = MethodChannel('app.goldvault/bank_notifications');
+  static const String _pendingOpsKey = 'gv_pending_sync_ops';
+
+  late final GoldVaultCloudAdapter _cloud;
+  final Future<bool> Function()? onlineChecker;
+
+  GoldVaultState({
+    GoldVaultCloudAdapter? cloud,
+    this.onlineChecker,
+  }) {
+    _cloud = cloud ?? SupabaseCloudAdapter(() => sb);
+  }
 
   bool get supportsBankNotifications =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  bool get isNativeIos =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   SupabaseClient get sb => Supabase.instance.client;
   Session? session;
   bool initialized = false;
   bool loadingCloud = false;
+  bool cloudSynced = false;
   bool isOnline = true;
   String? authError;
+  String? syncError;
+  DateTime? lastSyncedAt;
 
   Map<String, SpaceModel> spaces = {};
   String curSpaceId = 'space_main';
@@ -44,8 +202,17 @@ class GoldVaultState extends ChangeNotifier {
   bool androidListenerToggleOn = true;
 
   MovementModel? lastDeletedMovement;
+  final List<PendingSyncOp> _pendingOps = [];
   StreamSubscription<AuthState>? _authSub;
   Timer? _connectivityTimer;
+  Future<bool>? _activeSync;
+  bool _resyncRequested = false;
+  bool _supabaseReady = false;
+  String? _lastUserId;
+
+  int get pendingSyncCount => _pendingOps.length;
+  bool get hasPendingSync => _pendingOps.isNotEmpty;
+  List<PendingSyncOp> get pendingSyncOps => List.unmodifiable(_pendingOps);
 
   ThemeMode get themeMode {
     if (themePref == 'light') return ThemeMode.light;
@@ -62,7 +229,18 @@ class GoldVaultState extends ChangeNotifier {
     return SpaceModel.fromTemplate('complete', first: true);
   }
 
-  bool get needsOnboarding => session != null && !loadingCloud && spaces.isEmpty;
+  /// True while the user is authenticated and has no local spaces yet,
+  /// and we have not confirmed an empty account from the cloud.
+  bool get needsInitialSync => session != null && !cloudSynced && spaces.isEmpty;
+
+  /// Only send the user to Onboarding after a verified successful cloud sync
+  /// returned zero spaces (never after a sync error or before sync finishes).
+  bool get needsOnboarding =>
+      session != null &&
+      !loadingCloud &&
+      cloudSynced &&
+      syncError == null &&
+      spaces.isEmpty;
 
   List<MovementModel> get spaceMovements =>
       movements.where((m) => m.space == curSpace.id).toList();
@@ -108,15 +286,60 @@ class GoldVaultState extends ChangeNotifier {
     return '';
   }
 
-  Future<void> bootstrap() async {
+  Future<bool> _ensureSupabaseInitialized() async {
+    if (_supabaseReady) return true;
+    try {
+      // Check if Supabase was already initialized externally
+      Supabase.instance.client;
+      _supabaseReady = true;
+      return true;
+    } catch (_) {}
     try {
       await Supabase.initialize(
         url: sbUrl,
         // ignore: deprecated_member_use
         anonKey: sbKey,
-      ).timeout(const Duration(seconds: 5));
-    } catch (_) {}
+      ).timeout(const Duration(seconds: 6));
+      _supabaseReady = true;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> bootstrap() async {
+    await _ensureSupabaseInitialized();
     await init();
+  }
+
+  void _attachAuthListener() {
+    if (_authSub != null || !_supabaseReady) return;
+    try {
+      session = sb.auth.currentSession;
+      _lastUserId = session?.user.id;
+      _authSub = sb.auth.onAuthStateChange.listen((data) {
+        final nextSession = data.session;
+        final nextUserId = nextSession?.user.id;
+        final userChanged = nextUserId != _lastUserId;
+        session = nextSession;
+        _lastUserId = nextUserId;
+        authError = null;
+        if (nextSession == null) {
+          cloudSynced = false;
+          syncError = null;
+          loadingCloud = false;
+          notifyListeners();
+        } else {
+          if (userChanged) {
+            cloudSynced = false;
+            syncError = null;
+          }
+          loadingCloud = true;
+          notifyListeners();
+          syncAll();
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> init() async {
@@ -128,20 +351,14 @@ class GoldVaultState extends ChangeNotifier {
       androidListenerToggleOn = prefs.getBool('gv_bank_listener_on') ?? true;
       await prefs.setString('gv_webhook_token', webhookToken);
       _loadLocalCache(prefs);
+      _loadPendingOps(prefs);
     } catch (_) {}
 
-    try {
-      session = sb.auth.currentSession;
-      _authSub = sb.auth.onAuthStateChange.listen((data) {
-        session = data.session;
-        authError = null;
-        notifyListeners();
-        if (session != null) {
-          syncAll();
-        }
-      });
-    } catch (_) {}
+    _attachAuthListener();
 
+    if (session != null) {
+      loadingCloud = true;
+    }
     initialized = true;
     notifyListeners();
 
@@ -202,6 +419,8 @@ class GoldVaultState extends ChangeNotifier {
 
   Future<void> handleAuthDeepLink(String rawUrl) async {
     if (rawUrl.isEmpty) return;
+    await _ensureSupabaseInitialized();
+    _attachAuthListener();
     try {
       final uri = Uri.parse(rawUrl);
       final hasCode = uri.queryParameters.containsKey('code');
@@ -218,18 +437,24 @@ class GoldVaultState extends ChangeNotifier {
       if (hasCode || hasToken) {
         final response = await sb.auth.getSessionFromUrl(uri);
         session = response.session;
+        _lastUserId = session?.user.id;
         authError = null;
+        loadingCloud = true;
         notifyListeners();
         await syncAll();
       }
     } catch (_) {
       // Fallback: if Supabase SDK already processed the deep link internally, refresh session
-      final current = sb.auth.currentSession;
-      if (current != null) {
-        session = current;
-        authError = null;
-        notifyListeners();
-        await syncAll();
+      if (_supabaseReady) {
+        final current = sb.auth.currentSession;
+        if (current != null) {
+          session = current;
+          _lastUserId = current.user.id;
+          authError = null;
+          loadingCloud = true;
+          notifyListeners();
+          await syncAll();
+        }
       }
     }
   }
@@ -265,16 +490,31 @@ class GoldVaultState extends ChangeNotifier {
   }
 
   Future<bool> checkOnlineStatus({bool manual = false}) async {
+    final wasOffline = !isOnline;
     try {
-      final res = await http
-          .get(Uri.parse('$sbUrl/rest/v1/'), headers: {'apikey': sbKey})
-          .timeout(const Duration(seconds: 5));
-      isOnline = res.statusCode < 500;
+      if (onlineChecker != null) {
+        isOnline = await onlineChecker!();
+      } else {
+        final res = await http
+            .get(Uri.parse('$sbUrl/rest/v1/'), headers: {'apikey': sbKey})
+            .timeout(const Duration(seconds: 5));
+        isOnline = res.statusCode < 500;
+      }
     } catch (_) {
       isOnline = false;
     }
+
+    if (isOnline && !_supabaseReady && _cloud is SupabaseCloudAdapter) {
+      await _ensureSupabaseInitialized();
+      _attachAuthListener();
+    }
+
     notifyListeners();
-    if (isOnline && manual && session != null) {
+
+    final shouldRecoverSync = isOnline &&
+        session != null &&
+        (manual || wasOffline || !cloudSynced || hasPendingSync || syncError != null);
+    if (shouldRecoverSync) {
       await syncAll();
     }
     return isOnline;
@@ -329,6 +569,12 @@ class GoldVaultState extends ChangeNotifier {
 
   Future<void> googleLogin() async {
     if (!await checkOnlineStatus()) return;
+    if (!await _ensureSupabaseInitialized()) {
+      authError = 'No se pudo conectar con el servidor de autenticación. Intenta de nuevo.';
+      notifyListeners();
+      return;
+    }
+    _attachAuthListener();
     authError = null;
     notifyListeners();
     try {
@@ -354,13 +600,26 @@ class GoldVaultState extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await sb.auth.signOut();
+    try {
+      if (_supabaseReady) {
+        await sb.auth.signOut();
+      }
+    } catch (_) {}
     session = null;
+    _lastUserId = null;
+    loadingCloud = false;
+    cloudSynced = false;
+    syncError = null;
+    lastSyncedAt = null;
+    _pendingOps.clear();
     spaces.clear();
     movements.clear();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('gv_cache_spaces');
-    await prefs.remove('gv_cache_movements');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('gv_cache_spaces');
+      await prefs.remove('gv_cache_movements');
+      await prefs.remove(_pendingOpsKey);
+    } catch (_) {}
     notifyListeners();
   }
 
@@ -401,36 +660,183 @@ class GoldVaultState extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> syncAll() async {
-    if (session == null) return;
+  void _loadPendingOps(SharedPreferences prefs) {
+    try {
+      final raw = prefs.getString(_pendingOpsKey);
+      if (raw == null || raw.isEmpty) return;
+      final list = jsonDecode(raw) as List;
+      _pendingOps
+        ..clear()
+        ..addAll(list.map((e) => PendingSyncOp.fromJson(Map<String, dynamic>.from(e as Map))));
+    } catch (_) {}
+  }
+
+  Future<void> _savePendingOps() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_pendingOps.isEmpty) {
+        await prefs.remove(_pendingOpsKey);
+      } else {
+        await prefs.setString(
+          _pendingOpsKey,
+          jsonEncode(_pendingOps.map((e) => e.toJson()).toList()),
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _enqueuePendingOp(PendingSyncOp op) async {
+    _pendingOps.removeWhere(
+      (existing) => existing.entityFamily == op.entityFamily && existing.entityId == op.entityId,
+    );
+    _pendingOps.add(op);
+    await _savePendingOps();
+  }
+
+  String _formatSyncFailure(Object err, {String action = 'sincronizar tus datos'}) {
+    final msg = err.toString().toLowerCase();
+    if (msg.contains('jwt') || msg.contains('401') || msg.contains('unauthorized') || msg.contains('expired')) {
+      return 'Tu sesión expiró al $action. Reintenta o vuelve a iniciar sesión.';
+    }
+    if (msg.contains('timeout') || msg.contains('socket') || msg.contains('failed host lookup') || msg.contains('connection')) {
+      return 'Conexión inestable al $action. Tus cambios locales están a salvo; reintenta cuando mejore la señal.';
+    }
+    return 'No se pudo $action con la nube. Tus cambios locales siguen guardados.';
+  }
+
+  Future<bool> _executePendingOp(PendingSyncOp op) async {
+    final uid = session?.user.id;
+    switch (op.kind) {
+      case 'upsert_space':
+        final row = Map<String, dynamic>.from(op.payload);
+        if (uid != null) row['user_id'] = uid;
+        row['updated_at'] = DateTime.now().toIso8601String();
+        await _cloud.upsertSpace(row);
+        return true;
+      case 'upsert_goal':
+        final row = Map<String, dynamic>.from(op.payload);
+        if (uid != null) row['user_id'] = uid;
+        row['updated_at'] = DateTime.now().toIso8601String();
+        await _cloud.upsertGoal(row);
+        return true;
+      case 'delete_goal':
+        await _cloud.deleteGoal(op.entityId);
+        return true;
+      case 'upsert_movement':
+        final row = Map<String, dynamic>.from(op.payload);
+        if (uid != null) row['user_id'] = uid;
+        row['updated_at'] = DateTime.now().toIso8601String();
+        await _cloud.upsertMovement(row);
+        return true;
+      case 'delete_movement':
+        await _cloud.deleteMovement(op.entityId);
+        return true;
+      case 'upsert_profile':
+        final row = Map<String, dynamic>.from(op.payload);
+        if (uid != null) row['user_id'] = uid;
+        row['updated_at'] = DateTime.now().toIso8601String();
+        await _cloud.upsertProfile(row);
+        return true;
+      default:
+        return true;
+    }
+  }
+
+  /// Flushes queued offline/failed writes in causal order before any remote pull.
+  /// Returns true only when all pending operations have been confirmed by the cloud.
+  Future<bool> _flushPendingOps() async {
+    if (_pendingOps.isEmpty) return true;
+    final ordered = List<PendingSyncOp>.from(_pendingOps)
+      ..sort((a, b) {
+        final p = a.flushPriority.compareTo(b.flushPriority);
+        return p != 0 ? p : a.queuedAt.compareTo(b.queuedAt);
+      });
+
+    for (final op in ordered) {
+      try {
+        await _executePendingOp(op);
+        _pendingOps.removeWhere(
+          (e) => e.entityFamily == op.entityFamily && e.entityId == op.entityId && e.kind == op.kind,
+        );
+        await _savePendingOps();
+      } catch (e) {
+        syncError = _formatSyncFailure(e, action: 'subir cambios pendientes');
+        await _savePendingOps();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<bool> retrySync() async {
+    if (!isOnline) {
+      final online = await checkOnlineStatus(manual: true);
+      return online && syncError == null && !hasPendingSync;
+    }
+    return syncAll();
+  }
+
+  Future<bool> syncAll() async {
+    if (session == null) return false;
+    if (_activeSync != null) {
+      _resyncRequested = true;
+      return _activeSync!;
+    }
+
+    final future = _runSyncAll();
+    _activeSync = future;
+    bool ok = false;
+    bool shouldResync = false;
+    try {
+      ok = await future;
+      shouldResync = _resyncRequested && session != null;
+    } finally {
+      if (identical(_activeSync, future)) {
+        _activeSync = null;
+      }
+      _resyncRequested = false;
+    }
+    if (shouldResync) {
+      return syncAll();
+    }
+    return ok;
+  }
+
+  Future<bool> _runSyncAll() async {
+    if (session == null) return false;
     loadingCloud = true;
     notifyListeners();
     try {
-      final resSpaces = await sb.from('spaces').select();
-      final resGoals = await sb.from('goals').select();
-      final resMovs = await sb.from('movements').select();
-      final resProf = await sb
-          .from('profiles')
-          .select('display_name,avatar,webhook_token,default_space_id')
-          .maybeSingle();
+      if (_cloud is SupabaseCloudAdapter && !await _ensureSupabaseInitialized()) {
+        syncError = 'No se pudo inicializar la conexión con la nube. Reintenta en unos segundos.';
+        return false;
+      }
+
+      // 1. Always push queued local mutations before pulling remote state
+      // so unsynced user edits are never overwritten by stale cloud rows.
+      final flushed = await _flushPendingOps();
+      if (!flushed) {
+        return false;
+      }
+
+      // 2. Pull fresh state from cloud
+      final snapshot = await _cloud.fetchAll();
 
       final goalsBySpace = <String, List<GoalItem>>{};
-      for (final g in (resGoals as List)) {
-        final map = Map<String, dynamic>.from(g as Map);
+      for (final map in snapshot.goals) {
         final spId = (map['space_id'] ?? 'space_main').toString();
         goalsBySpace.putIfAbsent(spId, () => []).add(GoalItem.fromJson(map));
       }
 
       final remoteSpaces = <String, SpaceModel>{};
-      for (final s in (resSpaces as List)) {
-        final map = Map<String, dynamic>.from(s as Map);
+      for (final map in snapshot.spaces) {
         final id = (map['id'] ?? 'space_main').toString();
         remoteSpaces[id] = SpaceModel.fromRow(map, goalsBySpace[id] ?? []);
       }
 
       final remoteMovs = <MovementModel>[];
-      for (final m in (resMovs as List)) {
-        remoteMovs.add(MovementModel.fromRow(Map<String, dynamic>.from(m as Map)));
+      for (final map in snapshot.movements) {
+        remoteMovs.add(MovementModel.fromRow(map));
       }
 
       spaces = remoteSpaces;
@@ -439,14 +845,17 @@ class GoldVaultState extends ChangeNotifier {
         curSpaceId = spaces.keys.first;
       }
 
+      final resProf = snapshot.profile;
       if (resProf != null) {
         displayName = resProf['display_name']?.toString();
         avatarUrl = resProf['avatar']?.toString();
         final dbToken = resProf['webhook_token']?.toString();
         if (dbToken != null && dbToken.isNotEmpty) {
           webhookToken = dbToken;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('gv_webhook_token', webhookToken);
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('gv_webhook_token', webhookToken);
+          } catch (_) {}
         } else {
           await pushProfile();
         }
@@ -454,8 +863,16 @@ class GoldVaultState extends ChangeNotifier {
         await pushProfile();
       }
 
+      cloudSynced = true;
+      if (_pendingOps.isEmpty) {
+        syncError = null;
+      }
+      lastSyncedAt = DateTime.now();
       await _saveLocalCache();
-    } catch (_) {
+      return _pendingOps.isEmpty;
+    } catch (e) {
+      syncError = _formatSyncFailure(e, action: 'sincronizar tus datos');
+      return false;
     } finally {
       loadingCloud = false;
       notifyListeners();
@@ -464,18 +881,30 @@ class GoldVaultState extends ChangeNotifier {
 
   Future<void> pushProfile() async {
     if (session == null) return;
+    final row = {
+      'user_id': session!.user.id,
+      'display_name': displayName ?? userDisplayName,
+      'avatar': avatarUrl,
+      'webhook_token': webhookToken,
+      'default_space_id': spaces.isNotEmpty ? curSpace.id : 'space_main',
+      'updated_at': DateTime.now().toIso8601String(),
+    };
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('gv_webhook_token', webhookToken);
-      await sb.from('profiles').upsert({
-        'user_id': session!.user.id,
-        'display_name': displayName ?? userDisplayName,
-        'avatar': avatarUrl,
-        'webhook_token': webhookToken,
-        'default_space_id': spaces.isNotEmpty ? curSpace.id : 'space_main',
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id');
     } catch (_) {}
+    try {
+      await _cloud.upsertProfile(row);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'upsert_profile',
+        entityId: 'profile',
+        payload: row,
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'guardar tu perfil');
+      notifyListeners();
+    }
   }
 
   String get userDisplayName {
@@ -526,12 +955,21 @@ class GoldVaultState extends ChangeNotifier {
     await _saveLocalCache();
     notifyListeners();
     if (session == null) return;
+    final row = sp.toRow();
+    row['user_id'] = session!.user.id;
+    row['updated_at'] = DateTime.now().toIso8601String();
     try {
-      final row = sp.toRow();
-      row['user_id'] = session!.user.id;
-      row['updated_at'] = DateTime.now().toIso8601String();
-      await sb.from('spaces').upsert(row, onConflict: 'user_id,id');
-    } catch (_) {}
+      await _cloud.upsertSpace(row);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'upsert_space',
+        entityId: sp.id,
+        payload: row,
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'guardar tu espacio');
+      notifyListeners();
+    }
   }
 
   Future<void> pushSpaceFull(SpaceModel sp) async {
@@ -545,17 +983,27 @@ class GoldVaultState extends ChangeNotifier {
     await _saveLocalCache();
     notifyListeners();
     if (session == null) return;
+    final row = {
+      'id': g.id,
+      'user_id': session!.user.id,
+      'space_id': spaceId,
+      'name': g.name,
+      'target': g.target,
+      'achieved_at': g.achievedAt,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
     try {
-      await sb.from('goals').upsert({
-        'id': g.id,
-        'user_id': session!.user.id,
-        'space_id': spaceId,
-        'name': g.name,
-        'target': g.target,
-        'achieved_at': g.achievedAt,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,id');
-    } catch (_) {}
+      await _cloud.upsertGoal(row);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'upsert_goal',
+        entityId: g.id,
+        payload: row,
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'guardar la meta');
+      notifyListeners();
+    }
   }
 
   Future<void> deleteGoal(String goalId) async {
@@ -564,8 +1012,17 @@ class GoldVaultState extends ChangeNotifier {
     notifyListeners();
     if (session == null) return;
     try {
-      await sb.from('goals').delete().eq('id', goalId);
-    } catch (_) {}
+      await _cloud.deleteGoal(goalId);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'delete_goal',
+        entityId: goalId,
+        payload: const {},
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'eliminar la meta');
+      notifyListeners();
+    }
   }
 
   Future<void> saveMovement(MovementModel mv, {bool saveAsFrequent = false, int? freqDay}) async {
@@ -594,12 +1051,21 @@ class GoldVaultState extends ChangeNotifier {
     await _saveLocalCache();
     notifyListeners();
     if (session == null) return;
+    final row = mv.toRow();
+    row['user_id'] = session!.user.id;
+    row['updated_at'] = DateTime.now().toIso8601String();
     try {
-      final row = mv.toRow();
-      row['user_id'] = session!.user.id;
-      row['updated_at'] = DateTime.now().toIso8601String();
-      await sb.from('movements').upsert(row, onConflict: 'user_id,id');
-    } catch (_) {}
+      await _cloud.upsertMovement(row);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'upsert_movement',
+        entityId: mv.id,
+        payload: row,
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'guardar el movimiento');
+      notifyListeners();
+    }
   }
 
   Future<void> deleteMovement(String id) async {
@@ -610,8 +1076,17 @@ class GoldVaultState extends ChangeNotifier {
     notifyListeners();
     if (session == null) return;
     try {
-      await sb.from('movements').delete().eq('id', id);
-    } catch (_) {}
+      await _cloud.deleteMovement(id);
+    } catch (e) {
+      await _enqueuePendingOp(PendingSyncOp(
+        kind: 'delete_movement',
+        entityId: id,
+        payload: const {},
+        queuedAt: DateTime.now().toIso8601String(),
+      ));
+      syncError = _formatSyncFailure(e, action: 'eliminar el movimiento');
+      notifyListeners();
+    }
   }
 
   Future<void> undoDeleteMovement() async {
@@ -774,4 +1249,3 @@ class GoldVaultState extends ChangeNotifier {
     );
   }
 }
-

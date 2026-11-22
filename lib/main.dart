@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'screens/home_and_shells.dart';
 import 'state/app_state.dart';
 import 'theme/gold_theme.dart';
@@ -25,6 +26,15 @@ class GoldVaultApp extends StatelessWidget {
           theme: GoldTheme.build(Brightness.light),
           darkTheme: GoldTheme.build(Brightness.dark),
           themeMode: state.themeMode,
+          builder: (context, child) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: isDark
+                  ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
+                  : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: _buildRootGate(context),
         );
       },
@@ -41,6 +51,15 @@ class GoldVaultApp extends StatelessWidget {
     if (state.session == null) {
       return GoogleLoginScreen(state: state);
     }
+    if (state.needsInitialSync) {
+      if (state.loadingCloud) {
+        return const _StartupSplashScreen(message: 'Sincronizando tu bóveda…');
+      }
+      if (state.syncError != null) {
+        return SyncErrorScreen(state: state);
+      }
+      return const _StartupSplashScreen(message: 'Cargando tus datos…');
+    }
     if (state.needsOnboarding) {
       return OnboardingScreen(state: state);
     }
@@ -49,7 +68,8 @@ class GoldVaultApp extends StatelessWidget {
 }
 
 class _StartupSplashScreen extends StatelessWidget {
-  const _StartupSplashScreen();
+  final String? message;
+  const _StartupSplashScreen({this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -57,20 +77,27 @@ class _StartupSplashScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: c.bg,
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const GoldVaultLogo(fontSize: GVTxt.fsH1),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(c.acc),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const GoldVaultLogo(fontSize: GVTxt.fsH1),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(c.acc),
+                ),
               ),
-            ),
-          ],
+              if (message != null) ...[
+                const SizedBox(height: 14),
+                Text(message!, style: GVTxt.sm(c), textAlign: TextAlign.center),
+              ],
+            ],
+          ),
         ),
       ),
     );

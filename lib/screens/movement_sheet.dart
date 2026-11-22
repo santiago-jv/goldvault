@@ -192,13 +192,14 @@ class _MovementSheetState extends State<MovementSheet> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
-                childAspectRatio: 1.15,
+                childAspectRatio: 1.0,
                 children: sp.categories.map((cat) {
                   final on = category == cat.name;
                   return InkWell(
                     onTap: () => setState(() => category = cat.name),
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                       decoration: BoxDecoration(
                         color: on ? c.acc.withValues(alpha: 0.14) : c.card,
                         borderRadius: BorderRadius.circular(10),
@@ -207,10 +208,11 @@ class _MovementSheetState extends State<MovementSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(cat.icon, style: const TextStyle(fontSize: 20)),
-                          const SizedBox(height: 4),
+                          Text(cat.icon, style: const TextStyle(fontSize: 19)),
+                          const SizedBox(height: 3),
                           Text(
                             cat.name,
+                            maxLines: 1,
                             style: GVTxt.xs2(c, color: on ? c.txt : c.mut, weight: FontWeight.w700),
                             overflow: TextOverflow.ellipsis,
                           ),

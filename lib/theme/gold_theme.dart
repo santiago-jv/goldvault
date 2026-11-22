@@ -202,6 +202,22 @@ class GoldTheme {
         displayColor: c.txt,
       ),
       dividerColor: c.line,
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: c.card,
+        indicatorColor: c.acc.withValues(alpha: 0.18),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: c.acc, size: 24);
+          }
+          return IconThemeData(color: c.mut, size: 22);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GVTxt.xs2(c, color: c.acc, weight: FontWeight.w800);
+          }
+          return GVTxt.xs2(c, color: c.mut, weight: FontWeight.w600);
+        }),
+      ),
     );
   }
 }

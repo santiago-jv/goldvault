@@ -11,14 +11,15 @@ part 'movement_sheet.dart';
 
 class GoldVaultShell extends StatefulWidget {
   final GoldVaultState state;
-  const GoldVaultShell({super.key, required this.state});
+  final int initialTab;
+  const GoldVaultShell({super.key, required this.state, this.initialTab = 0});
 
   @override
   State<GoldVaultShell> createState() => _GoldVaultShellState();
 }
 
 class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObserver {
-  int tabIndex = 0;
+  late int tabIndex = widget.initialTab;
   final TextEditingController _quickCtrl = TextEditingController();
   final TextEditingController _customBankCtrl = TextEditingController();
 
@@ -73,28 +74,88 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
     final c = GVColors.of(context);
     final st = widget.state;
 
-    return Scaffold(
-      backgroundColor: c.bg,
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: switch (tabIndex) {
-              0 => _buildHomeView(c, st),
-              1 => _buildMovementsView(c, st),
-              2 => _buildGoalsView(c, st),
-              _ => _buildSettingsView(c, st),
-            },
+    return ListenableBuilder(
+      listenable: st,
+      builder: (context, _) => Scaffold(
+        backgroundColor: c.bg,
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                children: [
+                  if (st.syncError != null || st.hasPendingSync) _buildSyncBanner(c, st),
+                  Expanded(
+                    child: switch (tabIndex) {
+                      0 => _buildHomeView(c, st),
+                      1 => _buildMovementsView(c, st),
+                      2 => _buildGoalsView(c, st),
+                      _ => _buildSettingsView(c, st),
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _openMovementSheet(),
+          tooltip: 'Nuevo movimiento',
+          child: const Icon(Icons.add_rounded),
+        ),
+        bottomNavigationBar: _buildBottomNav(c),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openMovementSheet(),
-        tooltip: 'Nuevo movimiento',
-        child: const Icon(Icons.add_rounded),
+    );
+  }
+
+  Widget _buildSyncBanner(GVColors c, GoldVaultState st) {
+    final msg = st.syncError ??
+        '${st.pendingSyncCount} cambio(s) pendiente(s) por sincronizar con la nube.';
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.amber.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.amber.withValues(alpha: 0.45)),
       ),
-      bottomNavigationBar: _buildBottomNav(c),
+      child: Row(
+        children: [
+          Icon(
+            st.syncError != null ? Icons.sync_problem_rounded : Icons.cloud_upload_outlined,
+            size: 18,
+            color: c.amber,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              msg,
+              style: GVTxt.xs(c, color: c.txt, weight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: st.loadingCloud ? null : () => st.retrySync(),
+            child: st.loadingCloud
+                ? SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(c.acc),
+                    ),
+                  )
+                : Text('Reintentar', style: GVTxt.xs(c, color: c.acc, weight: FontWeight.w800)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -103,14 +164,28 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
       selectedIndex: tabIndex,
       onDestinationSelected: (index) => setState(() => tabIndex = index),
       backgroundColor: c.card,
-      indicatorColor: c.acc.withValues(alpha: 0.16),
-      destinations: const [
-        NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
+      indicatorColor: c.acc.withValues(alpha: 0.18),
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.format_list_bulleted_rounded), label: 'Movs'),
+          icon: Icon(Icons.home_outlined, color: c.mut),
+          selectedIcon: Icon(Icons.home_rounded, color: c.acc),
+          label: 'Inicio',
+        ),
         NavigationDestination(
-          icon: Icon(Icons.track_changes_rounded), label: 'Metas'),
-        NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Ajustes'),
+          icon: Icon(Icons.format_list_bulleted_rounded, color: c.mut),
+          selectedIcon: Icon(Icons.format_list_bulleted_rounded, color: c.acc),
+          label: 'Movs',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.track_changes_rounded, color: c.mut),
+          selectedIcon: Icon(Icons.track_changes_rounded, color: c.acc),
+          label: 'Metas',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined, color: c.mut),
+          selectedIcon: Icon(Icons.settings_rounded, color: c.acc),
+          label: 'Ajustes',
+        ),
       ],
     );
   }
@@ -177,7 +252,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
       color: c.acc,
       onRefresh: () => st.syncAll(),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
         children: [
           // Top Header
           Row(
@@ -231,7 +306,11 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                   style: GVTxt.xs(c, weight: FontWeight.w700, letterSpacing: 0.9),
                 ),
                 const SizedBox(height: 6),
-                Text(formatMoney(st.monthAvailable), style: GVTxt.display(c)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(formatMoney(st.monthAvailable), style: GVTxt.display(c)),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -625,28 +704,43 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
               children: [
                 Text('Pagos por cuenta', style: GVTxt.h3(c)),
                 const SizedBox(height: 10),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: st.curSpace.accounts.map((acc) {
-                    return Container(
-                      width: 150,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: c.card2,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: c.line),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(acc, style: GVTxt.xs(c, weight: FontWeight.w600)),
-                          const SizedBox(height: 4),
-                          Text(formatMoney(byAcct[acc] ?? 0), style: GVTxt.h3(c).copyWith(fontWeight: FontWeight.w800)),
-                        ],
-                      ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    const spacing = 10.0;
+                    final tileWidth = constraints.maxWidth >= 240
+                        ? (constraints.maxWidth - spacing) / 2
+                        : constraints.maxWidth;
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      children: st.curSpace.accounts.map((acc) {
+                        return Container(
+                          width: tileWidth,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: c.card2,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: c.line),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(acc, style: GVTxt.xs(c, weight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                              const SizedBox(height: 4),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  formatMoney(byAcct[acc] ?? 0),
+                                  style: GVTxt.h3(c).copyWith(fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -670,10 +764,13 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
           children: [
             Text(label, style: GVTxt.xs2(c, letterSpacing: 0.6)),
             const SizedBox(height: 4),
-            Text(
-              formatMoney(amount),
-              style: GVTxt.body(c, weight: FontWeight.w800),
-              overflow: TextOverflow.ellipsis,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formatMoney(amount),
+                style: GVTxt.body(c, weight: FontWeight.w800),
+              ),
             ),
           ],
         ),
@@ -817,7 +914,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
     ];
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -905,7 +1002,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
   Widget _buildGoalsView(GVColors c, GoldVaultState st) {
     final goals = st.curSpace.goals;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         RichText(
           text: TextSpan(
@@ -1010,7 +1107,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
     final webhookUrl = '${GoldVaultState.prodWebUrl}/api/bank?token=${Uri.encodeComponent(st.webhookToken)}';
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         Text('Ajustes', style: GVTxt.h2(c)),
         const SizedBox(height: 14),
@@ -1059,14 +1156,45 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(st.userDisplayName, style: GVTxt.h3(c)),
-                        Text(st.session?.user.email ?? '', style: GVTxt.xs(c)),
+                        Text(st.userDisplayName, style: GVTxt.h3(c), overflow: TextOverflow.ellipsis),
+                        Text(st.session?.user.email ?? '', style: GVTxt.xs(c), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: () => st.logout(),
                     child: Text('Cerrar sesión', style: GVTxt.xs(c, weight: FontWeight.w700, color: c.txt)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    st.syncError != null
+                        ? Icons.sync_problem_rounded
+                        : (st.hasPendingSync ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined),
+                    size: 16,
+                    color: st.syncError != null
+                        ? c.amber
+                        : (st.hasPendingSync ? c.amber : c.green),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      st.loadingCloud
+                          ? 'Sincronizando con la nube…'
+                          : (st.syncError ??
+                              (st.hasPendingSync
+                                  ? '${st.pendingSyncCount} cambio(s) pendiente(s) por enviar'
+                                  : 'Sincronizado con la nube')),
+                      style: GVTxt.xs(c),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: st.loadingCloud ? null : () => st.retrySync(),
+                    child: Text('Sincronizar', style: GVTxt.xs(c, color: c.acc, weight: FontWeight.w700)),
                   ),
                 ],
               ),
@@ -1211,7 +1339,8 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                   ),
                 ),
               ] else ...[
-                // On Web (iOS / Desktop): Native Android APK download button + iOS Shortcuts webhook
+                // On Web / Desktop: Native Android APK download button + iOS Shortcuts webhook.
+                // On Native iOS: show only iOS Shortcuts / Apple Pay setup.
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -1222,34 +1351,36 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('🤖 En Android (App 100% Nativa sin apps externas)', style: GVTxt.body(c, weight: FontWeight.w700)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Instala la App Nativa de GoldVault para Android (.APK) que incluye el servicio nativo del sistema para leer notificaciones de Nequi, Nu, Lulo, ARQ y Morse directamente.',
-                        style: GVTxt.xs(c),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: c.acc,
-                            foregroundColor: c.ink,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: () => launchUrl(
-                            Uri.parse('https://github.com/santiago-jv/goldvault/releases/latest'),
-                            mode: LaunchMode.externalApplication,
-                          ),
-                          icon: Icon(Icons.android_rounded, color: c.ink, size: 18),
-                          label: Text(
-                            'Descargar GoldVault Nativo (.APK)',
-                            style: GVTxt.sm(c, weight: FontWeight.w800, color: c.ink),
+                      if (!st.isNativeIos) ...[
+                        Text('🤖 En Android (App 100% Nativa sin apps externas)', style: GVTxt.body(c, weight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Instala la App Nativa de GoldVault para Android (.APK) que incluye el servicio nativo del sistema para leer notificaciones de Nequi, Nu, Lulo, ARQ y Morse directamente.',
+                          style: GVTxt.xs(c),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: c.acc,
+                              foregroundColor: c.ink,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () => launchUrl(
+                              Uri.parse('https://github.com/santiago-jv/goldvault/releases/latest'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            icon: Icon(Icons.android_rounded, color: c.ink, size: 18),
+                            label: Text(
+                              'Descargar GoldVault Nativo (.APK)',
+                              style: GVTxt.sm(c, weight: FontWeight.w800, color: c.ink),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
+                        const SizedBox(height: 14),
+                      ],
                       Text('🍎 En iPhone (Atajos nativos de iOS / Apple Pay)', style: GVTxt.body(c, weight: FontWeight.w700)),
                       const SizedBox(height: 4),
                       Text(
@@ -1402,7 +1533,11 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: () => _showCustomizeDialog(c, st),
-                      child: Text('Personalizar espacio', style: GVTxt.sm(c, weight: FontWeight.w800, color: c.ink)),
+                      child: Text(
+                        'Personalizar espacio',
+                        textAlign: TextAlign.center,
+                        style: GVTxt.sm(c, weight: FontWeight.w800, color: c.ink),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1413,7 +1548,11 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: () => _showSpacesDialog(c, st),
-                      child: Text('Gestionar espacios', style: GVTxt.sm(c, weight: FontWeight.w700, color: c.txt)),
+                      child: Text(
+                        'Gestionar espacios',
+                        textAlign: TextAlign.center,
+                        style: GVTxt.sm(c, weight: FontWeight.w700, color: c.txt),
+                      ),
                     ),
                   ),
                 ],
@@ -1482,57 +1621,60 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
     final nameCtrl = TextEditingController();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: c.card2,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Tus espacios', style: GVTxt.h3(c)),
-            const SizedBox(height: 10),
-            ...st.spaces.values.map((sp) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text(sp.emoji, style: const TextStyle(fontSize: 22)),
-                  title: Text(sp.name, style: GVTxt.body(c, weight: FontWeight.w700)),
-                  trailing: sp.id == st.curSpace.id
-                      ? Text('Actual', style: GVTxt.xs(c, color: c.acc, weight: FontWeight.w700))
-                      : null,
-                  onTap: () {
-                    st.switchSpace(sp.id);
-                    Navigator.pop(ctx);
-                  },
-                )),
-            const Divider(),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: nameCtrl,
-                    style: GVTxt.body(c),
-                    decoration: InputDecoration(
-                      hintText: 'Nuevo espacio (ej: Negocio, Viaje)',
-                      hintStyle: GVTxt.sm(c, color: c.placeholder),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Tus espacios', style: GVTxt.h3(c)),
+              const SizedBox(height: 10),
+              ...st.spaces.values.map((sp) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Text(sp.emoji, style: const TextStyle(fontSize: 22)),
+                    title: Text(sp.name, style: GVTxt.body(c, weight: FontWeight.w700)),
+                    trailing: sp.id == st.curSpace.id
+                        ? Text('Actual', style: GVTxt.xs(c, color: c.acc, weight: FontWeight.w700))
+                        : null,
+                    onTap: () {
+                      st.switchSpace(sp.id);
+                      Navigator.pop(ctx);
+                    },
+                  )),
+              const Divider(),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: nameCtrl,
+                      style: GVTxt.body(c),
+                      decoration: InputDecoration(
+                        hintText: 'Nuevo espacio (ej: Negocio, Viaje)',
+                        hintStyle: GVTxt.sm(c, color: c.placeholder),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: c.acc, foregroundColor: c.ink),
-                  onPressed: () {
-                    if (nameCtrl.text.trim().isEmpty) return;
-                    st.createNewSpace(nameCtrl.text.trim(), '💼');
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Crear'),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: c.acc, foregroundColor: c.ink),
+                    onPressed: () {
+                      if (nameCtrl.text.trim().isEmpty) return;
+                      st.createNewSpace(nameCtrl.text.trim(), '💼');
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Crear'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    );
+    ).whenComplete(nameCtrl.dispose);
   }
 
   void _showAddGoalDialog(GVColors c, GoldVaultState st) {
