@@ -54,6 +54,7 @@
                            hashParams.has('error');
 
       if (isApkBridge) {
+        var isAndroid = /android/i.test(navigator.userAgent || '');
         var deepLink = 'goldvault://login-callback' + search + hash;
         var intentPath = 'login-callback' + search + hash;
         var intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
@@ -80,20 +81,22 @@
                   : 'Conectando con la aplicacion GoldVault...') +
               '</p>' +
               '<a id="gv-open-apk" class="gv-bridge-btn" href="' + deepLink + '">Abrir en la app GoldVault</a>' +
-              '<a id="gv-open-intent" class="gv-bridge-btn-sec" href="' + intentUrl + '">Reintentar apertura directa</a>' +
+              (isAndroid ? '<a id="gv-open-intent" class="gv-bridge-btn-sec" href="' + intentUrl + '">Reintentar apertura directa</a>' : '') +
             '</div>' +
           '</div>';
 
-        // Trigger immediate deep link redirect back to the APK
+        // Trigger immediate deep link redirect back to the native app (Android & iOS)
         try {
           window.location.replace(deepLink);
         } catch (_) {}
 
-        setTimeout(function() {
-          try {
-            window.location.href = intentUrl;
-          } catch (_) {}
-        }, 650);
+        if (isAndroid) {
+          setTimeout(function() {
+            try {
+              window.location.href = intentUrl;
+            } catch (_) {}
+          }, 650);
+        }
 
         return;
       }
