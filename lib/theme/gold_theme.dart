@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class GVColors {
   final Color bg;
@@ -106,15 +104,6 @@ class GVTxt {
     double? letterSpacing,
     required Color color,
   }) {
-    if (kIsWeb) {
-      return GoogleFonts.plusJakartaSans(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-        letterSpacing: letterSpacing,
-        color: color,
-      );
-    }
     return TextStyle(
       fontSize: fontSize,
       fontWeight: fontWeight,
@@ -209,7 +198,6 @@ class GoldTheme {
         onSurface: c.txt,
       ),
       textTheme: base.textTheme.apply(
-        fontFamily: kIsWeb ? GoogleFonts.plusJakartaSans().fontFamily : null,
         bodyColor: c.txt,
         displayColor: c.txt,
       ),
@@ -304,3 +292,4 @@ class _VaultArchPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _VaultArchPainter oldDelegate) => oldDelegate.color != color;
 }
+

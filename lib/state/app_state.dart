@@ -15,6 +15,9 @@ class GoldVaultState extends ChangeNotifier {
   static const String prodWebUrl = 'https://goldvault-app.vercel.app';
   static const MethodChannel _bankChannel = MethodChannel('app.goldvault/bank_notifications');
 
+  bool get supportsBankNotifications =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
   SupabaseClient get sb => Supabase.instance.client;
   Session? session;
   bool initialized = false;
@@ -142,7 +145,7 @@ class GoldVaultState extends ChangeNotifier {
     initialized = true;
     notifyListeners();
 
-    if (!kIsWeb) {
+    if (supportsBankNotifications) {
       _setupAndroidChannel();
       refreshAndroidPermission();
     }
@@ -188,7 +191,7 @@ class GoldVaultState extends ChangeNotifier {
   }
 
   Future<void> _checkInitialAuthDeepLink() async {
-    if (kIsWeb) return;
+    if (!supportsBankNotifications) return;
     try {
       final initialLink = await _bankChannel.invokeMethod<String>('getInitialAuthDeepLink');
       if (initialLink != null && initialLink.isNotEmpty) {
@@ -232,7 +235,7 @@ class GoldVaultState extends ChangeNotifier {
   }
 
   Future<void> refreshAndroidPermission() async {
-    if (kIsWeb) return;
+    if (!supportsBankNotifications) return;
     try {
       final enabled = await _bankChannel.invokeMethod<bool>('isNotificationServiceEnabled') ?? false;
       androidPermissionGranted = enabled;
@@ -241,14 +244,14 @@ class GoldVaultState extends ChangeNotifier {
   }
 
   Future<void> openAndroidNotificationSettings() async {
-    if (kIsWeb) return;
+    if (!supportsBankNotifications) return;
     try {
       await _bankChannel.invokeMethod('openNotificationSettings');
     } catch (_) {}
   }
 
   Future<void> openAndroidAppDetailsSettings() async {
-    if (kIsWeb) return;
+    if (!supportsBankNotifications) return;
     try {
       await _bankChannel.invokeMethod('openAppDetailsSettings');
     } catch (_) {}
@@ -771,3 +774,4 @@ class GoldVaultState extends ChangeNotifier {
     );
   }
 }
+

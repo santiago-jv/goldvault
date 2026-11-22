@@ -1,70 +1,80 @@
-name: Build GoldVault Android APK
+name: Validate and build GoldVault
 
 on:
+  pull_request:
   push:
-    branches:
-      - master
-      - main
+    branches: [master, main]
+    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
-  group: build-apk-${{ github.ref }}
-  cancel-in-progress: true
+  group: goldvault-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-android:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
+          channel: stable
           cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/check_release_version.py
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build Web Release (with APK OAuth bridge)
-        run: flutter build web --release --pwa-strategy=none
-
-      - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
-
-      - name: Rename APK to GoldVault.apk
-        run: cp build/app/outputs/flutter-apk/app-release.apk GoldVault.apk
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          name: GoldVault-APK
-          path: GoldVault.apk
-
-      - name: Create/Update GitHub Release (latest)
-        uses: softprops/action-gh-release@v2
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
         with:
-          tag_name: v2.0.0-goldvault
-          name: "GoldVault v2.0.0 (Flutter Native Android + Web)"
-          body: |
-            ### GoldVault v2.0.0 — Production Release
-            - **Production RSA-2048 Signing Certificate (`GoldVault Finanzas`)**:
-              - `SHA-1`: `C9:B8:33:6A:70:79:82:C4:C4:15:92:2B:58:D7:23:2D:E8:EA:E3:4F`
-              - `SHA-256`: `FD:8D:63:AE:20:01:7D:46:BC:7E:1F:78:9C:6D:31:6A:66:C7:78:D4:80:99:69:03:83:3B:88:DF:02:9A:9B:49`
-            - **Native Android Notification Listener (`BankNotificationService`)**: Captures payment notifications from **Nequi, Nu Bank, Lulo Bank, ARQ, and Morse** 24/7 in the background without external automation apps.
-            - **Graphics & Startup Engine**: Uses Skia OpenGL (`EnableImpeller=false`) with non-blocking asynchronous initialization for instant startup across all Android GPUs.
-            - **Android 13/14/15 Installation Notes**:
-              1. If Google Play Protect prompts when sideloading an APK that declares `BIND_NOTIFICATION_LISTENER_SERVICE`, temporarily toggle off *Scan apps with Play Protect* in **Play Store → Profile → Play Protect → Settings (⚙️)** and install `GoldVault.apk`.
-              2. In **GoldVault → Ajustes**, use **Step 1 (Open App Info → ⋮ → Allow restricted settings)** followed by **Step 2 (Enable notification access)**.
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build web --release --pwa-strategy=none
+      - run: flutter build apk --release --no-tree-shake-icons
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldVault-Android
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldVault-Web
+          path: build/web
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: GoldVault-Android
+      - name: Name release asset
+        run: mv app-release.apk GoldVault.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GoldVault ${{ github.ref_name }}
+          generate_release_notes: true
           files: GoldVault.apk
-          prerelease: false
+          fail_on_unmatched_files: true
