@@ -1,4 +1,8 @@
-part of 'home_and_shells.dart';
+import 'package:flutter/material.dart';
+import '../models/models.dart';
+import '../state/app_state.dart';
+import '../theme/gold_theme.dart';
+import '../widgets/gv_components.dart';
 
 class MovementSheet extends StatefulWidget {
   final GoldVaultState state;
@@ -18,7 +22,7 @@ class MovementSheet extends StatefulWidget {
 
 class _MovementSheetState extends State<MovementSheet> {
   late String type;
-  late String ccy;
+  late String currency;
   late TextEditingController amountCtrl;
   late TextEditingController descCtrl;
   late String? category;
@@ -35,8 +39,10 @@ class _MovementSheetState extends State<MovementSheet> {
     final sp = widget.state.curSpace;
     final src = widget.editing ?? widget.prefilled;
     type = src?.type ?? 'expense';
-    ccy = 'COP';
-    amountCtrl = TextEditingController(text: (src != null && src.amount > 0) ? src.amount.toString() : '');
+    currency = 'COP';
+    amountCtrl = TextEditingController(
+      text: (src != null && src.amount > 0) ? src.amount.toString() : '',
+    );
     descCtrl = TextEditingController(text: src?.desc ?? '');
     category = src?.category ?? (sp.categories.isNotEmpty ? sp.categories.first.name : 'Otros');
     account = src?.account ?? (sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo');
@@ -63,8 +69,8 @@ class _MovementSheetState extends State<MovementSheet> {
       constraints: const BoxConstraints(maxWidth: 520),
       padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 24),
       decoration: BoxDecoration(
-        color: c.card2,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        color: c.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(top: BorderSide(color: c.line)),
       ),
       child: SingleChildScrollView(
@@ -74,72 +80,64 @@ class _MovementSheetState extends State<MovementSheet> {
           children: [
             Center(
               child: Container(
-                width: 42,
-                height: 5,
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(color: c.line, borderRadius: BorderRadius.circular(99)),
+                width: 38,
+                height: 4.5,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: c.lineStrong,
+                  borderRadius: BorderRadius.circular(GVRadius.pill),
+                ),
               ),
             ),
-            // Type segmented control
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: c.line),
-              ),
-              child: Row(
-                children: [
-                  _segBtn(c, 'expense', 'Gasto'),
-                  _segBtn(c, 'saving', 'Ahorro'),
-                  _segBtn(c, 'income', 'Ingreso'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
 
-            // COP / USD Toggle + Centered Amount Row
+            // Movement type segmented control
+            GVSegmentedControl<String>(
+              value: type,
+              items: const [
+                ('expense', 'Gasto'),
+                ('saving', 'Ahorro'),
+                ('income', 'Ingreso'),
+              ],
+              onChanged: (next) => setState(() => type = next),
+            ),
+            const SizedBox(height: 16),
+
+            // Currency toggle and hero numeric amount input
             Center(
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: c.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: c.line),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _ccyBtn(c, 'COP'),
-                        _ccyBtn(c, 'USD'),
-                      ],
-                    ),
+                  GVSegmentedControl<String>(
+                    value: currency,
+                    compact: true,
+                    items: const [
+                      ('COP', 'COP'),
+                      ('USD', 'USD'),
+                    ],
+                    onChanged: (next) => setState(() => currency = next),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        ccy == 'USD' ? 'US\$' : 'COP \$',
-                        style: GVTxt.h2(c).copyWith(color: c.mut),
+                        currency == 'USD' ? 'US\$' : 'COP \$',
+                        style: GVTxt.h2(c, color: c.tertiary),
                       ),
                       const SizedBox(width: 6),
                       IntrinsicWidth(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 48, maxWidth: 240),
+                          constraints: const BoxConstraints(minWidth: 56, maxWidth: 240),
                           child: TextField(
                             controller: amountCtrl,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             textAlign: TextAlign.center,
-                            style: GVTxt.display(c).copyWith(color: c.txt),
+                            style: GVTxt.display(c, color: c.txt),
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
                               hintText: '0',
-                              hintStyle: GVTxt.display(c).copyWith(color: c.placeholder),
+                              hintStyle: GVTxt.display(c, color: c.placeholder),
                               border: InputBorder.none,
                               isDense: true,
                               contentPadding: EdgeInsets.zero,
@@ -149,43 +147,33 @@ class _MovementSheetState extends State<MovementSheet> {
                       ),
                     ],
                   ),
-                  if (ccy == 'USD' && rawAmt > 0)
+                  if (currency == 'USD' && rawAmt > 0)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '≈ ${formatMoney(rawAmt * widget.state.fxRate)} COP · 1 USD = ${formatMoney(widget.state.fxRate)}',
-                        style: GVTxt.xs(c, color: c.acc2, weight: FontWeight.w700),
+                      padding: const EdgeInsets.only(top: 6),
+                      child: GVPillBadge(
+                        label: '≈ ${formatMoney(rawAmt * widget.state.fxRate)} COP · 1 USD = ${formatMoney(widget.state.fxRate)}',
+                        color: c.acc,
                       ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Description
-            Container(
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: c.line),
-              ),
-              child: TextField(
-                controller: descCtrl,
-                style: GVTxt.body(c),
-                decoration: InputDecoration(
-                  hintText: 'Descripción',
-                  hintStyle: GVTxt.sm(c, color: c.placeholder),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                ),
-              ),
+            // Description field
+            GVTextField(
+              controller: descCtrl,
+              hintText: 'Descripción (ej: Almuerzo, Uber, Mercado)',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Category / Goal / Source
+            // Category grid, savings goal selector, or income source selector
             if (type == 'expense') ...[
-              Text('CATEGORÍA', style: GVTxt.xs(c, weight: FontWeight.w700, letterSpacing: 0.7)),
-              const SizedBox(height: 8),
+              Text(
+                'CATEGORÍA',
+                style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+              ),
+              const SizedBox(height: 10),
               GridView.count(
                 crossAxisCount: 4,
                 shrinkWrap: true,
@@ -197,24 +185,33 @@ class _MovementSheetState extends State<MovementSheet> {
                   final on = category == cat.name;
                   return InkWell(
                     onTap: () => setState(() => category = cat.name),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    borderRadius: BorderRadius.circular(GVRadius.control),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                       decoration: BoxDecoration(
-                        color: on ? c.acc.withValues(alpha: 0.14) : c.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: on ? c.acc : c.line),
+                        color: on ? c.acc.withValues(alpha: 0.14) : c.card2,
+                        borderRadius: BorderRadius.circular(GVRadius.control),
+                        border: Border.all(
+                          color: on ? c.acc : c.line,
+                          width: on ? 1.4 : 1,
+                        ),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(cat.icon, style: const TextStyle(fontSize: 19)),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             cat.name,
                             maxLines: 1,
-                            style: GVTxt.xs2(c, color: on ? c.txt : c.mut, weight: FontWeight.w700),
                             overflow: TextOverflow.ellipsis,
+                            style: GVTxt.xs2(
+                              c,
+                              color: on ? c.txt : c.mut,
+                              weight: on ? FontWeight.w700 : FontWeight.w500,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ],
                       ),
@@ -223,41 +220,42 @@ class _MovementSheetState extends State<MovementSheet> {
                 }).toList(),
               ),
             ] else if (type == 'saving') ...[
-              Text('META DE AHORRO', style: GVTxt.xs(c, weight: FontWeight.w700, letterSpacing: 0.7)),
-              const SizedBox(height: 8),
+              Text(
+                'META DE AHORRO',
+                style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+              ),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: sp.goals.map((g) {
                   final on = goalId == g.id;
-                  return ChoiceChip(
-                    selected: on,
-                    label: Text(g.name),
-                    onSelected: (_) => setState(() => goalId = g.id),
-                  );
+                  return _selectPill(c, g.name, on, () => setState(() => goalId = g.id));
                 }).toList(),
               ),
             ] else ...[
-              Text('FUENTE DE INGRESO', style: GVTxt.xs(c, weight: FontWeight.w700, letterSpacing: 0.7)),
-              const SizedBox(height: 8),
+              Text(
+                'FUENTE DE INGRESO',
+                style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+              ),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: sp.sources.map((s) {
                   final on = source == s;
-                  return ChoiceChip(
-                    selected: on,
-                    label: Text(s),
-                    onSelected: (_) => setState(() => source = s),
-                  );
+                  return _selectPill(c, s, on, () => setState(() => source = s));
                 }).toList(),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Account chips
-            Text('CUENTA', style: GVTxt.xs(c, weight: FontWeight.w700, letterSpacing: 0.7)),
-            const SizedBox(height: 8),
+            // Payment account horizontal pills
+            Text(
+              'CUENTA',
+              style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+            ),
+            const SizedBox(height: 10),
             SizedBox(
               height: 38,
               child: ListView.separated(
@@ -266,78 +264,52 @@ class _MovementSheetState extends State<MovementSheet> {
                 separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (_, i) {
                   final acc = sp.accounts[i];
-                  final on = account == acc;
-                  return InkWell(
-                    onTap: () => setState(() => account = acc),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: on ? c.acc.withValues(alpha: 0.14) : c.card,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: on ? c.acc : c.line),
-                      ),
-                      child: Text(acc, style: GVTxt.sm(c, weight: FontWeight.w600, color: c.txt)),
-                    ),
-                  );
+                  return _selectPill(c, acc, account == acc, () => setState(() => account = acc));
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // Save / Delete Buttons
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: c.acc,
-                  foregroundColor: c.ink,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-                ),
-                onPressed: () async {
-                  if (rawAmt <= 0) return;
-                  final finalCop = ccy == 'USD' ? (rawAmt * widget.state.fxRate).round() : rawAmt.round();
-                  final mv = MovementModel(
-                    id: widget.editing?.id ?? genId('mv'),
-                    space: sp.id,
-                    date: date,
-                    type: type,
-                    desc: descCtrl.text.trim(),
-                    amount: finalCop,
-                    category: type == 'expense' ? category : null,
-                    account: account,
-                    status: type == 'income' ? 'paid' : status,
-                    goalId: type == 'saving' ? goalId : null,
-                    source: type == 'income' ? source : null,
-                    fx: ccy == 'USD' ? FxInfo(ccy: 'USD', amount: rawAmt, rate: widget.state.fxRate) : widget.editing?.fx,
-                    autoBank: widget.editing?.autoBank,
-                    autoRaw: widget.editing?.autoRaw,
-                    autoReviewed: true,
-                  );
-                  await widget.state.saveMovement(mv, saveAsFrequent: saveFreq);
-                  if (context.mounted) Navigator.pop(context);
-                },
-                child: Text('Guardar movimiento', style: GVTxt.body(c, weight: FontWeight.w800, color: c.ink)),
-              ),
+            // Save / delete actions
+            GVPillButton(
+              label: 'Guardar movimiento',
+              onPressed: () async {
+                if (rawAmt <= 0) return;
+                final finalCop = currency == 'USD'
+                    ? (rawAmt * widget.state.fxRate).round()
+                    : rawAmt.round();
+                final mv = MovementModel(
+                  id: widget.editing?.id ?? genId('mv'),
+                  space: sp.id,
+                  date: date,
+                  type: type,
+                  desc: descCtrl.text.trim(),
+                  amount: finalCop,
+                  category: type == 'expense' ? category : null,
+                  account: account,
+                  status: type == 'income' ? 'paid' : status,
+                  goalId: type == 'saving' ? goalId : null,
+                  source: type == 'income' ? source : null,
+                  fx: currency == 'USD'
+                      ? FxInfo(ccy: 'USD', amount: rawAmt, rate: widget.state.fxRate)
+                      : widget.editing?.fx,
+                  autoBank: widget.editing?.autoBank,
+                  autoRaw: widget.editing?.autoRaw,
+                  autoReviewed: true,
+                );
+                await widget.state.saveMovement(mv, saveAsFrequent: saveFreq);
+                if (context.mounted) Navigator.pop(context);
+              },
             ),
             if (widget.editing != null) ...[
               const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: c.red,
-                    side: BorderSide(color: c.red.withValues(alpha: 0.4)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: () async {
-                    await widget.state.deleteMovement(widget.editing!.id);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: Text('Eliminar movimiento', style: GVTxt.sm(c, weight: FontWeight.w700, color: c.red)),
-                ),
+              GVPillButton(
+                label: 'Eliminar movimiento',
+                variant: GVPillButtonVariant.danger,
+                onPressed: () async {
+                  await widget.state.deleteMovement(widget.editing!.id);
+                  if (context.mounted) Navigator.pop(context);
+                },
               ),
             ],
           ],
@@ -346,45 +318,27 @@ class _MovementSheetState extends State<MovementSheet> {
     );
   }
 
-  Widget _segBtn(GVColors c, String t, String label) {
-    final on = type == t;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => type = t),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: on ? c.acc : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            label,
-            style: GVTxt.sm(c, weight: FontWeight.w700, color: on ? c.ink : c.mut),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _ccyBtn(GVColors c, String code) {
-    final on = ccy == code;
+  Widget _selectPill(GVColors c, String label, bool selected, VoidCallback onTap) {
     return InkWell(
-      onTap: () => setState(() => ccy = code),
-      borderRadius: BorderRadius.circular(9),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(GVRadius.pill),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: on ? c.acc : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
+          color: selected ? c.acc.withValues(alpha: 0.14) : c.card2,
+          borderRadius: BorderRadius.circular(GVRadius.pill),
+          border: Border.all(color: selected ? c.acc : c.line, width: selected ? 1.3 : 1),
         ),
         child: Text(
-          code,
-          style: GVTxt.xs(c, weight: FontWeight.w800, color: on ? c.ink : c.mut),
+          label,
+          style: GVTxt.sm(
+            c,
+            weight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? c.txt : c.mut,
+          ),
         ),
       ),
     );
   }
 }
-

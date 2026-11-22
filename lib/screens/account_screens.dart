@@ -1,4 +1,7 @@
-part of 'home_and_shells.dart';
+import 'package:flutter/material.dart';
+import '../state/app_state.dart';
+import '../theme/gold_theme.dart';
+import '../widgets/gv_components.dart';
 
 class OfflineGuardScreen extends StatelessWidget {
   final GoldVaultState state;
@@ -13,49 +16,42 @@ class OfflineGuardScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 360),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: c.line),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.cloud_off_rounded, size: 44, color: c.amber),
-                  const SizedBox(height: 14),
-                  Text('Sin conexión a internet', style: GVTxt.h2(c), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text(
-                    'GoldVault requiere conexión activa a internet para mantener tus cuentas, movimientos y bancos sincronizados sin errores.',
-                    style: GVTxt.sm(c),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (state.hasPendingSync) ...[
-                    const SizedBox(height: 10),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: GVCard(
+                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GVSquircleIcon(
+                      size: 56,
+                      radius: 16,
+                      backgroundColor: c.amber.withValues(alpha: 0.12),
+                      borderColor: c.amber.withValues(alpha: 0.28),
+                      child: Icon(Icons.cloud_off_rounded, size: 28, color: c.amber),
+                    ),
+                    const SizedBox(height: 18),
+                    Text('Sin conexión a internet', style: GVTxt.h2(c), textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
                     Text(
-                      '${state.pendingSyncCount} cambio(s) guardado(s) localmente se enviarán al reconectar.',
-                      style: GVTxt.xs(c, color: c.acc, weight: FontWeight.w700),
+                      'GoldVault requiere conexión activa para mantener tus cuentas, movimientos y bancos sincronizados sin errores.',
+                      style: GVTxt.sm(c),
                       textAlign: TextAlign.center,
                     ),
-                  ],
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: c.acc,
-                        foregroundColor: c.ink,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                    if (state.hasPendingSync) ...[
+                      const SizedBox(height: 12),
+                      GVPillBadge(
+                        label: '${state.pendingSyncCount} cambio(s) pendiente(s) a salvo',
+                        color: c.acc,
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    GVPillButton(
+                      label: 'Reintentar conexión',
                       onPressed: () => state.checkOnlineStatus(manual: true),
-                      child: Text('Reintentar conexión', style: GVTxt.body(c, weight: FontWeight.w800, color: c.ink)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -78,57 +74,42 @@ class SyncErrorScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 360),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: c.line),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.sync_problem_rounded, size: 44, color: c.amber),
-                  const SizedBox(height: 14),
-                  Text('Error al sincronizar', style: GVTxt.h2(c), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.syncError ?? 'No pudimos cargar tus cuentas desde la nube. Reintenta para evitar perder información.',
-                    style: GVTxt.sm(c),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: c.acc,
-                        foregroundColor: c.ink,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-                      ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: GVCard(
+                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GVSquircleIcon(
+                      size: 56,
+                      radius: 16,
+                      backgroundColor: c.amber.withValues(alpha: 0.12),
+                      borderColor: c.amber.withValues(alpha: 0.28),
+                      child: Icon(Icons.sync_problem_rounded, size: 28, color: c.amber),
+                    ),
+                    const SizedBox(height: 18),
+                    Text('Error al sincronizar', style: GVTxt.h2(c), textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.syncError ??
+                          'No pudimos cargar tus cuentas desde la nube. Reintenta para evitar perder información.',
+                      style: GVTxt.sm(c),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    GVPillButton(
+                      label: state.loadingCloud ? 'Reintentando…' : 'Reintentar sincronización',
                       onPressed: state.loadingCloud ? null : () => state.retrySync(),
-                      child: Text(
-                        state.loadingCloud ? 'Reintentando…' : 'Reintentar sincronización',
-                        style: GVTxt.body(c, weight: FontWeight.w800, color: c.ink),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: c.line),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-                      ),
+                    const SizedBox(height: 10),
+                    GVPillButton(
+                      label: 'Cerrar sesión',
+                      variant: GVPillButtonVariant.secondary,
                       onPressed: () => state.logout(),
-                      child: Text('Cerrar sesión', style: GVTxt.sm(c, weight: FontWeight.w700, color: c.txt)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -151,61 +132,49 @@ class GoogleLoginScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 360),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: c.line),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const GoldVaultLogo(fontSize: GVTxt.fsH1),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Tus cuentas, movimientos y metas en un solo lugar.',
-                    style: GVTxt.sm(c),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF1F2937),
-                        elevation: 2,
-                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(11),
-                          side: BorderSide(color: c.line),
-                        ),
-                      ),
-                      onPressed: () => state.googleLogin(),
-                      icon: const Icon(Icons.g_mobiledata_rounded, size: 28, color: Color(0xFF4285F4)),
-                      label: Text(
-                        'Continuar con Google',
-                        style: GVTxt.body(c, weight: FontWeight.w800, color: const Color(0xFF1F2937)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Sincroniza tus finanzas entre tus dispositivos.',
-                    style: GVTxt.xs(c),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (state.authError != null) ...[
-                    const SizedBox(height: 12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 390),
+              child: GVCard(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const GoldVaultLogo(fontSize: GVTxt.fsH1),
+                    const SizedBox(height: 14),
                     Text(
-                      state.authError!,
-                      style: GVTxt.sm(c, color: c.amber, weight: FontWeight.w600),
+                      'Claridad sobre tu dinero.',
+                      style: GVTxt.h3(c),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Tus cuentas, movimientos y metas en un solo lugar.',
+                      style: GVTxt.sm(c),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    GVPillButton(
+                      label: 'Continuar con Google',
+                      variant: GVPillButtonVariant.dark,
+                      leading: const Icon(Icons.g_mobiledata_rounded, size: 26, color: Color(0xFF4285F4)),
+                      onPressed: () => state.googleLogin(),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sincroniza tus finanzas entre tus dispositivos.',
+                      style: GVTxt.xs(c),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (state.authError != null) ...[
+                      const SizedBox(height: 14),
+                      Text(
+                        state.authError!,
+                        style: GVTxt.xs(c, color: c.amber, weight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -215,31 +184,60 @@ class GoogleLoginScreen extends StatelessWidget {
   }
 }
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends StatelessWidget {
   final GoldVaultState state;
   const OnboardingScreen({super.key, required this.state});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
     return Scaffold(
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+              constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const GoldVaultLogo(fontSize: GVTxt.fsH1),
-                  const SizedBox(height: 32),
-                  _buildTemplateChoice(c),
+                  const SizedBox(height: 28),
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: GVTxt.h1(c),
+                      children: [
+                        const TextSpan(text: '¿Cómo quieres '),
+                        TextSpan(text: 'empezar?', style: TextStyle(color: c.acc)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Puedes cambiar categorías, cuentas y metas cuando quieras.',
+                    style: GVTxt.sm(c),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  _templateCard(
+                    c: c,
+                    icon: Icons.auto_awesome_rounded,
+                    badge: 'Recomendado',
+                    title: 'Configuración recomendada',
+                    desc: 'Categorías, cuentas (Nequi, Nu, Lulo, ARQ, Morse) y metas listas. Empieza de inmediato.',
+                    highlighted: true,
+                    onTap: () => state.createSpaceFromOnboarding('complete'),
+                  ),
+                  const SizedBox(height: 14),
+                  _templateCard(
+                    c: c,
+                    icon: Icons.layers_outlined,
+                    title: 'Desde cero',
+                    desc: 'Define tu propia estructura: cada categoría, cuenta y meta.',
+                    onTap: () => state.createSpaceFromOnboarding('zero'),
+                  ),
                 ],
               ),
             ),
@@ -249,84 +247,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildTemplateChoice(GVColors c) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.auto_awesome_outlined, size: 54, color: c.acc),
-        const SizedBox(height: 20),
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: GVTxt.h1(c),
-            children: [
-              const TextSpan(text: '¿Cómo quieres '),
-              TextSpan(text: 'empezar?', style: TextStyle(color: c.acc)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        _tplCard(
-          c: c,
-          icon: Icons.auto_awesome_rounded,
-          title: 'Configuración recomendada',
-          desc: 'Categorías, cuentas (Nequi, Nu, Lulo, ARQ, Morse) y metas listas. Empieza de inmediato.',
-          onTap: () => widget.state.createSpaceFromOnboarding('complete'),
-        ),
-        const SizedBox(height: 12),
-        _tplCard(
-          c: c,
-          icon: Icons.layers_outlined,
-          title: 'Desde cero',
-          desc: 'Define tu propia estructura: cada categoría, cuenta y meta.',
-          onTap: () => widget.state.createSpaceFromOnboarding('zero'),
-        ),
-      ],
-    );
-  }
-
-  Widget _tplCard({
+  Widget _templateCard({
     required GVColors c,
     required IconData icon,
     required String title,
     required String desc,
+    String? badge,
+    bool highlighted = false,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return GVCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: c.card,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: c.line),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: c.acc.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: c.acc.withValues(alpha: 0.24)),
-              ),
-              child: Icon(icon, color: c.acc, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GVTxt.body(c, weight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(desc, style: GVTxt.sm(c)),
+      padding: const EdgeInsets.all(20),
+      borderColor: highlighted ? c.acc.withValues(alpha: 0.45) : c.line,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GVSquircleIcon(
+            size: 46,
+            radius: 14,
+            backgroundColor: highlighted ? c.acc.withValues(alpha: 0.14) : c.card2,
+            borderColor: highlighted ? c.acc.withValues(alpha: 0.3) : c.line,
+            child: Icon(icon, color: highlighted ? c.acc : c.txt, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (badge != null) ...[
+                  GVPillBadge(label: badge, color: c.acc),
+                  const SizedBox(height: 6),
                 ],
-              ),
+                Text(title, style: GVTxt.h3(c)),
+                const SizedBox(height: 4),
+                Text(desc, style: GVTxt.sm(c)),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Icon(Icons.chevron_right_rounded, color: c.tertiary, size: 20),
+          ),
+        ],
       ),
     );
   }

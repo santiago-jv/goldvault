@@ -1,12 +1,35 @@
 import 'package:flutter/material.dart';
 
+/// Unified geometry tokens aligned with Apple Human Interface Guidelines
+/// and Bento surface design.
+class GVRadius {
+  static const double bento = 24.0;
+  static const double card = 20.0;
+  static const double control = 14.0;
+  static const double squircle = 12.0;
+  static const double pill = 999.0;
+}
+
+/// Unified spacing scale across screens and components.
+class GVSpacing {
+  static const double xs = 6.0;
+  static const double sm = 10.0;
+  static const double md = 16.0;
+  static const double lg = 20.0;
+  static const double xl = 28.0;
+}
+
 class GVColors {
+  final bool isDark;
   final Color bg;
   final Color card;
   final Color card2;
+  final Color navGlass;
   final Color txt;
   final Color mut;
+  final Color tertiary;
   final Color line;
+  final Color lineStrong;
   final Color acc;
   final Color acc2;
   final Color ink;
@@ -17,12 +40,16 @@ class GVColors {
   final List<Color> chartPalette;
 
   const GVColors({
+    required this.isDark,
     required this.bg,
     required this.card,
     required this.card2,
+    required this.navGlass,
     required this.txt,
     required this.mut,
+    required this.tertiary,
     required this.line,
+    required this.lineStrong,
     required this.acc,
     required this.acc2,
     required this.ink,
@@ -33,69 +60,101 @@ class GVColors {
     required this.chartPalette,
   });
 
+  /// Apple Anodized Space Black Pro + Liquid Gold.
   static const dark = GVColors(
-    bg: Color(0xFF0E0F12),
-    card: Color(0xFF14161B),
-    card2: Color(0xFF191C22),
-    txt: Color(0xFFECE7DD),
-    mut: Color(0xFF8B867C),
-    line: Color(0x1AECE7DD),
+    isDark: true,
+    bg: Color(0xFF000000),
+    card: Color(0xFF141417),
+    card2: Color(0xFF1E1E22),
+    navGlass: Color(0xCC141417),
+    txt: Color(0xFFF5F5F7),
+    mut: Color(0xFF98989F),
+    tertiary: Color(0xFF6E6E73),
+    line: Color(0x18FFFFFF),
+    lineStrong: Color(0x2BFFFFFF),
     acc: Color(0xFFD9B87A),
     acc2: Color(0xFFB8965A),
-    ink: Color(0xFF17130B),
-    green: Color(0xFF6FA882),
-    red: Color(0xFFD07A72),
-    amber: Color(0xFFD4AC58),
-    placeholder: Color(0x8CECE7DD),
+    ink: Color(0xFF12100B),
+    green: Color(0xFF30D158),
+    red: Color(0xFFFF453A),
+    amber: Color(0xFFFF9F0A),
+    placeholder: Color(0x73F5F5F7),
     chartPalette: [
       Color(0xFFD9B87A),
-      Color(0xFF7FA3B8),
-      Color(0xFF6FA882),
-      Color(0xFFC8876C),
-      Color(0xFF9D8BC2),
-      Color(0xFFB8A878),
+      Color(0xFF64D2FF),
+      Color(0xFF30D158),
+      Color(0xFFFF9F0A),
+      Color(0xFFBF5AF2),
+      Color(0xFFFF6961),
     ],
   );
 
+  /// Apple Cupertino Daylight Stone + Pure White Bento Cards + Burnished Gold.
   static const light = GVColors(
-    bg: Color(0xFFF6F2EA),
-    card: Color(0xFFEFEAE0),
-    card2: Color(0xFFE6E0D3),
-    txt: Color(0xFF1C1A16),
-    mut: Color(0xFF787166),
-    line: Color(0x1F1C1A16),
-    acc: Color(0xFF8A6830),
-    acc2: Color(0xFF6E5122),
-    ink: Color(0xFFFBF8F2),
-    green: Color(0xFF2F6E49),
-    red: Color(0xFFAC443C),
-    amber: Color(0xFF946B1D),
-    placeholder: Color(0x8C1C1A16),
+    isDark: false,
+    bg: Color(0xFFF5F5F7),
+    card: Color(0xFFFFFFFF),
+    card2: Color(0xFFF0F0F4),
+    navGlass: Color(0xD9FFFFFF),
+    txt: Color(0xFF1D1D1F),
+    mut: Color(0xFF6E6E73),
+    tertiary: Color(0xFF86868B),
+    line: Color(0x13000000),
+    lineStrong: Color(0x24000000),
+    acc: Color(0xFF9A742B),
+    acc2: Color(0xFF7A591B),
+    ink: Color(0xFFFFFFFF),
+    green: Color(0xFF1D8348),
+    red: Color(0xFFD70015),
+    amber: Color(0xFFC27200),
+    placeholder: Color(0x731D1D1F),
     chartPalette: [
-      Color(0xFF8A6830),
-      Color(0xFF3E6B85),
-      Color(0xFF2F6E49),
-      Color(0xFFA8573B),
-      Color(0xFF695394),
-      Color(0xFF7C6B3F),
+      Color(0xFF9A742B),
+      Color(0xFF0071E3),
+      Color(0xFF1D8348),
+      Color(0xFFD97706),
+      Color(0xFF7C3AED),
+      Color(0xFFD70015),
     ],
   );
+
+  /// Soft multi-layered Bento elevation shadow (subtle in light, clean rim in dark).
+  List<BoxShadow> get cardShadow => isDark
+      ? const [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ]
+      : const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 24,
+            offset: Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Color(0x05000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ];
 
   static GVColors of(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark ? dark : light;
   }
 }
 
-/// Strict 8-tier typographic scale standardized across the entire application
+/// Standardized 8-tier Apple-inspired typographic hierarchy with tabular figure support.
 class GVTxt {
-  static const double fsDisplay = 36.0; // 2.25rem — Hero balance & amount input
-  static const double fsH1 = 24.0;      // 1.50rem — Full-screen titles (Onboarding / Login)
-  static const double fsH2 = 20.0;      // 1.25rem — Main view headers & brand title
-  static const double fsH3 = 16.0;      // 1.00rem — Card & modal section titles
-  static const double fsBody = 15.0;    // 0.9375rem — Primary body text, list rows, inputs, buttons
-  static const double fsSm = 13.0;      // 0.8125rem — Subtitles, descriptions, placeholders, chips
-  static const double fsXs = 12.0;      // 0.75rem — Uppercase labels, footnotes, helper captions
-  static const double fs2xs = 11.0;     // 0.6875rem — Micro-labels, badges, bottom navigation bar
+  static const double fsDisplay = 38.0;
+  static const double fsH1 = 26.0;
+  static const double fsH2 = 22.0;
+  static const double fsH3 = 16.0;
+  static const double fsBody = 15.0;
+  static const double fsSm = 13.5;
+  static const double fsXs = 12.0;
+  static const double fs2xs = 11.0;
 
   static TextStyle _font({
     required double fontSize,
@@ -103,6 +162,7 @@ class GVTxt {
     required double height,
     double? letterSpacing,
     required Color color,
+    bool tabular = false,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -110,72 +170,104 @@ class GVTxt {
       height: height,
       letterSpacing: letterSpacing,
       color: color,
+      fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
     );
   }
 
-  static TextStyle display(GVColors c) => _font(
+  static TextStyle display(GVColors c, {Color? color}) => _font(
         fontSize: fsDisplay,
-        fontWeight: FontWeight.w800,
-        height: 1.1,
-        letterSpacing: -0.8,
-        color: c.acc,
-      );
-
-  static TextStyle h1(GVColors c) => _font(
-        fontSize: fsH1,
-        fontWeight: FontWeight.w800,
-        height: 1.2,
-        letterSpacing: -0.4,
-        color: c.txt,
-      );
-
-  static TextStyle h2(GVColors c) => _font(
-        fontSize: fsH2,
-        fontWeight: FontWeight.w800,
-        height: 1.2,
-        letterSpacing: -0.3,
-        color: c.txt,
-      );
-
-  static TextStyle h3(GVColors c) => _font(
-        fontSize: fsH3,
         fontWeight: FontWeight.w700,
-        height: 1.25,
-        color: c.txt,
+        height: 1.06,
+        letterSpacing: -1.2,
+        color: color ?? c.acc,
+        tabular: true,
       );
 
-  static TextStyle body(GVColors c, {FontWeight weight = FontWeight.w600, Color? color}) =>
+  static TextStyle h1(GVColors c, {Color? color}) => _font(
+        fontSize: fsH1,
+        fontWeight: FontWeight.w700,
+        height: 1.15,
+        letterSpacing: -0.7,
+        color: color ?? c.txt,
+      );
+
+  static TextStyle h2(GVColors c, {Color? color}) => _font(
+        fontSize: fsH2,
+        fontWeight: FontWeight.w700,
+        height: 1.18,
+        letterSpacing: -0.5,
+        color: color ?? c.txt,
+      );
+
+  static TextStyle h3(GVColors c, {Color? color, bool tabular = false}) => _font(
+        fontSize: fsH3,
+        fontWeight: FontWeight.w600,
+        height: 1.25,
+        letterSpacing: -0.25,
+        color: color ?? c.txt,
+        tabular: tabular,
+      );
+
+  static TextStyle body(
+    GVColors c, {
+    FontWeight weight = FontWeight.w500,
+    Color? color,
+    bool tabular = false,
+  }) =>
       _font(
         fontSize: fsBody,
         fontWeight: weight,
         height: 1.4,
+        letterSpacing: -0.18,
         color: color ?? c.txt,
+        tabular: tabular,
       );
 
-  static TextStyle sm(GVColors c, {FontWeight weight = FontWeight.w500, Color? color}) =>
+  static TextStyle sm(
+    GVColors c, {
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    bool tabular = false,
+  }) =>
       _font(
         fontSize: fsSm,
         fontWeight: weight,
-        height: 1.5,
+        height: 1.45,
+        letterSpacing: -0.12,
         color: color ?? c.mut,
+        tabular: tabular,
       );
 
-  static TextStyle xs(GVColors c, {FontWeight weight = FontWeight.w600, Color? color, double? letterSpacing}) =>
+  static TextStyle xs(
+    GVColors c, {
+    FontWeight weight = FontWeight.w500,
+    Color? color,
+    double? letterSpacing,
+    bool tabular = false,
+  }) =>
       _font(
         fontSize: fsXs,
         fontWeight: weight,
-        height: 1.5,
-        letterSpacing: letterSpacing,
+        height: 1.35,
+        letterSpacing: letterSpacing ?? -0.05,
         color: color ?? c.mut,
+        tabular: tabular,
       );
 
-  static TextStyle xs2(GVColors c, {FontWeight weight = FontWeight.w700, Color? color, double? letterSpacing}) =>
+  static TextStyle xs2(
+    GVColors c, {
+    FontWeight weight = FontWeight.w600,
+    Color? color,
+    double? letterSpacing,
+    bool tabular = false,
+  }) =>
       _font(
         fontSize: fs2xs,
         fontWeight: weight,
         height: 1.2,
-        letterSpacing: letterSpacing,
-        color: color ?? c.mut,
+        letterSpacing: letterSpacing ?? 0.2,
+        color: color ?? c.tertiary,
+        tabular: tabular,
       );
 }
 
@@ -186,6 +278,9 @@ class GoldTheme {
     return base.copyWith(
       brightness: brightness,
       scaffoldBackgroundColor: c.bg,
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: c.txt.withValues(alpha: 0.04),
+      hoverColor: c.txt.withValues(alpha: 0.03),
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: c.acc,
@@ -202,21 +297,12 @@ class GoldTheme {
         displayColor: c.txt,
       ),
       dividerColor: c.line,
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: c.card,
-        indicatorColor: c.acc.withValues(alpha: 0.18),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: c.acc, size: 24);
-          }
-          return IconThemeData(color: c.mut, size: 22);
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return GVTxt.xs2(c, color: c.acc, weight: FontWeight.w800);
-          }
-          return GVTxt.xs2(c, color: c.mut, weight: FontWeight.w600);
-        }),
+      dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: c.isDark ? const Color(0xFF242429) : const Color(0xFF1D1D1F),
+        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w500),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -224,11 +310,21 @@ class GoldTheme {
 
 class GoldVaultLogo extends StatelessWidget {
   final double fontSize;
-  const GoldVaultLogo({super.key, this.fontSize = GVTxt.fsH2});
+  final Color? textColor;
+  final Color? accentColor;
+
+  const GoldVaultLogo({
+    super.key,
+    this.fontSize = GVTxt.fsH2,
+    this.textColor,
+    this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
+    final primaryTxt = textColor ?? c.txt;
+    final primaryAcc = accentColor ?? c.acc;
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
@@ -236,22 +332,22 @@ class GoldVaultLogo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           CustomPaint(
-            size: Size(fontSize * 1.1, fontSize * 1.1),
-            painter: _VaultArchPainter(c.acc),
+            size: Size(fontSize * 1.05, fontSize * 1.05),
+            painter: _VaultArchPainter(primaryAcc),
           ),
           const SizedBox(width: 8),
           RichText(
             text: TextSpan(
               style: GVTxt._font(
                 fontSize: fontSize,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-                letterSpacing: -0.3,
-                color: c.txt,
+                fontWeight: FontWeight.w700,
+                height: 1.08,
+                letterSpacing: -0.5,
+                color: primaryTxt,
               ),
               children: [
                 const TextSpan(text: 'Gold'),
-                TextSpan(text: 'Vault', style: TextStyle(color: c.acc)),
+                TextSpan(text: 'Vault', style: TextStyle(color: primaryAcc)),
               ],
             ),
           ),
@@ -273,7 +369,7 @@ class _VaultArchPainter extends CustomPainter {
     final p1 = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2 * sx
+      ..strokeWidth = 2.1 * sx
       ..strokeCap = StrokeCap.round;
 
     final outer = Path()
@@ -290,7 +386,7 @@ class _VaultArchPainter extends CustomPainter {
     final p2 = Paint()
       ..color = color.withValues(alpha: 0.45)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7 * sx
+      ..strokeWidth = 1.65 * sx
       ..strokeCap = StrokeCap.round;
 
     final inner = Path()
@@ -308,4 +404,3 @@ class _VaultArchPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _VaultArchPainter oldDelegate) => oldDelegate.color != color;
 }
-

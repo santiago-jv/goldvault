@@ -30,14 +30,21 @@
 ├── api/
 │   └── bank.js                          # Serverless webhook endpoint for iOS Shortcuts / Apple Pay
 ├── lib/
-│   ├── main.dart                        # App entry point & root state gate
+│   ├── main.dart                        # App entry point, status bar styling & root state gate
 │   ├── models/models.dart               # Domain models & BankNotificationParser
 │   ├── screens/account_screens.dart     # Login, Offline guard, Sync error recovery & Onboarding
-│   ├── screens/home_and_shells.dart     # Main navigation shell, tabs & sync banner
-│   ├── screens/movement_sheet.dart      # Movement creation/editing bottom sheet
+│   ├── screens/goals_tab.dart           # Savings goals Bento view
+│   ├── screens/home_and_shells.dart     # Lightweight navigation shell coordinating tabs & glass dock
+│   ├── screens/home_tab.dart            # Dashboard with Anodized Hero Card, charts & bank review
+│   ├── screens/movement_sheet.dart      # Apple-style movement creation/editing bottom sheet
+│   ├── screens/movements_tab.dart       # Searchable grouped inset movements list
+│   ├── screens/settings_tab.dart        # Appearance, account/sync, bank automation & customization
+│   ├── screens/space_modals.dart        # Spaces switcher, space customization & add-goal sheets
 │   ├── state/app_state.dart             # Reactive state, pending sync queue & Supabase adapter
-│   ├── theme/gold_theme.dart            # Color palettes, 8-tier typography & vector logo
-│   └── widgets/charts.dart              # CustomPainter 6-month trend & category donut charts
+│   ├── theme/gold_theme.dart            # Apple Daylight & Space Black Pro tokens + vector logo
+│   └── widgets/
+│       ├── charts.dart                  # CustomPainter 6-month trend & category donut charts
+│       └── gv_components.dart           # Reusable Apple Bento design system primitives
 ├── scripts/
 │   └── check_release_version.py         # Verifies release tag vX.Y.Z matches pubspec.yaml
 └── test/
