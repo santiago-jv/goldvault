@@ -60,61 +60,61 @@ class GVColors {
     required this.chartPalette,
   });
 
-  /// Apple Anodized Space Black Pro + Liquid Gold.
+  /// Apple Anodized Space Black Pro — pure monochrome black & white palette.
   static const dark = GVColors(
     isDark: true,
     bg: Color(0xFF000000),
     card: Color(0xFF141417),
     card2: Color(0xFF1E1E22),
-    navGlass: Color(0xCC141417),
+    navGlass: Color(0xD9141417),
     txt: Color(0xFFF5F5F7),
     mut: Color(0xFF98989F),
     tertiary: Color(0xFF6E6E73),
-    line: Color(0x18FFFFFF),
-    lineStrong: Color(0x2BFFFFFF),
-    acc: Color(0xFFD9B87A),
-    acc2: Color(0xFFB8965A),
-    ink: Color(0xFF12100B),
-    green: Color(0xFF30D158),
-    red: Color(0xFFFF453A),
-    amber: Color(0xFFFF9F0A),
+    line: Color(0x1AFFFFFF),
+    lineStrong: Color(0x2EFFFFFF),
+    acc: Color(0xFFFFFFFF),
+    acc2: Color(0xFFD2D2D7),
+    ink: Color(0xFF0C0C0E),
+    green: Color(0xFFFFFFFF),
+    red: Color(0xFFC7C7CC),
+    amber: Color(0xFFE5E5EA),
     placeholder: Color(0x73F5F5F7),
     chartPalette: [
-      Color(0xFFD9B87A),
-      Color(0xFF64D2FF),
-      Color(0xFF30D158),
-      Color(0xFFFF9F0A),
-      Color(0xFFBF5AF2),
-      Color(0xFFFF6961),
+      Color(0xFFFFFFFF),
+      Color(0xFFD1D1D6),
+      Color(0xFFAEAEB2),
+      Color(0xFF8E8E93),
+      Color(0xFF636366),
+      Color(0xFF48484A),
     ],
   );
 
-  /// Apple Cupertino Daylight Stone + Pure White Bento Cards + Burnished Gold.
+  /// Apple Cupertino Daylight — pure monochrome white, stone & Space Black palette.
   static const light = GVColors(
     isDark: false,
     bg: Color(0xFFF5F5F7),
     card: Color(0xFFFFFFFF),
-    card2: Color(0xFFF0F0F4),
+    card2: Color(0xFFEFEFF2),
     navGlass: Color(0xD9FFFFFF),
     txt: Color(0xFF1D1D1F),
     mut: Color(0xFF6E6E73),
     tertiary: Color(0xFF86868B),
-    line: Color(0x13000000),
-    lineStrong: Color(0x24000000),
-    acc: Color(0xFF9A742B),
-    acc2: Color(0xFF7A591B),
+    line: Color(0x14000000),
+    lineStrong: Color(0x26000000),
+    acc: Color(0xFF1D1D1F),
+    acc2: Color(0xFF3A3A3D),
     ink: Color(0xFFFFFFFF),
-    green: Color(0xFF1D8348),
-    red: Color(0xFFD70015),
-    amber: Color(0xFFC27200),
+    green: Color(0xFF1D1D1F),
+    red: Color(0xFF48484A),
+    amber: Color(0xFF3A3A3D),
     placeholder: Color(0x731D1D1F),
     chartPalette: [
-      Color(0xFF9A742B),
-      Color(0xFF0071E3),
-      Color(0xFF1D8348),
-      Color(0xFFD97706),
-      Color(0xFF7C3AED),
-      Color(0xFFD70015),
+      Color(0xFF1D1D1F),
+      Color(0xFF48484A),
+      Color(0xFF6E6E73),
+      Color(0xFF8E8E93),
+      Color(0xFFAEAEB2),
+      Color(0xFFD1D1D6),
     ],
   );
 
@@ -179,7 +179,7 @@ class GVTxt {
         fontWeight: FontWeight.w700,
         height: 1.06,
         letterSpacing: -1.2,
-        color: color ?? c.acc,
+        color: color ?? c.txt,
         tabular: true,
       );
 
@@ -288,7 +288,7 @@ class GoldTheme {
         secondary: c.acc2,
         onSecondary: c.ink,
         error: c.red,
-        onError: Colors.white,
+        onError: c.ink,
         surface: c.card,
         onSurface: c.txt,
       ),
@@ -324,7 +324,7 @@ class GoldVaultLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
     final primaryTxt = textColor ?? c.txt;
-    final primaryAcc = accentColor ?? c.acc;
+    final secondaryTxt = accentColor ?? c.mut;
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
@@ -333,7 +333,7 @@ class GoldVaultLogo extends StatelessWidget {
         children: [
           CustomPaint(
             size: Size(fontSize * 1.05, fontSize * 1.05),
-            painter: _VaultArchPainter(primaryAcc),
+            painter: _VaultArchPainter(primaryTxt),
           ),
           const SizedBox(width: 8),
           RichText(
@@ -347,7 +347,10 @@ class GoldVaultLogo extends StatelessWidget {
               ),
               children: [
                 const TextSpan(text: 'Gold'),
-                TextSpan(text: 'Vault', style: TextStyle(color: primaryAcc)),
+                TextSpan(
+                  text: 'Vault',
+                  style: TextStyle(color: secondaryTxt, fontWeight: FontWeight.w500),
+                ),
               ],
             ),
           ),

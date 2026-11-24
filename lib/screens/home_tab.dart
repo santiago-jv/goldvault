@@ -491,9 +491,9 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  /// Signature Apple Anodized Space Black Pro balance tile inspired by Apple Card & Portfolio Bento.
+  /// Signature Apple Anodized Space Black Pro balance tile in pure monochrome black & white.
   Widget _buildAnodizedHeroCard(GVColors c) {
-    const heroGold = Color(0xFFD9B87A);
+    const heroWhite = Color(0xFFFFFFFF);
     const heroText = Color(0xFFF5F5F7);
     const heroMut = Color(0xFFA1A1A6);
 
@@ -520,7 +520,7 @@ class HomeTab extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(GVRadius.pill),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
                 ),
                 child: Text(
                   state.curSpace.name,
@@ -535,17 +535,17 @@ class HomeTab extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               formatMoney(state.monthAvailable),
-              style: GVTxt.display(c, color: heroGold),
+              style: GVTxt.display(c, color: heroWhite),
             ),
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              _heroMetric(c, 'INGRESOS', state.monthIncome, const Color(0xFF30D158)),
+              _heroMetric(c, 'INGRESOS', state.monthIncome, heroWhite),
               const SizedBox(width: 8),
-              _heroMetric(c, 'GASTOS', state.monthExpense, const Color(0xFFFF6961)),
+              _heroMetric(c, 'GASTOS', state.monthExpense, const Color(0xFF8E8E93)),
               const SizedBox(width: 8),
-              _heroMetric(c, 'AHORRO', state.monthSaving, heroGold),
+              _heroMetric(c, 'AHORRO', state.monthSaving, const Color(0xFFD1D1D6)),
             ],
           ),
         ],

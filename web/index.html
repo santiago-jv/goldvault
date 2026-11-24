@@ -4,29 +4,133 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <meta name="description" content="GoldVault — Claridad sobre tu dinero: registro automático de bancos, metas y análisis en tiempo real.">
-  <meta name="theme-color" content="#0e0f12" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f2ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GoldVault">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png">
   <title>GoldVault — Finanzas Personales</title>
   <link rel="manifest" href="manifest.json">
   <style>
+    :root {
+      color-scheme: light dark;
+      --gv-bg-light: #f5f5f7;
+      --gv-bg-dark: #000000;
+      --gv-card-light: #ffffff;
+      --gv-card-dark: #141417;
+      --gv-txt-light: #1d1d1f;
+      --gv-txt-dark: #f5f5f7;
+      --gv-mut-light: #6e6e73;
+      --gv-mut-dark: #98989f;
+      --gv-line-light: rgba(0, 0, 0, 0.08);
+      --gv-line-dark: rgba(255, 255, 255, 0.12);
+      --gv-bg: var(--gv-bg-light);
+      --gv-card: var(--gv-card-light);
+      --gv-txt: var(--gv-txt-light);
+      --gv-mut: var(--gv-mut-light);
+      --gv-line: var(--gv-line-light);
+      --gv-cta-bg: #1d1d1f;
+      --gv-cta-fg: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --gv-bg: var(--gv-bg-dark);
+        --gv-card: var(--gv-card-dark);
+        --gv-txt: var(--gv-txt-dark);
+        --gv-mut: var(--gv-mut-dark);
+        --gv-line: var(--gv-line-dark);
+        --gv-cta-bg: #ffffff;
+        --gv-cta-fg: #0c0c0e;
+      }
+    }
+    @supports (color: light-dark(white, black)) {
+      :root {
+        --gv-bg: light-dark(var(--gv-bg-light), var(--gv-bg-dark));
+        --gv-card: light-dark(var(--gv-card-light), var(--gv-card-dark));
+        --gv-txt: light-dark(var(--gv-txt-light), var(--gv-txt-dark));
+        --gv-mut: light-dark(var(--gv-mut-light), var(--gv-mut-dark));
+        --gv-line: light-dark(var(--gv-line-light), var(--gv-line-dark));
+        --gv-cta-bg: light-dark(#1d1d1f, #ffffff);
+        --gv-cta-fg: light-dark(#ffffff, #0c0c0e);
+      }
+    }
     html, body {
       margin: 0;
       padding: 0;
-      background-color: #0e0f12;
+      background-color: var(--gv-bg);
+      color: var(--gv-txt);
       height: 100%;
       width: 100%;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     }
-    @media (prefers-color-scheme: light) {
-      html, body { background-color: #f6f2ea; }
+    .gv-bridge-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 24px;
+      box-sizing: border-box;
+      background: var(--gv-bg);
+      color: var(--gv-txt);
+    }
+    .gv-bridge-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--gv-card);
+      border: 1px solid var(--gv-line);
+      border-radius: 24px;
+      padding: 32px 24px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .gv-bridge-logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: var(--gv-txt);
+    }
+    .gv-bridge-logo span {
+      color: var(--gv-mut);
+      font-weight: 500;
+    }
+    .gv-bridge-desc {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--gv-mut);
+      margin: 0 0 22px 0;
+    }
+    .gv-bridge-btn,
+    .gv-bridge-btn-sec {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 46px;
+      border-radius: 999px;
+      text-decoration: none;
+      box-sizing: border-box;
+      font-weight: 600;
+    }
+    .gv-bridge-btn {
+      background: var(--gv-cta-bg);
+      color: var(--gv-cta-fg);
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+    .gv-bridge-btn-sec {
+      background: transparent;
+      color: var(--gv-txt);
+      font-size: 13.5px;
+      border: 1px solid var(--gv-line);
     }
   </style>
 </head>
@@ -34,56 +138,72 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let r of registrations) { r.unregister(); }
+        for (const r of registrations) { r.unregister(); }
       });
     }
 
     (function() {
-      var search = window.location.search || '';
-      var hash = window.location.hash || '';
-      var params = new URLSearchParams(search);
-      var hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+      const search = window.location.search || '';
+      const hash = window.location.hash || '';
+      const params = new URLSearchParams(search);
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
 
-      var isApkBridge = params.get('apk_redirect') === '1' ||
-                        hashParams.get('apk_redirect') === '1' ||
-                        window.location.pathname.indexOf('/apk-callback') === 0;
+      const isApkBridge = params.get('apk_redirect') === '1' ||
+                          hashParams.get('apk_redirect') === '1' ||
+                          window.location.pathname.indexOf('/apk-callback') === 0;
 
-      var hasAuthPayload = params.has('code') ||
-                           params.has('error') ||
-                           hashParams.has('access_token') ||
-                           hashParams.has('error');
+      const hasAuthPayload = params.has('code') ||
+                             params.has('error') ||
+                             hashParams.has('access_token') ||
+                             hashParams.has('error');
 
       if (isApkBridge) {
-        var isAndroid = /android/i.test(navigator.userAgent || '');
-        var deepLink = 'goldvault://login-callback' + search + hash;
-        var intentPath = 'login-callback' + search + hash;
-        var intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
+        const isAndroid = /android/i.test(navigator.userAgent || '');
+        const deepLink = 'goldvault://login-callback' + search + hash;
+        const intentPath = 'login-callback' + search + hash;
+        const intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
 
-        document.head.insertAdjacentHTML('beforeend',
-          '<style>' +
-          '.gv-bridge-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0e0f12;color:#ece7dd;}' +
-          '.gv-bridge-card{width:100%;max-width:360px;background:#14161b;border:1px solid rgba(236,231,221,0.12);border-radius:18px;padding:28px 22px;text-align:center;box-sizing:border-box;}' +
-          '.gv-bridge-logo{font-size:24px;font-weight:800;letter-spacing:-0.4px;margin-bottom:12px;}' +
-          '.gv-bridge-logo span{color:#d9b87a;}' +
-          '.gv-bridge-desc{font-size:13px;line-height:1.5;color:#8b867c;margin:0 0 22px 0;}' +
-          '.gv-bridge-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:#d9b87a;color:#17130b;font-weight:800;font-size:15px;border-radius:11px;text-decoration:none;border:none;cursor:pointer;box-sizing:border-box;margin-bottom:12px;}' +
-          '.gv-bridge-btn-sec{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;background:transparent;color:#ece7dd;font-weight:600;font-size:13px;border-radius:11px;text-decoration:none;border:1px solid rgba(236,231,221,0.14);box-sizing:border-box;}' +
-          '</style>'
-        );
+        // Build DOM programmatically (avoid innerHTML with untrusted URL query/hash)
+        const wrap = document.createElement('main');
+        wrap.className = 'gv-bridge-wrap';
 
-        document.body.innerHTML =
-          '<div class="gv-bridge-wrap">' +
-            '<div class="gv-bridge-card">' +
-              '<div class="gv-bridge-logo">Gold<span>Vault</span></div>' +
-              '<p class="gv-bridge-desc">' +
-                (hasAuthPayload
-                  ? 'Autenticacion completada. Redirigiendo de vuelta a la aplicacion GoldVault en tu telefono...'
-                  : 'Conectando con la aplicacion GoldVault...') +
-              '</p>' +
-              '<a id="gv-open-apk" class="gv-bridge-btn" href="' + deepLink + '">Abrir en la app GoldVault</a>' +
-              (isAndroid ? '<a id="gv-open-intent" class="gv-bridge-btn-sec" href="' + intentUrl + '">Reintentar apertura directa</a>' : '') +
-            '</div>' +
-          '</div>';
+        const card = document.createElement('section');
+        card.className = 'gv-bridge-card';
+
+        const logo = document.createElement('div');
+        logo.className = 'gv-bridge-logo';
+        logo.appendChild(document.createTextNode('Gold'));
+        const logoAccent = document.createElement('span');
+        logoAccent.textContent = 'Vault';
+        logo.appendChild(logoAccent);
+
+        const desc = document.createElement('p');
+        desc.className = 'gv-bridge-desc';
+        desc.textContent = hasAuthPayload
+          ? 'Autenticación completada. Redirigiendo de vuelta a la aplicación GoldVault en tu teléfono...'
+          : 'Conectando con la aplicación GoldVault...';
+
+        const openAppLink = document.createElement('a');
+        openAppLink.id = 'gv-open-apk';
+        openAppLink.className = 'gv-bridge-btn';
+        openAppLink.href = deepLink;
+        openAppLink.textContent = 'Abrir en la app GoldVault';
+
+        card.appendChild(logo);
+        card.appendChild(desc);
+        card.appendChild(openAppLink);
+
+        if (isAndroid) {
+          const openIntentLink = document.createElement('a');
+          openIntentLink.id = 'gv-open-intent';
+          openIntentLink.className = 'gv-bridge-btn-sec';
+          openIntentLink.href = intentUrl;
+          openIntentLink.textContent = 'Reintentar apertura directa';
+          card.appendChild(openIntentLink);
+        }
+
+        wrap.appendChild(card);
+        document.body.replaceChildren(wrap);
 
         // Trigger immediate deep link redirect back to the native app (Android & iOS)
         try {
@@ -101,10 +221,10 @@
         return;
       }
 
-      var s = document.createElement('script');
-      s.src = 'flutter_bootstrap.js';
-      s.async = true;
-      document.body.appendChild(s);
+      const script = document.createElement('script');
+      script.src = 'flutter_bootstrap.js';
+      script.async = true;
+      document.body.appendChild(script);
     })();
   </script>
 </body>

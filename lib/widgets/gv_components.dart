@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
@@ -694,14 +695,10 @@ class GVGlassDock extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [c.acc, c.acc2],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: c.acc,
                               boxShadow: [
                                 BoxShadow(
-                                  color: c.acc.withValues(alpha: 0.34),
+                                  color: Colors.black.withValues(alpha: c.isDark ? 0.35 : 0.18),
                                   blurRadius: 14,
                                   offset: const Offset(0, 4),
                                 ),
@@ -761,4 +758,60 @@ class GVGlassDock extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Official Google "G" vector mark rendered via CustomPainter for Sign-In buttons.
+class GoogleGIcon extends StatelessWidget {
+  final double size;
+  const GoogleGIcon({super.key, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Google',
+      child: CustomPaint(
+        size: Size.square(size),
+        painter: _GoogleGPainter(),
+      ),
+    );
+  }
+}
+
+class _GoogleGPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final stroke = s * 0.19;
+    final center = Offset(s / 2, s / 2);
+    final radius = (s - stroke) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    Paint arcPaint(Color color) => Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.butt;
+
+    // Red top-left arc (-145 deg to -42 deg)
+    canvas.drawArc(rect, -145 * math.pi / 180, 103 * math.pi / 180, false, arcPaint(const Color(0xFFEA4335)));
+    // Yellow left arc (145 deg to 217 deg)
+    canvas.drawArc(rect, 145 * math.pi / 180, 72 * math.pi / 180, false, arcPaint(const Color(0xFFFBBC05)));
+    // Green bottom arc (40 deg to 147 deg)
+    canvas.drawArc(rect, 40 * math.pi / 180, 107 * math.pi / 180, false, arcPaint(const Color(0xFF34A853)));
+    // Blue right-bottom arc (-5 deg to 43 deg)
+    canvas.drawArc(rect, -5 * math.pi / 180, 48 * math.pi / 180, false, arcPaint(const Color(0xFF4285F4)));
+
+    // Blue horizontal crossbar from center to outer right edge
+    final barPaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    final barTop = center.dy - stroke * 0.48;
+    canvas.drawRect(
+      Rect.fromLTRB(center.dx, barTop, s - stroke * 0.04, barTop + stroke * 0.96),
+      barPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

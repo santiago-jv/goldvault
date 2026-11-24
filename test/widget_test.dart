@@ -6,6 +6,7 @@ import 'package:goldvault/models/models.dart';
 import 'package:goldvault/screens/home_and_shells.dart';
 import 'package:goldvault/state/app_state.dart';
 import 'package:goldvault/theme/gold_theme.dart';
+import 'package:goldvault/widgets/gv_components.dart';
 
 void main() {
   test('Only Android exposes notification listener controls', () {
@@ -69,6 +70,7 @@ void main() {
     st.notifyListeners();
     await tester.pumpAndSettle();
     expect(find.text('Continuar con Google'), findsOneWidget);
+    expect(find.byType(GoogleGIcon), findsOneWidget);
   });
 
   testWidgets('GoldVaultShell renders Home, Movs, Metas, Ajustes and MovementSheet cleanly', (WidgetTester tester) async {

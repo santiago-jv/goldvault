@@ -24,7 +24,8 @@ const PREVIEW_HTML = `<!DOCTYPE html>
 <html lang="es-CO">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <title>GoldVault — Finanzas Personales & Puente OAuth APK</title>
   <meta name="description" content="GoldVault — Claridad sobre tu dinero: registro automático de bancos, metas y análisis en tiempo real.">
   <meta property="og:title" content="GoldVault — Finanzas Personales">
@@ -33,15 +34,15 @@ const PREVIEW_HTML = `<!DOCTYPE html>
   <link rel="manifest" href="/manifest.json">
   <style>
     :root {
-      --bg: #0e0f12;
-      --card: #14161b;
-      --card2: #191c22;
-      --txt: #ece7dd;
-      --mut: #8b867c;
-      --line: rgba(236, 231, 221, 0.12);
-      --acc: #d9b87a;
-      --ink: #17130b;
-      --green: #6fa882;
+      color-scheme: light dark;
+      --bg: #000000;
+      --card: #141417;
+      --card2: #1e1e22;
+      --txt: #f5f5f7;
+      --mut: #98989f;
+      --line: rgba(255, 255, 255, 0.12);
+      --acc: #ffffff;
+      --ink: #0c0c0e;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -172,28 +173,56 @@ const PREVIEW_HTML = `<!DOCTYPE html>
                            hashParams.has('error');
 
       if (isApkBridge) {
-        var deepLink = 'goldvault://login-callback' + search + hash;
-        var intentPath = 'login-callback' + search + hash;
-        var intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
+        const isAndroid = /android/i.test(navigator.userAgent || '');
+        const deepLink = 'goldvault://login-callback' + search + hash;
+        const intentPath = 'login-callback' + search + hash;
+        const intentUrl = 'intent://' + intentPath + '#Intent;scheme=goldvault;package=app.goldvault.goldvault;end';
 
-        document.body.innerHTML =
-          '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;">' +
-            '<div class="card" style="max-width:360px;width:100%;text-align:center;">' +
-              '<div class="logo" style="margin-bottom:12px;">Gold<span>Vault</span></div>' +
-              '<p>' +
-                (hasAuthPayload
-                  ? 'Autenticación completada. Redirigiendo de vuelta a la aplicación GoldVault en tu teléfono...'
-                  : 'Conectando con la aplicación GoldVault...') +
-              '</p>' +
-              '<a class="btn" href="' + deepLink + '">Abrir en la app GoldVault</a>' +
-              '<a class="btn-sec" href="' + intentUrl + '">Reintentar apertura directa</a>' +
-            '</div>' +
-          '</div>';
+        const wrap = document.createElement('main');
+        wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:24px;';
+        const card = document.createElement('section');
+        card.className = 'card';
+        card.style.cssText = 'max-width:360px;width:100%;text-align:center;';
+
+        const logo = document.createElement('div');
+        logo.className = 'logo';
+        logo.style.marginBottom = '12px';
+        logo.appendChild(document.createTextNode('Gold'));
+        const accent = document.createElement('span');
+        accent.textContent = 'Vault';
+        logo.appendChild(accent);
+
+        const desc = document.createElement('p');
+        desc.textContent = hasAuthPayload
+          ? 'Autenticación completada. Redirigiendo de vuelta a la aplicación GoldVault en tu teléfono...'
+          : 'Conectando con la aplicación GoldVault...';
+
+        const openBtn = document.createElement('a');
+        openBtn.className = 'btn';
+        openBtn.href = deepLink;
+        openBtn.textContent = 'Abrir en la app GoldVault';
+
+        card.appendChild(logo);
+        card.appendChild(desc);
+        card.appendChild(openBtn);
+
+        if (isAndroid) {
+          const intentBtn = document.createElement('a');
+          intentBtn.className = 'btn-sec';
+          intentBtn.href = intentUrl;
+          intentBtn.textContent = 'Reintentar apertura directa';
+          card.appendChild(intentBtn);
+        }
+
+        wrap.appendChild(card);
+        document.body.replaceChildren(wrap);
 
         try { window.location.replace(deepLink); } catch (_) {}
-        setTimeout(function() {
-          try { window.location.href = intentUrl; } catch (_) {}
-        }, 650);
+        if (isAndroid) {
+          setTimeout(function() {
+            try { window.location.href = intentUrl; } catch (_) {}
+          }, 650);
+        }
       }
     })();
   </script>

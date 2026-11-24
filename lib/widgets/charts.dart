@@ -77,9 +77,9 @@ class TrendChartWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _legendDot(c.green, 'Ingresos', c),
+            _legendDot(c.acc, 'Ingresos', c),
             const SizedBox(width: 18),
-            _legendDot(c.red, 'Gastos', c),
+            _legendDot(c.mut.withValues(alpha: 0.45), 'Gastos', c),
           ],
         ),
       ],
@@ -134,8 +134,8 @@ class _TrendBarPainter extends CustomPainter {
     )..layout();
     maxTp.paint(canvas, const Offset(pad, 0));
 
-    final incPaint = Paint()..color = colors.green.withValues(alpha: 0.9);
-    final expPaint = Paint()..color = colors.red.withValues(alpha: 0.9);
+    final incPaint = Paint()..color = colors.acc;
+    final expPaint = Paint()..color = colors.mut.withValues(alpha: 0.45);
 
     for (var i = 0; i < data.length; i++) {
       final d = data[i];

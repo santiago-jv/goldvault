@@ -153,11 +153,39 @@ class GoogleLoginScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 28),
-                    GVPillButton(
-                      label: 'Continuar con Google',
-                      variant: GVPillButtonVariant.dark,
-                      leading: const Icon(Icons.g_mobiledata_rounded, size: 26, color: Color(0xFF4285F4)),
-                      onPressed: () => state.googleLogin(),
+                    Material(
+                      color: Colors.white,
+                      shape: StadiumBorder(
+                        side: BorderSide(
+                          color: c.isDark ? const Color(0x2EFFFFFF) : const Color(0x22000000),
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () => state.googleLogin(),
+                        customBorder: const StadiumBorder(),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const GoogleGIcon(size: 20),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  'Continuar con Google',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GVTxt.body(
+                                    c,
+                                    weight: FontWeight.w600,
+                                    color: const Color(0xFF1D1D1F),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
