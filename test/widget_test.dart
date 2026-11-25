@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
 import 'package:goldvault/screens/home_and_shells.dart';
@@ -9,6 +10,9 @@ import 'package:goldvault/theme/gold_theme.dart';
 import 'package:goldvault/widgets/gv_components.dart';
 
 void main() {
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
   test('Only Android exposes notification listener controls', () {
     final state = GoldVaultState();
     addTearDown(() {

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Unified geometry tokens aligned with Apple Human Interface Guidelines
 /// and Bento surface design.
@@ -200,6 +202,20 @@ class GVTxt {
   static const double fsXs = 12.0;
   static const double fs2xs = 11.0;
 
+  static bool get _isNativeApple =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
+  static const List<String> _appleFallbackStack = [
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'SF Pro Display',
+    'SF Pro Text',
+    'Helvetica Neue',
+    'sans-serif',
+  ];
+
   static TextStyle _font({
     required double fontSize,
     required FontWeight fontWeight,
@@ -208,14 +224,22 @@ class GVTxt {
     required Color color,
     bool tabular = false,
   }) {
-    return TextStyle(
+    final baseStyle = TextStyle(
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
       letterSpacing: letterSpacing,
       color: color,
+      fontFamily: _isNativeApple
+          ? (fontSize >= 20.0 ? '.SF Pro Display' : '.SF Pro Text')
+          : null,
+      fontFamilyFallback: _appleFallbackStack,
       fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
     );
+    if (_isNativeApple) {
+      return baseStyle;
+    }
+    return GoogleFonts.inter(textStyle: baseStyle);
   }
 
   static TextStyle display(GVColors c, {Color? color}) => _font(
@@ -319,6 +343,19 @@ class GoldTheme {
   static ThemeData build(Brightness brightness) {
     final c = brightness == Brightness.dark ? GVColors.dark : GVColors.light;
     final base = brightness == Brightness.dark ? ThemeData.dark() : ThemeData.light();
+    final isNativeApple = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS);
+    final baseTextTheme = isNativeApple
+        ? base.textTheme.apply(
+            fontFamily: '.SF Pro Text',
+            bodyColor: c.txt,
+            displayColor: c.txt,
+          )
+        : GoogleFonts.interTextTheme(base.textTheme).apply(
+            bodyColor: c.txt,
+            displayColor: c.txt,
+          );
     return base.copyWith(
       brightness: brightness,
       scaffoldBackgroundColor: c.bg,
@@ -336,16 +373,13 @@ class GoldTheme {
         surface: c.card,
         onSurface: c.txt,
       ),
-      textTheme: base.textTheme.apply(
-        bodyColor: c.txt,
-        displayColor: c.txt,
-      ),
+      textTheme: baseTextTheme,
       dividerColor: c.line,
       dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: c.isDark ? const Color(0xFF242429) : const Color(0xFF1D1D1F),
-        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w500),
+        contentTextStyle: GVTxt.sm(c, weight: FontWeight.w500, color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
 import 'package:goldvault/screens/home_and_shells.dart';
@@ -94,6 +95,10 @@ class FakeCloudAdapter implements GoldVaultCloudAdapter {
 }
 
 void main() {
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
