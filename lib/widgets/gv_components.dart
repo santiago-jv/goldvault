@@ -306,7 +306,7 @@ class GVTextField extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.card2,
         borderRadius: BorderRadius.circular(GVRadius.control),
-        border: Border.all(color: c.line),
+        border: Border.all(color: c.lineStrong),
       ),
       child: TextField(
         controller: controller,

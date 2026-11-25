@@ -7,8 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="GoldVault — Claridad sobre tu dinero: registro automático de bancos, metas y análisis en tiempo real.">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0b0e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,22 +22,22 @@
   <style>
     :root {
       color-scheme: light dark;
-      --gv-bg-light: #f5f5f7;
-      --gv-bg-dark: #000000;
+      --gv-bg-light: #f7f8fa;
+      --gv-bg-dark: #0b0b0e;
       --gv-card-light: #ffffff;
-      --gv-card-dark: #141417;
-      --gv-txt-light: #1d1d1f;
+      --gv-card-dark: #151519;
+      --gv-txt-light: #111113;
       --gv-txt-dark: #f5f5f7;
-      --gv-mut-light: #6e6e73;
-      --gv-mut-dark: #98989f;
-      --gv-line-light: rgba(0, 0, 0, 0.08);
-      --gv-line-dark: rgba(255, 255, 255, 0.12);
+      --gv-mut-light: #525866;
+      --gv-mut-dark: #a8a8b3;
+      --gv-line-light: rgba(0, 0, 0, 0.12);
+      --gv-line-dark: rgba(255, 255, 255, 0.16);
       --gv-bg: var(--gv-bg-light);
       --gv-card: var(--gv-card-light);
       --gv-txt: var(--gv-txt-light);
       --gv-mut: var(--gv-mut-light);
       --gv-line: var(--gv-line-light);
-      --gv-cta-bg: #1d1d1f;
+      --gv-cta-bg: #111113;
       --gv-cta-fg: #ffffff;
     }
     @media (prefers-color-scheme: dark) {
@@ -47,8 +47,8 @@
         --gv-txt: var(--gv-txt-dark);
         --gv-mut: var(--gv-mut-dark);
         --gv-line: var(--gv-line-dark);
-        --gv-cta-bg: #ffffff;
-        --gv-cta-fg: #0c0c0e;
+        --gv-cta-bg: #f5f5f7;
+        --gv-cta-fg: #0b0b0e;
       }
     }
     @supports (color: light-dark(white, black)) {
@@ -58,8 +58,19 @@
         --gv-txt: light-dark(var(--gv-txt-light), var(--gv-txt-dark));
         --gv-mut: light-dark(var(--gv-mut-light), var(--gv-mut-dark));
         --gv-line: light-dark(var(--gv-line-light), var(--gv-line-dark));
-        --gv-cta-bg: light-dark(#1d1d1f, #ffffff);
-        --gv-cta-fg: light-dark(#ffffff, #0c0c0e);
+        --gv-cta-bg: light-dark(#111113, #f5f5f7);
+        --gv-cta-fg: light-dark(#ffffff, #0b0b0e);
+      }
+    }
+    @media (forced-colors: active) {
+      :root {
+        --gv-bg: Canvas;
+        --gv-card: Canvas;
+        --gv-txt: CanvasText;
+        --gv-mut: GrayText;
+        --gv-line: CanvasText;
+        --gv-cta-bg: ButtonFace;
+        --gv-cta-fg: ButtonText;
       }
     }
     html, body {
@@ -70,7 +81,8 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
     }
     .gv-bridge-wrap {
       display: flex;
@@ -78,37 +90,41 @@
       justify-content: center;
       min-height: 100vh;
       min-height: 100dvh;
-      padding: 24px;
+      padding: 1.5rem;
       box-sizing: border-box;
       background: var(--gv-bg);
       color: var(--gv-txt);
     }
     .gv-bridge-card {
       width: 100%;
-      max-width: 360px;
+      max-width: 22.5rem;
       background: var(--gv-card);
       border: 1px solid var(--gv-line);
-      border-radius: 24px;
-      padding: 32px 24px;
+      border-radius: 1.125rem;
+      padding: 2rem 1.5rem;
       text-align: center;
       box-sizing: border-box;
+      overflow-wrap: break-word;
     }
     .gv-bridge-logo {
-      font-size: 24px;
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 12px;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
       color: var(--gv-txt);
+      text-wrap: balance;
     }
     .gv-bridge-logo span {
       color: var(--gv-mut);
       font-weight: 500;
     }
     .gv-bridge-desc {
-      font-size: 13.5px;
+      font-size: 0.875rem;
       line-height: 1.5;
       color: var(--gv-mut);
-      margin: 0 0 22px 0;
+      margin: 0 0 1.375rem 0;
+      text-wrap: pretty;
     }
     .gv-bridge-btn,
     .gv-bridge-btn-sec {
@@ -116,22 +132,43 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: 46px;
+      min-block-size: 2.875rem;
+      padding: 0.625rem 1rem;
       border-radius: 999px;
       text-decoration: none;
       box-sizing: border-box;
       font-weight: 600;
+      line-height: 1.3;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .gv-bridge-btn,
+      .gv-bridge-btn-sec {
+        transition: opacity 150ms ease-out, scale 150ms ease-out, border-color 150ms ease-out;
+      }
+      .gv-bridge-btn:active,
+      .gv-bridge-btn-sec:active {
+        scale: 0.98;
+      }
+    }
+    .gv-bridge-btn:hover,
+    .gv-bridge-btn-sec:hover {
+      opacity: 0.88;
+    }
+    :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+      outline: 2px solid CanvasText;
+      outline-offset: 3px;
     }
     .gv-bridge-btn {
       background: var(--gv-cta-bg);
       color: var(--gv-cta-fg);
-      font-size: 15px;
-      margin-bottom: 10px;
+      border: 1px solid transparent;
+      font-size: 0.9375rem;
+      margin-bottom: 0.625rem;
     }
     .gv-bridge-btn-sec {
       background: transparent;
       color: var(--gv-txt);
-      font-size: 13.5px;
+      font-size: 0.875rem;
       border: 1px solid var(--gv-line);
     }
   </style>
