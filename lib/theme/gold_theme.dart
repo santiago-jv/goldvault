@@ -19,6 +19,46 @@ class GVSpacing {
   static const double xl = 28.0;
 }
 
+/// Maps category names to crisp vector icons so Web, iOS, and Android render identically
+/// without inconsistent or monochrome platform emoji glyphs.
+IconData categoryIconData(String? category) {
+  final name = (category ?? '').toLowerCase();
+  if (name.contains('vivienda') || name.contains('arriendo') || name.contains('hogar')) {
+    return Icons.home_outlined;
+  }
+  if (name.contains('mercado') || name.contains('super')) {
+    return Icons.shopping_cart_outlined;
+  }
+  if (name.contains('comida') || name.contains('restaurante') || name.contains('almuerzo')) {
+    return Icons.restaurant_outlined;
+  }
+  if (name.contains('transporte') || name.contains('uber') || name.contains('auto')) {
+    return Icons.directions_car_outlined;
+  }
+  if (name.contains('suscrip') || name.contains('servicio')) {
+    return Icons.subscriptions_outlined;
+  }
+  if (name.contains('salud') || name.contains('farmacia') || name.contains('gym')) {
+    return Icons.favorite_outline_rounded;
+  }
+  if (name.contains('educa') || name.contains('libro')) {
+    return Icons.school_outlined;
+  }
+  if (name.contains('ocio') || name.contains('entreten')) {
+    return Icons.celebration_outlined;
+  }
+  if (name.contains('ropa') || name.contains('calzado')) {
+    return Icons.checkroom_outlined;
+  }
+  if (name.contains('deuda') || name.contains('tarjeta') || name.contains('crédito')) {
+    return Icons.credit_card_outlined;
+  }
+  if (name.contains('regalo')) {
+    return Icons.card_giftcard_outlined;
+  }
+  return Icons.category_outlined;
+}
+
 class GVColors {
   final bool isDark;
   final Color bg;
@@ -36,6 +76,7 @@ class GVColors {
   final Color green;
   final Color red;
   final Color amber;
+  final Color blue;
   final Color placeholder;
   final List<Color> chartPalette;
 
@@ -56,11 +97,12 @@ class GVColors {
     required this.green,
     required this.red,
     required this.amber,
+    required this.blue,
     required this.placeholder,
     required this.chartPalette,
   });
 
-  /// Apple Anodized Space Black Pro — pure monochrome black & white palette.
+  /// Apple Anodized Space Black chrome with crisp Apple semantic colors.
   static const dark = GVColors(
     isDark: true,
     bg: Color(0xFF000000),
@@ -70,26 +112,27 @@ class GVColors {
     txt: Color(0xFFF5F5F7),
     mut: Color(0xFF98989F),
     tertiary: Color(0xFF6E6E73),
-    line: Color(0x1AFFFFFF),
-    lineStrong: Color(0x2EFFFFFF),
+    line: Color(0x18FFFFFF),
+    lineStrong: Color(0x2CFFFFFF),
     acc: Color(0xFFFFFFFF),
     acc2: Color(0xFFD2D2D7),
     ink: Color(0xFF0C0C0E),
-    green: Color(0xFFFFFFFF),
-    red: Color(0xFFC7C7CC),
-    amber: Color(0xFFE5E5EA),
+    green: Color(0xFF30D158),
+    red: Color(0xFFFF453A),
+    amber: Color(0xFFFF9F0A),
+    blue: Color(0xFF0A84FF),
     placeholder: Color(0x73F5F5F7),
     chartPalette: [
-      Color(0xFFFFFFFF),
-      Color(0xFFD1D1D6),
-      Color(0xFFAEAEB2),
-      Color(0xFF8E8E93),
-      Color(0xFF636366),
-      Color(0xFF48484A),
+      Color(0xFF0A84FF),
+      Color(0xFF30D158),
+      Color(0xFFFF9F0A),
+      Color(0xFFBF5AF2),
+      Color(0xFFFF453A),
+      Color(0xFF64D2FF),
     ],
   );
 
-  /// Apple Cupertino Daylight — pure monochrome white, stone & Space Black palette.
+  /// Apple Cupertino Daylight chrome with crisp Apple semantic colors.
   static const light = GVColors(
     isDark: false,
     bg: Color(0xFFF5F5F7),
@@ -99,26 +142,27 @@ class GVColors {
     txt: Color(0xFF1D1D1F),
     mut: Color(0xFF6E6E73),
     tertiary: Color(0xFF86868B),
-    line: Color(0x14000000),
-    lineStrong: Color(0x26000000),
+    line: Color(0x13000000),
+    lineStrong: Color(0x24000000),
     acc: Color(0xFF1D1D1F),
     acc2: Color(0xFF3A3A3D),
     ink: Color(0xFFFFFFFF),
-    green: Color(0xFF1D1D1F),
-    red: Color(0xFF48484A),
-    amber: Color(0xFF3A3A3D),
+    green: Color(0xFF1D8348),
+    red: Color(0xFFD70015),
+    amber: Color(0xFFC27200),
+    blue: Color(0xFF0071E3),
     placeholder: Color(0x731D1D1F),
     chartPalette: [
-      Color(0xFF1D1D1F),
-      Color(0xFF48484A),
-      Color(0xFF6E6E73),
-      Color(0xFF8E8E93),
-      Color(0xFFAEAEB2),
-      Color(0xFFD1D1D6),
+      Color(0xFF0071E3),
+      Color(0xFF1D8348),
+      Color(0xFFD97706),
+      Color(0xFF7C3AED),
+      Color(0xFFD70015),
+      Color(0xFF0284C7),
     ],
   );
 
-  /// Soft multi-layered Bento elevation shadow (subtle in light, clean rim in dark).
+  /// Soft multi-layered Bento elevation shadow.
   List<BoxShadow> get cardShadow => isDark
       ? const [
           BoxShadow(
@@ -288,7 +332,7 @@ class GoldTheme {
         secondary: c.acc2,
         onSecondary: c.ink,
         error: c.red,
-        onError: c.ink,
+        onError: Colors.white,
         surface: c.card,
         onSurface: c.txt,
       ),

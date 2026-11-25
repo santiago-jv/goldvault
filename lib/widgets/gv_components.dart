@@ -551,7 +551,7 @@ class GVMovementRow extends StatelessWidget {
     final c = GVColors.of(context);
     final isInc = movement.type == 'income';
     final isSav = movement.type == 'saving';
-    final amtColor = isInc ? c.green : (isSav ? c.acc : c.txt);
+    final amtColor = isInc ? c.green : (isSav ? c.blue : c.txt);
     final sign = isInc ? '+' : '−';
     final sub = isInc
         ? (movement.source ?? 'Ingreso')
@@ -567,20 +567,21 @@ class GVMovementRow extends StatelessWidget {
             child: Row(
               children: [
                 GVSquircleIcon(
-                  size: 42,
+                  size: 40,
                   backgroundColor: isInc
-                      ? c.green.withValues(alpha: 0.11)
-                      : (isSav ? c.acc.withValues(alpha: 0.12) : c.card2),
+                      ? c.green.withValues(alpha: 0.12)
+                      : (isSav ? c.blue.withValues(alpha: 0.12) : c.card2),
                   borderColor: isInc
-                      ? c.green.withValues(alpha: 0.2)
-                      : (isSav ? c.acc.withValues(alpha: 0.24) : c.line),
+                      ? c.green.withValues(alpha: 0.22)
+                      : (isSav ? c.blue.withValues(alpha: 0.22) : c.line),
                   child: isInc
                       ? Icon(Icons.south_west_rounded, size: 18, color: c.green)
                       : isSav
-                          ? Icon(Icons.account_balance_rounded, size: 18, color: c.acc)
-                          : Text(
-                              state.curSpace.iconForCategory(movement.category),
-                              style: const TextStyle(fontSize: 18),
+                          ? Icon(Icons.savings_outlined, size: 18, color: c.blue)
+                          : Icon(
+                              categoryIconData(movement.category),
+                              size: 18,
+                              color: c.txt,
                             ),
                 ),
                 const SizedBox(width: 12),

@@ -276,7 +276,7 @@ void main() {
       await tester.tap(find.text('Ajustes'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Descargar GoldVault Nativo (.APK)'), findsNothing);
+      expect(find.text('Descargar App Android (.APK)'), findsNothing);
       expect(find.textContaining('En iPhone'), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;

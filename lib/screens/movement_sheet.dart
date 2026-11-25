@@ -200,8 +200,12 @@ class _MovementSheetState extends State<MovementSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(cat.icon, style: const TextStyle(fontSize: 19)),
-                          const SizedBox(height: 4),
+                          Icon(
+                            categoryIconData(cat.name),
+                            size: 20,
+                            color: on ? c.txt : c.mut,
+                          ),
+                          const SizedBox(height: 5),
                           Text(
                             cat.name,
                             maxLines: 1,
