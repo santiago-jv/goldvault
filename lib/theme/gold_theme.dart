@@ -346,16 +346,15 @@ class GoldTheme {
     final isNativeApple = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS);
-    final baseTextTheme = isNativeApple
-        ? base.textTheme.apply(
-            fontFamily: '.SF Pro Text',
-            bodyColor: c.txt,
-            displayColor: c.txt,
-          )
-        : GoogleFonts.interTextTheme(base.textTheme).apply(
-            bodyColor: c.txt,
-            displayColor: c.txt,
-          );
+    final textFontFamily = isNativeApple
+        ? '.SF Pro Text'
+        : GoogleFonts.inter().fontFamily;
+    final baseTextTheme = base.textTheme.apply(
+      fontFamily: textFontFamily,
+      fontFamilyFallback: GVTxt._appleFallbackStack,
+      bodyColor: c.txt,
+      displayColor: c.txt,
+    );
     return base.copyWith(
       brightness: brightness,
       scaffoldBackgroundColor: c.bg,
