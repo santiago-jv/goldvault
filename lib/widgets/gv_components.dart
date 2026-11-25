@@ -228,11 +228,10 @@ class GVSegmentedControl<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
     return Container(
-      padding: const EdgeInsets.all(3.5),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: c.card2,
-        borderRadius: BorderRadius.circular(GVRadius.pill),
-        border: Border.all(color: c.line),
+        borderRadius: BorderRadius.circular(GVRadius.control),
       ),
       child: Row(
         mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
@@ -242,22 +241,22 @@ class GVSegmentedControl<T> extends StatelessWidget {
             onTap: () => onChanged(entry.$1),
             behavior: HitTestBehavior.opaque,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
+              duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               padding: EdgeInsets.symmetric(
-                horizontal: compact ? 16 : 12,
-                vertical: compact ? 7 : 9,
+                horizontal: compact ? 14 : 10,
+                vertical: compact ? 6 : 7,
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: selected ? (c.isDark ? c.acc : c.card) : Colors.transparent,
-                borderRadius: BorderRadius.circular(GVRadius.pill),
-                boxShadow: selected
-                    ? [
+                borderRadius: BorderRadius.circular(GVRadius.control - 2),
+                boxShadow: selected && !c.isDark
+                    ? const [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: c.isDark ? 0.25 : 0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Color(0x0D000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
                         ),
                       ]
                     : null,
@@ -266,7 +265,7 @@ class GVSegmentedControl<T> extends StatelessWidget {
                 entry.$2,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GVTxt.sm(
+                style: GVTxt.xs(
                   c,
                   weight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: selected ? (c.isDark ? c.ink : c.txt) : c.mut,
@@ -433,9 +432,6 @@ class GVMonthStepper extends StatelessWidget {
         color: c.card,
         borderRadius: BorderRadius.circular(GVRadius.pill),
         border: Border.all(color: c.line),
-        boxShadow: c.isDark ? null : const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 2)),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -690,22 +686,10 @@ class GVGlassDock extends StatelessWidget {
                         child: InkWell(
                           onTap: onAdd,
                           customBorder: const CircleBorder(),
-                          child: Container(
-                            width: 46,
-                            height: 46,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: c.acc,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: c.isDark ? 0.35 : 0.18),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Icon(Icons.add_rounded, color: c.ink, size: 24),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(Icons.add_rounded, color: c.ink, size: 22),
                           ),
                         ),
                       ),

@@ -133,7 +133,7 @@ void main() {
     expect(state.cloudSynced, isTrue);
     expect(state.syncError, isNull);
     expect(state.spaces.containsKey('space_main'), isTrue);
-    expect(find.text('DISPONIBLE ESTE MES'), findsOneWidget);
+    expect(find.text('Disponible este mes'), findsOneWidget);
   });
 
   testWidgets('Verified empty cloud account transitions to OnboardingScreen', (tester) async {

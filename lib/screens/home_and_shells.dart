@@ -100,6 +100,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                           quickController: _quickCtrl,
                           onSubmitQuickEntry: _submitQuickEntry,
                           onOpenSheet: _openMovementSheet,
+                          onNavigateMovements: () => setState(() => tabIndex = 1),
                         ),
                       1 => MovementsTab(
                           state: st,

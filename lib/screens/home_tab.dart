@@ -11,6 +11,7 @@ class HomeTab extends StatefulWidget {
   final TextEditingController quickController;
   final VoidCallback onSubmitQuickEntry;
   final void Function({MovementModel? editing, MovementModel? prefilled}) onOpenSheet;
+  final VoidCallback? onNavigateMovements;
 
   const HomeTab({
     super.key,
@@ -18,6 +19,7 @@ class HomeTab extends StatefulWidget {
     required this.quickController,
     required this.onSubmitQuickEntry,
     required this.onOpenSheet,
+    this.onNavigateMovements,
   });
 
   @override
@@ -33,6 +35,8 @@ class _HomeTabState extends State<HomeTab> {
     final st = widget.state;
     final unrev = st.unreviewedBankMovements;
     final pend = st.pendingMovements;
+
+    final recent = st.monthMovements.toList()..sort((a, b) => b.date.compareTo(a.date));
 
     final byCat = <String, int>{};
     for (final m in st.activeMonthMovements.where((x) => x.type == 'expense')) {
@@ -52,274 +56,221 @@ class _HomeTabState extends State<HomeTab> {
       color: c.acc,
       onRefresh: () => st.syncAll(),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
         children: [
-          // Top bar: brand + space pill + month stepper
+          // 1. Minimal Top Bar: Space selector + Month stepper
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Flexible(child: GoldVaultLogo(fontSize: GVTxt.fsH2)),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () => showSpacesSheet(context, st),
-                      borderRadius: BorderRadius.circular(GVRadius.pill),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: c.card,
-                          borderRadius: BorderRadius.circular(GVRadius.pill),
-                          border: Border.all(color: c.line),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              st.curSpace.name,
-                              style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt),
-                            ),
-                            const SizedBox(width: 2),
-                            Icon(Icons.unfold_more_rounded, size: 14, color: c.mut),
-                          ],
-                        ),
+              InkWell(
+                onTap: () => showSpacesSheet(context, st),
+                borderRadius: BorderRadius.circular(GVRadius.pill),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: c.card,
+                    borderRadius: BorderRadius.circular(GVRadius.pill),
+                    border: Border.all(color: c.line),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.account_balance_wallet_outlined, size: 15, color: c.txt),
+                      const SizedBox(width: 6),
+                      Text(
+                        st.curSpace.name,
+                        style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                      Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: c.mut),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
               GVMonthStepper(ym: st.ym, onShift: st.shiftMonth),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 26),
 
-          // 1. Hero Balance Card (Anodized Space Black + Apple Semantic Indicators)
-          _buildHeroCard(c, st),
-          const SizedBox(height: 14),
+          // 2. Open, Calm Balance Hero (Revolut / Copilot / Apple Wallet style)
+          _buildCalmHero(context, c, st),
+          const SizedBox(height: 28),
 
-          // 2. Quick Entry Bar (+ compact frequent capsules if any)
-          Row(
-            children: [
-              Expanded(
-                child: GVTextField(
-                  controller: widget.quickController,
-                  hintText: 'Ej: 20 mil almuerzo en nequi',
-                  prefixIcon: Icons.bolt_rounded,
-                  onSubmitted: (_) => widget.onSubmitQuickEntry(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Material(
-                color: c.acc,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: widget.onSubmitQuickEntry,
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
-                    width: 46,
-                    height: 46,
-                    child: Icon(Icons.arrow_upward_rounded, color: c.ink, size: 20),
+          // 3. Action Needed: Auto-detected bank payments (iOS inset-grouped header)
+          if (unrev.isNotEmpty) ...[
+            _sectionLabel(
+              c,
+              'Por revisar (${unrev.length})',
+              trailing: InkWell(
+                onTap: () => st.confirmAllAutoBank(),
+                borderRadius: BorderRadius.circular(GVRadius.pill),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text(
+                    'Confirmar todos',
+                    style: GVTxt.xs(c, weight: FontWeight.w600, color: c.blue),
                   ),
                 ),
               ),
-            ],
-          ),
-          if (st.curSpace.frequents.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 34,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: st.curSpace.frequents.take(6).length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final f = st.curSpace.frequents[i];
-                  return InkWell(
-                    onTap: () async {
-                      final mv = MovementModel(
-                        id: genId('mv'),
-                        space: st.curSpace.id,
-                        date: todayIso(),
-                        type: 'expense',
-                        desc: f.desc,
-                        amount: f.amount,
-                        category: f.category,
-                        account: f.account,
-                        status: 'paid',
-                      );
-                      await st.saveMovement(mv);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Registrado: ${f.desc} ${formatMoney(f.amount)}')),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(GVRadius.pill),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: c.card,
-                        borderRadius: BorderRadius.circular(GVRadius.pill),
-                        border: Border.all(color: c.line),
+            ),
+            const SizedBox(height: 8),
+            GVCard(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: Column(
+                children: unrev.take(6).toList().asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final x = entry.value;
+                  final showDivider = idx < unrev.take(6).length - 1;
+                  return Column(
+                    children: [
+                      InkWell(
+                        onTap: () => widget.onOpenSheet(editing: x),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                          child: Row(
+                            children: [
+                              GVSquircleIcon(
+                                size: 38,
+                                child: Icon(
+                                  categoryIconData(x.category),
+                                  size: 18,
+                                  color: c.txt,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      x.desc.isEmpty ? 'Pago' : x.desc,
+                                      style: GVTxt.body(c, weight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${x.autoBank ?? 'Banco'} · ${x.category ?? 'Otros'}${x.fx != null ? ' · US\$${x.fx!.amount}' : ''}',
+                                      style: GVTxt.xs(c),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '−${formatMoney(x.amount)}',
+                                style: GVTxt.body(
+                                  c,
+                                  weight: FontWeight.w600,
+                                  color: c.red,
+                                  tabular: true,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                onPressed: () => st.confirmAutoBank(x.id),
+                                icon: Icon(Icons.check_circle_rounded, color: c.green, size: 22),
+                                tooltip: 'Confirmar',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
+                              IconButton(
+                                onPressed: () => st.deleteMovement(x.id),
+                                icon: Icon(Icons.close_rounded, color: c.mut, size: 18),
+                                tooltip: 'Descartar',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Text(f.desc, style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt)),
-                          const SizedBox(width: 6),
-                          Text(formatMoney(f.amount), style: GVTxt.xs(c, tabular: true)),
-                        ],
-                      ),
-                    ),
+                      if (showDivider)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 52),
+                          child: Divider(height: 1, color: c.line),
+                        ),
+                    ],
                   );
-                },
+                }).toList(),
               ),
             ),
+            const SizedBox(height: 22),
           ],
-          const SizedBox(height: 16),
 
-          // 3. Action Needed: Auto-detected bank payments (clean, scannable rows)
-          if (unrev.isNotEmpty) ...[
+          // 4. Pending payments (only when non-empty)
+          if (pend.isNotEmpty) ...[
+            _sectionLabel(
+              c,
+              'Pendiente por pagar',
+              trailing: GVPillBadge(
+                label: formatMoney(pend.fold(0, (a, x) => a + x.amount)),
+                color: c.amber,
+              ),
+            ),
+            const SizedBox(height: 8),
             GVCard(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GVSectionHeader(
-                    title: 'Pagos por revisar (${unrev.length})',
-                    trailing: InkWell(
-                      onTap: () => st.confirmAllAutoBank(),
+                children: pend.take(4).toList().asMap().entries.map((entry) {
+                  return GVMovementRow(
+                    state: st,
+                    movement: entry.value,
+                    onTap: () => widget.onOpenSheet(editing: entry.value),
+                    showDivider: entry.key < pend.take(4).length - 1,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 22),
+          ],
+
+          // 5. Recent Activity (Revolut / Apple Wallet style)
+          if (recent.isNotEmpty) ...[
+            _sectionLabel(
+              c,
+              'Actividad reciente',
+              trailing: widget.onNavigateMovements != null
+                  ? InkWell(
+                      onTap: widget.onNavigateMovements,
                       borderRadius: BorderRadius.circular(GVRadius.pill),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         child: Text(
-                          'Confirmar todos',
+                          'Ver todos',
                           style: GVTxt.xs(c, weight: FontWeight.w600, color: c.blue),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...unrev.take(6).toList().asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final x = entry.value;
-                    final showDivider = idx < unrev.take(6).length - 1;
-                    return Column(
-                      children: [
-                        InkWell(
-                          onTap: () => widget.onOpenSheet(editing: x),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Row(
-                              children: [
-                                GVSquircleIcon(
-                                  size: 38,
-                                  child: Icon(
-                                    categoryIconData(x.category),
-                                    size: 18,
-                                    color: c.txt,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        x.desc.isEmpty ? 'Pago' : x.desc,
-                                        style: GVTxt.body(c, weight: FontWeight.w600),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${x.autoBank ?? 'Banco'} · ${x.category ?? 'Otros'}${x.fx != null ? ' · US\$${x.fx!.amount}' : ''}',
-                                        style: GVTxt.xs(c),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '−${formatMoney(x.amount)}',
-                                  style: GVTxt.body(
-                                    c,
-                                    weight: FontWeight.w600,
-                                    color: c.red,
-                                    tabular: true,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                IconButton(
-                                  onPressed: () => st.confirmAutoBank(x.id),
-                                  icon: Icon(Icons.check_circle_rounded, color: c.green, size: 22),
-                                  tooltip: 'Confirmar',
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                ),
-                                IconButton(
-                                  onPressed: () => st.deleteMovement(x.id),
-                                  icon: Icon(Icons.close_rounded, color: c.mut, size: 19),
-                                  tooltip: 'Descartar',
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (showDivider)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 50),
-                            child: Divider(height: 1, color: c.line),
-                          ),
-                      ],
-                    );
-                  }),
-                ],
-              ),
+                    )
+                  : null,
             ),
-            const SizedBox(height: 14),
-          ],
-
-          // Pending payments (only when non-empty)
-          if (pend.isNotEmpty) ...[
+            const SizedBox(height: 8),
             GVCard(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GVSectionHeader(
-                    title: 'Pendiente por pagar',
-                    trailing: GVPillBadge(
-                      label: formatMoney(pend.fold(0, (a, x) => a + x.amount)),
-                      color: c.amber,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  ...pend.take(4).toList().asMap().entries.map((entry) {
-                    return GVMovementRow(
-                      state: st,
-                      movement: entry.value,
-                      onTap: () => widget.onOpenSheet(editing: entry.value),
-                      showDivider: entry.key < pend.take(4).length - 1,
-                    );
-                  }),
-                ],
+                children: recent.take(4).toList().asMap().entries.map((entry) {
+                  return GVMovementRow(
+                    state: st,
+                    movement: entry.value,
+                    onTap: () => widget.onOpenSheet(editing: entry.value),
+                    showDivider: entry.key < recent.take(4).length - 1,
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 22),
           ],
 
-          // 4. Unified Monthly Summary Card (Categorías | Tendencia | Cuentas)
+          // 6. Clean Monthly Overview (Categorías | Tendencia | Cuentas)
+          _sectionLabel(c, 'Resumen'),
+          const SizedBox(height: 8),
           GVCard(
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -332,7 +283,7 @@ class _HomeTabState extends State<HomeTab> {
                   ],
                   onChanged: (next) => setState(() => _summaryTab = next),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 if (_summaryTab == 'categories')
                   _buildCategoriesView(c, st, byCat, catEntries, maxCat)
                 else if (_summaryTab == 'trend')
@@ -350,6 +301,329 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  Widget _sectionLabel(GVColors c, String title, {Widget? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: GVTxt.sm(c, weight: FontWeight.w600, color: c.mut),
+          ),
+          ?trailing,
+        ],
+      ),
+    );
+  }
+
+  /// Open, calm balance hero without heavy black slabs or nested boxes.
+  Widget _buildCalmHero(BuildContext context, GVColors c, GoldVaultState st) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Disponible este mes',
+          style: GVTxt.sm(c, weight: FontWeight.w500, color: c.mut),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            formatMoney(st.monthAvailable),
+            style: GVTxt.display(c).copyWith(fontSize: 42, letterSpacing: -1.6),
+          ),
+        ),
+        const SizedBox(height: 18),
+        // Clean inline metric strip separated by delicate hairlines
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              _inlineMetric(c, 'Ingresos', st.monthIncome, Icons.south_west_rounded, c.green),
+              VerticalDivider(width: 24, thickness: 1, color: c.line),
+              _inlineMetric(c, 'Gastos', st.monthExpense, Icons.north_east_rounded, c.red),
+              VerticalDivider(width: 24, thickness: 1, color: c.line),
+              _inlineMetric(c, 'Ahorro', st.monthSaving, Icons.savings_outlined, c.blue),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Revolut-style minimalist action pills
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _actionPill(
+              c,
+              icon: Icons.add_rounded,
+              label: 'Registrar',
+              primary: true,
+              onTap: () => widget.onOpenSheet(),
+            ),
+            _actionPill(
+              c,
+              icon: Icons.bolt_rounded,
+              label: 'Rápido',
+              onTap: () => _showQuickEntrySheet(context, c),
+            ),
+            if (st.curSpace.frequents.isNotEmpty)
+              _actionPill(
+                c,
+                icon: Icons.repeat_rounded,
+                label: 'Frecuentes',
+                onTap: () => _showFrequentsSheet(context, c, st),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _inlineMetric(GVColors c, String label, int amount, IconData icon, Color iconColor) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: iconColor),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GVTxt.xs(c, color: c.mut),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              formatMoney(amount),
+              style: GVTxt.body(c, weight: FontWeight.w600, tabular: true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionPill(
+    GVColors c, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool primary = false,
+  }) {
+    final bg = primary ? c.acc : c.card;
+    final fg = primary ? c.ink : c.txt;
+    return Material(
+      color: bg,
+      shape: StadiumBorder(
+        side: primary ? BorderSide.none : BorderSide(color: c.line),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GVTxt.xs(c, weight: FontWeight.w600, color: fg),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showQuickEntrySheet(BuildContext context, GVColors c) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        final bottom = MediaQuery.of(sheetCtx).viewInsets.bottom;
+        return Container(
+          padding: EdgeInsets.fromLTRB(20, 14, 20, bottom + 24),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: c.lineStrong,
+                    borderRadius: BorderRadius.circular(GVRadius.pill),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Registro rápido', style: GVTxt.h3(c)),
+              const SizedBox(height: 4),
+              Text(
+                'Escribe el gasto como hablas y lo prellenamos por ti.',
+                style: GVTxt.xs(c),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: GVTextField(
+                      controller: widget.quickController,
+                      hintText: 'Ej: 20 mil almuerzo en nequi',
+                      prefixIcon: Icons.bolt_rounded,
+                      onSubmitted: (_) {
+                        Navigator.pop(sheetCtx);
+                        widget.onSubmitQuickEntry();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Material(
+                    color: c.acc,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pop(sheetCtx);
+                        widget.onSubmitQuickEntry();
+                      },
+                      customBorder: const CircleBorder(),
+                      child: SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Icon(Icons.arrow_upward_rounded, color: c.ink, size: 20),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFrequentsSheet(BuildContext context, GVColors c, GoldVaultState st) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: c.lineStrong,
+                    borderRadius: BorderRadius.circular(GVRadius.pill),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Pagos frecuentes', style: GVTxt.h3(c)),
+              const SizedBox(height: 4),
+              Text('Toca uno para registrarlo al instante en este mes.', style: GVTxt.xs(c)),
+              const SizedBox(height: 14),
+              ...st.curSpace.frequents.take(8).toList().asMap().entries.map((entry) {
+                final idx = entry.key;
+                final f = entry.value;
+                final showDiv = idx < st.curSpace.frequents.take(8).length - 1;
+                return Column(
+                  children: [
+                    InkWell(
+                      onTap: () async {
+                        Navigator.pop(sheetCtx);
+                        final mv = MovementModel(
+                          id: genId('mv'),
+                          space: st.curSpace.id,
+                          date: todayIso(),
+                          type: 'expense',
+                          desc: f.desc,
+                          amount: f.amount,
+                          category: f.category,
+                          account: f.account,
+                          status: 'paid',
+                        );
+                        await st.saveMovement(mv);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Registrado: ${f.desc} ${formatMoney(f.amount)}')),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
+                        child: Row(
+                          children: [
+                            GVSquircleIcon(
+                              size: 36,
+                              child: Icon(categoryIconData(f.category), size: 17, color: c.txt),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(f.desc, style: GVTxt.body(c, weight: FontWeight.w600)),
+                                  Text(
+                                    '${f.category} · ${f.account}',
+                                    style: GVTxt.xs(c),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              formatMoney(f.amount),
+                              style: GVTxt.body(c, weight: FontWeight.w600, tabular: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (showDiv)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 50),
+                        child: Divider(height: 1, color: c.line),
+                      ),
+                  ],
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCategoriesView(
     GVColors c,
     GoldVaultState st,
@@ -359,9 +633,9 @@ class _HomeTabState extends State<HomeTab> {
   ) {
     if (catEntries.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Center(
-          child: Text('Sin gastos registrados este mes.', style: GVTxt.sm(c)),
+          child: Text('Sin gastos registrados este mes.', style: GVTxt.xs(c)),
         ),
       );
     }
@@ -454,7 +728,6 @@ class _HomeTabState extends State<HomeTab> {
               decoration: BoxDecoration(
                 color: c.card2,
                 borderRadius: BorderRadius.circular(GVRadius.control),
-                border: Border.all(color: c.line),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,13 +737,13 @@ class _HomeTabState extends State<HomeTab> {
                     style: GVTxt.xs(c, weight: FontWeight.w600),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
                       formatMoney(byAcct[acc] ?? 0),
-                      style: GVTxt.h3(c, tabular: true).copyWith(fontWeight: FontWeight.w700),
+                      style: GVTxt.body(c, weight: FontWeight.w700, tabular: true),
                     ),
                   ),
                 ],
@@ -479,102 +752,6 @@ class _HomeTabState extends State<HomeTab> {
           }).toList(),
         );
       },
-    );
-  }
-
-  /// Anodized Space Black Hero Card with crisp white balance and subtle Apple semantic dots.
-  Widget _buildHeroCard(GVColors c, GoldVaultState st) {
-    const heroWhite = Color(0xFFFFFFFF);
-    const heroMut = Color(0xFFA1A1A6);
-
-    return GVCard(
-      anodized: true,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'DISPONIBLE ESTE MES',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GVTxt.xs2(c, color: heroMut, weight: FontWeight.w600, letterSpacing: 1.0),
-          ),
-          const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              formatMoney(st.monthAvailable),
-              style: GVTxt.display(c, color: heroWhite),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              _heroMetric(c, 'Ingresos', st.monthIncome, const Color(0xFF30D158)),
-              const SizedBox(width: 8),
-              _heroMetric(c, 'Gastos', st.monthExpense, const Color(0xFFFF453A)),
-              const SizedBox(width: 8),
-              _heroMetric(c, 'Ahorro', st.monthSaving, const Color(0xFF0A84FF)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _heroMetric(GVColors c, String label, int amount, Color dotColor) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(GVRadius.control),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 5),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GVTxt.xs2(
-                      c,
-                      color: const Color(0xFFA1A1A6),
-                      weight: FontWeight.w600,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                formatMoney(amount),
-                style: GVTxt.body(
-                  c,
-                  weight: FontWeight.w700,
-                  color: const Color(0xFFF5F5F7),
-                  tabular: true,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

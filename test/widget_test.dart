@@ -92,8 +92,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Home view is visible and not crushed by bottomNavigationBar
-    expect(find.text('DISPONIBLE ESTE MES'), findsOneWidget);
-    final heroRect = tester.getRect(find.text('DISPONIBLE ESTE MES'));
+    expect(find.text('Disponible este mes'), findsOneWidget);
+    final heroRect = tester.getRect(find.text('Disponible este mes'));
     expect(heroRect.top, lessThan(200));
 
     // Switch to Movs

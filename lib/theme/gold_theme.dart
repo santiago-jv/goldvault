@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Unified geometry tokens aligned with Apple Human Interface Guidelines
-/// and Bento surface design.
+/// and minimalist fintech surfaces (Copilot / Apple Wallet / Revolut).
 class GVRadius {
-  static const double bento = 24.0;
-  static const double card = 20.0;
-  static const double control = 14.0;
-  static const double squircle = 12.0;
+  static const double bento = 18.0;
+  static const double card = 16.0;
+  static const double control = 12.0;
+  static const double squircle = 11.0;
   static const double pill = 999.0;
 }
 
@@ -104,26 +104,26 @@ class GVColors {
     required this.chartPalette,
   });
 
-  /// Apple Anodized Space Black chrome with crisp Apple semantic colors.
+  /// Calm matte obsidian dark palette with restrained Apple semantic accents.
   static const dark = GVColors(
     isDark: true,
-    bg: Color(0xFF000000),
-    card: Color(0xFF141417),
-    card2: Color(0xFF1E1E22),
-    navGlass: Color(0xD9141417),
+    bg: Color(0xFF0B0B0E),
+    card: Color(0xFF151519),
+    card2: Color(0xFF1E1E24),
+    navGlass: Color(0xE0151519),
     txt: Color(0xFFF5F5F7),
     mut: Color(0xFF98989F),
     tertiary: Color(0xFF6E6E73),
-    line: Color(0x18FFFFFF),
-    lineStrong: Color(0x2CFFFFFF),
-    acc: Color(0xFFFFFFFF),
+    line: Color(0x14FFFFFF),
+    lineStrong: Color(0x26FFFFFF),
+    acc: Color(0xFFF5F5F7),
     acc2: Color(0xFFD2D2D7),
-    ink: Color(0xFF0C0C0E),
+    ink: Color(0xFF0B0B0E),
     green: Color(0xFF30D158),
     red: Color(0xFFFF453A),
     amber: Color(0xFFFF9F0A),
     blue: Color(0xFF0A84FF),
-    placeholder: Color(0x73F5F5F7),
+    placeholder: Color(0x66F5F5F7),
     chartPalette: [
       Color(0xFF0A84FF),
       Color(0xFF30D158),
@@ -134,55 +134,44 @@ class GVColors {
     ],
   );
 
-  /// Apple Cupertino Daylight chrome with crisp Apple semantic colors.
+  /// Calm daylight fintech palette with crisp white surfaces and whisper-soft hairlines.
   static const light = GVColors(
     isDark: false,
-    bg: Color(0xFFF5F5F7),
+    bg: Color(0xFFF7F8FA),
     card: Color(0xFFFFFFFF),
-    card2: Color(0xFFEFEFF2),
-    navGlass: Color(0xD9FFFFFF),
-    txt: Color(0xFF1D1D1F),
-    mut: Color(0xFF6E6E73),
-    tertiary: Color(0xFF86868B),
-    line: Color(0x13000000),
-    lineStrong: Color(0x24000000),
-    acc: Color(0xFF1D1D1F),
-    acc2: Color(0xFF3A3A3D),
+    card2: Color(0xFFF1F2F6),
+    navGlass: Color(0xE6FFFFFF),
+    txt: Color(0xFF111113),
+    mut: Color(0xFF6B7280),
+    tertiary: Color(0xFF9CA3AF),
+    line: Color(0x0E000000),
+    lineStrong: Color(0x1F000000),
+    acc: Color(0xFF111113),
+    acc2: Color(0xFF374151),
     ink: Color(0xFFFFFFFF),
-    green: Color(0xFF1D8348),
-    red: Color(0xFFD70015),
-    amber: Color(0xFFC27200),
+    green: Color(0xFF16A34A),
+    red: Color(0xFFDC2626),
+    amber: Color(0xFFD97706),
     blue: Color(0xFF0071E3),
-    placeholder: Color(0x731D1D1F),
+    placeholder: Color(0x66111113),
     chartPalette: [
       Color(0xFF0071E3),
-      Color(0xFF1D8348),
+      Color(0xFF16A34A),
       Color(0xFFD97706),
       Color(0xFF7C3AED),
-      Color(0xFFD70015),
+      Color(0xFFDC2626),
       Color(0xFF0284C7),
     ],
   );
 
-  /// Soft multi-layered Bento elevation shadow.
+  /// Whisper-soft hairline elevation (flat in dark mode, ultra-subtle in light mode).
   List<BoxShadow> get cardShadow => isDark
-      ? const [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ]
+      ? const []
       : const [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 24,
-            offset: Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
         ];
 
