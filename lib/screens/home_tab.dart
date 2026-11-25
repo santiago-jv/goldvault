@@ -33,7 +33,6 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
     final st = widget.state;
-    final unrev = st.unreviewedBankMovements;
     final pend = st.pendingMovements;
 
     final recent = st.monthMovements.toList()..sort((a, b) => b.date.compareTo(a.date));
@@ -96,114 +95,7 @@ class _HomeTabState extends State<HomeTab> {
           _buildCalmHero(context, c, st),
           const SizedBox(height: 28),
 
-          // 3. Action Needed: Auto-detected bank payments (iOS inset-grouped header)
-          if (unrev.isNotEmpty) ...[
-            _sectionLabel(
-              c,
-              'Por revisar (${unrev.length})',
-              trailing: InkWell(
-                onTap: () => st.confirmAllAutoBank(),
-                borderRadius: BorderRadius.circular(GVRadius.pill),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Text(
-                    'Confirmar todos',
-                    style: GVTxt.xs(c, weight: FontWeight.w600, color: c.blue),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            GVCard(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              child: Column(
-                children: unrev.take(6).toList().asMap().entries.map((entry) {
-                  final idx = entry.key;
-                  final x = entry.value;
-                  final showDivider = idx < unrev.take(6).length - 1;
-                  return Column(
-                    children: [
-                      InkWell(
-                        onTap: () => widget.onOpenSheet(editing: x),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-                          child: Row(
-                            children: [
-                              GVSquircleIcon(
-                                size: 38,
-                                child: Icon(
-                                  categoryIconData(x.category),
-                                  size: 18,
-                                  color: c.txt,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      x.desc.isEmpty ? 'Pago' : x.desc,
-                                      style: GVTxt.body(c, weight: FontWeight.w600),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${x.autoBank ?? 'Banco'} · ${x.category ?? 'Otros'}${x.fx != null ? ' · US\$${x.fx!.amount}' : ''}',
-                                      style: GVTxt.xs(c),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '−${formatMoney(x.amount)}',
-                                style: GVTxt.body(
-                                  c,
-                                  weight: FontWeight.w600,
-                                  color: c.red,
-                                  tabular: true,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                onPressed: () => st.confirmAutoBank(x.id),
-                                icon: Icon(Icons.check_circle_rounded, color: c.green, size: 22),
-                                tooltip: 'Confirmar',
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                              ),
-                              IconButton(
-                                onPressed: () => st.deleteMovement(x.id),
-                                icon: Icon(Icons.close_rounded, color: c.mut, size: 18),
-                                tooltip: 'Descartar',
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (showDivider)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 52),
-                          child: Divider(height: 1, color: c.line),
-                        ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 22),
-          ],
-
-          // 4. Pending payments (only when non-empty)
+          // 3. Pending payments (only when non-empty)
           if (pend.isNotEmpty) ...[
             _sectionLabel(
               c,
