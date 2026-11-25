@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Left folded ribbon arm of the geometric V mark -->
+    <path
+        android:fillColor="#F5F5F7"
+        android:pathData="M34.5,35.5 L28.5,45.5 L45.5,73.0 L52.0,62.0 Z" />
+    <!-- Inner folded facet -->
+    <path
+        android:fillColor="#E2E2E6"
+        android:pathData="M56.5,35.5 L47.5,50.5 L53.5,60.2 L65.5,40.5 L62.5,35.5 Z" />
+    <!-- Right primary ribbon arm -->
+    <path
+        android:fillColor="#F5F5F7"
+        android:pathData="M62.5,35.5 L72.0,35.5 L79.5,45.5 L61.5,74.5 L48.5,74.5 L67.0,44.5 Z" />
+</vector>

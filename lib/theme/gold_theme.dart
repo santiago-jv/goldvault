@@ -400,7 +400,7 @@ class GoldVaultLogo extends StatelessWidget {
         children: [
           CustomPaint(
             size: Size(fontSize * 1.05, fontSize * 1.05),
-            painter: _VaultArchPainter(primaryTxt),
+            painter: _VaultVMarkPainter(primaryTxt),
           ),
           const SizedBox(width: 8),
           RichText(
@@ -427,50 +427,55 @@ class GoldVaultLogo extends StatelessWidget {
   }
 }
 
-class _VaultArchPainter extends CustomPainter {
+/// Minimalist folded geometric V emblem matching the GoldVault app icon.
+class _VaultVMarkPainter extends CustomPainter {
   final Color color;
-  _VaultArchPainter(this.color);
+  _VaultVMarkPainter(this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 24.0;
     final sy = size.height / 24.0;
 
-    final p1 = Paint()
+    final primary = Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.1 * sx
-      ..strokeCap = StrokeCap.round;
+      ..style = PaintingStyle.fill;
 
-    final outer = Path()
-      ..moveTo(3.5 * sx, 21 * sy)
-      ..lineTo(3.5 * sx, 11.5 * sy)
-      ..arcToPoint(
-        Offset(20.5 * sx, 11.5 * sy),
-        radius: Radius.elliptical(8.5 * sx, 8.5 * sy),
-        clockwise: true,
-      )
-      ..lineTo(20.5 * sx, 21 * sy);
-    canvas.drawPath(outer, p1);
+    final fold = Paint()
+      ..color = color.withValues(alpha: 0.72)
+      ..style = PaintingStyle.fill;
 
-    final p2 = Paint()
-      ..color = color.withValues(alpha: 0.45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.65 * sx
-      ..strokeCap = StrokeCap.round;
+    // Left ribbon arm
+    final leftArm = Path()
+      ..moveTo(5.8 * sx, 4.2 * sy)
+      ..lineTo(3.0 * sx, 8.8 * sy)
+      ..lineTo(10.8 * sx, 20.4 * sy)
+      ..lineTo(13.5 * sx, 15.8 * sy)
+      ..close();
+    canvas.drawPath(leftArm, primary);
 
-    final inner = Path()
-      ..moveTo(9 * sx, 21 * sy)
-      ..lineTo(9 * sx, 11.8 * sy)
-      ..arcToPoint(
-        Offset(15 * sx, 11.8 * sy),
-        radius: Radius.elliptical(3 * sx, 3 * sy),
-        clockwise: true,
-      )
-      ..lineTo(15 * sx, 21 * sy);
-    canvas.drawPath(inner, p2);
+    // Inner folded ribbon facet
+    final innerFacet = Path()
+      ..moveTo(14.5 * sx, 4.2 * sy)
+      ..lineTo(10.9 * sx, 10.4 * sy)
+      ..lineTo(13.4 * sx, 14.4 * sy)
+      ..lineTo(18.0 * sx, 6.6 * sy)
+      ..lineTo(16.7 * sx, 4.2 * sy)
+      ..close();
+    canvas.drawPath(innerFacet, fold);
+
+    // Right primary ribbon arm
+    final rightArm = Path()
+      ..moveTo(16.7 * sx, 4.2 * sy)
+      ..lineTo(19.6 * sx, 4.2 * sy)
+      ..lineTo(22.0 * sx, 8.4 * sy)
+      ..lineTo(14.8 * sx, 20.6 * sy)
+      ..lineTo(11.4 * sx, 20.6 * sy)
+      ..lineTo(18.4 * sx, 8.6 * sy)
+      ..close();
+    canvas.drawPath(rightArm, primary);
   }
 
   @override
-  bool shouldRepaint(covariant _VaultArchPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _VaultVMarkPainter oldDelegate) => oldDelegate.color != color;
 }
