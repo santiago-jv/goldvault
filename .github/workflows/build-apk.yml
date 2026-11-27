@@ -16,24 +16,43 @@ permissions:
 
 jobs:
   validate:
+    name: Analyze & Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.47.8'
           cache: true
-      - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
-      - run: flutter test
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos
+      - name: Run Flutter unit & widget tests
+        run: flutter test --reporter expanded
+      - name: Verify Node API syntax
+        run: node --check server.mjs && node --check api/bank.js
       - name: Validate release version
         if: startsWith(github.ref, 'refs/tags/')
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: python3 scripts/check_release_version.py
+      - name: Publish test summary
+        if: always()
+        run: |
+          {
+            echo "### Validation Summary"
+            echo "- **Static analysis**: \`flutter analyze --no-fatal-infos\`"
+            echo "- **Unit & widget tests**: \`flutter test --reporter expanded\`"
+            echo "- **Node API lint**: \`server.mjs\` & \`api/bank.js\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build:
+    name: Build Android & Web
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -91,6 +110,7 @@ jobs:
           if-no-files-found: error
 
   build-ios:
+    name: Build iOS (unsigned)
     needs: validate
     runs-on: macos-latest
     steps:
@@ -103,7 +123,62 @@ jobs:
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
 
+  build-macos:
+    name: Build macOS Desktop
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.8'
+          cache: true
+      - run: flutter pub get
+      - name: Build macOS release app
+        run: flutter build macos --release
+      - name: Package macOS bundle
+        run: |
+          mkdir -p dist-macos
+          APP_BUNDLE="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' | head -n 1)"
+          if [ -z "$APP_BUNDLE" ]; then
+            echo "ERROR: macOS .app bundle not found in build/macos/Build/Products/Release" >&2
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" dist-macos/GoldVault-macOS.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldVault-macOS
+          path: dist-macos/GoldVault-macOS.zip
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows Desktop
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.8'
+          cache: true
+      - run: flutter pub get
+      - name: Build Windows release app
+        run: flutter build windows --release
+      - name: Package Windows release
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-windows | Out-Null
+          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "dist-windows\GoldVault-Windows.zip" -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldVault-Windows
+          path: dist-windows/GoldVault-Windows.zip
+          if-no-files-found: error
+
   deploy-web:
+    name: Deploy Web to Vercel
     needs: build
     runs-on: ubuntu-latest
     env:
@@ -173,8 +248,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   release:
+    name: Publish Multi-Platform Release
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build, build-ios, deploy-web]
+    needs: [build, build-ios, build-macos, build-windows, deploy-web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -182,12 +258,24 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: GoldVault-Android
-      - name: Name release asset
-        run: mv app-release.apk GoldVault.apk
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: GoldVault-macOS
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: GoldVault-Windows
+          path: release-assets
+      - name: Name release assets
+        run: mv release-assets/app-release.apk release-assets/GoldVault.apk
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: GoldVault ${{ github.ref_name }}
           generate_release_notes: true
-          files: GoldVault.apk
+          files: |
+            release-assets/GoldVault.apk
+            release-assets/GoldVault-macOS.zip
+            release-assets/GoldVault-Windows.zip
           fail_on_unmatched_files: true
