@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
+import 'gv_motion.dart';
 
 /// Elevated Apple Bento card surface with subtle hairline border and soft shadow.
 class GVCard extends StatelessWidget {
@@ -205,7 +206,12 @@ class GVPillButton extends StatelessWidget {
       ),
     );
 
-    return fullWidth ? SizedBox(width: double.infinity, child: button) : button;
+    final wrapped = GVSpringTap(
+      enabled: onPressed != null,
+      pressedScale: 0.97,
+      child: button,
+    );
+    return fullWidth ? SizedBox(width: double.infinity, child: wrapped) : wrapped;
   }
 }
 
@@ -227,54 +233,118 @@ class GVSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final selectedIdx = items.indexWhere((e) => e.$1 == value).clamp(0, items.length - 1);
+
+    if (compact) {
+      return Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: c.card2,
+          borderRadius: BorderRadius.circular(GVRadius.control),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: items.map((entry) {
+            final selected = entry.$1 == value;
+            return GestureDetector(
+              onTap: () => onChanged(entry.$1),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+                curve: GVMotion.standard,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected ? (c.isDark ? c.acc : c.card) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(GVRadius.control - 2),
+                ),
+                child: Text(
+                  entry.$2,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GVTxt.xs(
+                    c,
+                    weight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: selected ? (c.isDark ? c.ink : c.txt) : c.mut,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    }
+
+    // Full-width iOS-style sliding thumb segmented control
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: c.card2,
         borderRadius: BorderRadius.circular(GVRadius.control),
       ),
-      child: Row(
-        mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
-        children: items.map((entry) {
-          final selected = entry.$1 == value;
-          final child = GestureDetector(
-            onTap: () => onChanged(entry.$1),
-            behavior: HitTestBehavior.opaque,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? 14 : 10,
-                vertical: compact ? 6 : 7,
-              ),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? (c.isDark ? c.acc : c.card) : Colors.transparent,
-                borderRadius: BorderRadius.circular(GVRadius.control - 2),
-                boxShadow: selected && !c.isDark
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x0D000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                entry.$2,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GVTxt.xs(
-                  c,
-                  weight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? (c.isDark ? c.ink : c.txt) : c.mut,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final count = items.length;
+          final slotWidth = constraints.maxWidth / count;
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 260),
+                curve: GVMotion.standard,
+                left: selectedIdx * slotWidth,
+                top: 0,
+                bottom: 0,
+                width: slotWidth,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: c.isDark ? c.acc : c.card,
+                    borderRadius: BorderRadius.circular(GVRadius.control - 2),
+                    boxShadow: c.isDark
+                        ? null
+                        : const [
+                            BoxShadow(
+                              color: Color(0x0D000000),
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                  ),
                 ),
               ),
-            ),
+              Row(
+                children: items.map((entry) {
+                  final selected = entry.$1 == value;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => onChanged(entry.$1),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        child: Center(
+                          child: AnimatedDefaultTextStyle(
+                            duration: reduceMotion ? Duration.zero : GVMotion.fast,
+                            curve: GVMotion.standard,
+                            style: GVTxt.xs(
+                              c,
+                              weight: selected ? FontWeight.w600 : FontWeight.w500,
+                              color: selected ? (c.isDark ? c.ink : c.txt) : c.mut,
+                            ),
+                            child: Text(
+                              entry.$2,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           );
-          return compact ? child : Expanded(child: child);
-        }).toList(),
+        },
       ),
     );
   }
@@ -439,9 +509,25 @@ class GVMonthStepper extends StatelessWidget {
           _stepBtn(c, Icons.chevron_left_rounded, () => onShift(-1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              monthShortLabel(ym),
-              style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt, tabular: true),
+            child: AnimatedSwitcher(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.18),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                monthShortLabel(ym),
+                key: ValueKey<String>(ym),
+                style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt, tabular: true),
+              ),
             ),
           ),
           _stepBtn(c, Icons.chevron_right_rounded, () => onShift(1)),
@@ -451,9 +537,10 @@ class GVMonthStepper extends StatelessWidget {
   }
 
   Widget _stepBtn(GVColors c, IconData icon, VoidCallback onTap) {
-    return InkWell(
+    return GVSpringTap(
       onTap: onTap,
-      customBorder: const CircleBorder(),
+      pressedScale: 0.88,
+      haptic: true,
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Icon(icon, size: 17, color: c.mut),
@@ -679,13 +766,14 @@ class GVGlassDock extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Tooltip(
                       message: 'Nuevo movimiento',
-                      child: Material(
-                        color: c.acc,
-                        shape: const CircleBorder(),
-                        elevation: 0,
-                        child: InkWell(
-                          onTap: onAdd,
-                          customBorder: const CircleBorder(),
+                      child: GVSpringTap(
+                        onTap: onAdd,
+                        pressedScale: 0.90,
+                        haptic: true,
+                        child: Material(
+                          color: c.acc,
+                          shape: const CircleBorder(),
+                          elevation: 0,
                           child: SizedBox(
                             width: 40,
                             height: 40,
@@ -716,25 +804,34 @@ class GVGlassDock extends StatelessWidget {
     final active = selectedIndex == index;
     final color = active ? c.acc : c.mut;
     return Expanded(
-      child: InkWell(
+      child: GVSpringTap(
         onTap: () => onSelect(index),
-        borderRadius: BorderRadius.circular(14),
+        pressedScale: 0.93,
+        haptic: true,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(active ? activeIcon : icon, size: 22, color: color),
+              AnimatedScale(
+                scale: active ? 1.08 : 1.0,
+                duration: GVMotion.fast,
+                curve: GVMotion.standard,
+                child: Icon(active ? activeIcon : icon, size: 22, color: color),
+              ),
               const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              AnimatedDefaultTextStyle(
+                duration: GVMotion.fast,
                 style: GVTxt.xs2(
                   c,
                   color: color,
                   weight: active ? FontWeight.w700 : FontWeight.w500,
                   letterSpacing: 0,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

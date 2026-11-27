@@ -3,6 +3,7 @@ import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
+import '../widgets/gv_motion.dart';
 import 'goals_tab.dart';
 import 'home_tab.dart';
 import 'movement_sheet.dart';
@@ -26,8 +27,17 @@ class GoldVaultShell extends StatefulWidget {
 
 class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObserver {
   late int tabIndex = widget.initialTab;
+  int _prevTabIndex = 0;
   final TextEditingController _quickCtrl = TextEditingController();
   final TextEditingController _customBankCtrl = TextEditingController();
+
+  void _selectTab(int next) {
+    if (next == tabIndex) return;
+    setState(() {
+      _prevTabIndex = tabIndex;
+      tabIndex = next;
+    });
+  }
 
   @override
   void initState() {
@@ -56,6 +66,12 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      sheetAnimationStyle: AnimationStyle(
+        duration: GVMotion.medium,
+        reverseDuration: const Duration(milliseconds: 210),
+        curve: GVMotion.standard,
+        reverseCurve: Curves.easeInCubic,
+      ),
       builder: (_) => MovementSheet(
         state: widget.state,
         editing: editing,
@@ -94,25 +110,47 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                 children: [
                   if (st.syncError != null || st.hasPendingSync) GVSyncBanner(state: st),
                   Expanded(
-                    child: switch (tabIndex) {
-                      0 => HomeTab(
-                          state: st,
-                          quickController: _quickCtrl,
-                          onSubmitQuickEntry: _submitQuickEntry,
-                          onOpenSheet: _openMovementSheet,
-                          onNavigateMovements: () => setState(() => tabIndex = 1),
-                        ),
-                      1 => MovementsTab(
-                          state: st,
-                          onOpenSheet: _openMovementSheet,
-                        ),
-                      2 => GoalsTab(state: st),
-                      _ => SettingsTab(
-                          state: st,
-                          customBankController: _customBankCtrl,
-                          onNavigateHome: () => setState(() => tabIndex = 0),
-                        ),
-                    },
+                    child: AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 230),
+                      switchInCurve: GVMotion.standard,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final forward = tabIndex >= _prevTabIndex;
+                        final beginX = forward ? 0.03 : -0.03;
+                        final slide = Tween<Offset>(
+                          begin: Offset(beginX, 0),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(position: slide, child: child),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<int>(tabIndex),
+                        child: switch (tabIndex) {
+                          0 => HomeTab(
+                              state: st,
+                              quickController: _quickCtrl,
+                              onSubmitQuickEntry: _submitQuickEntry,
+                              onOpenSheet: _openMovementSheet,
+                              onNavigateMovements: () => _selectTab(1),
+                            ),
+                          1 => MovementsTab(
+                              state: st,
+                              onOpenSheet: _openMovementSheet,
+                            ),
+                          2 => GoalsTab(state: st),
+                          _ => SettingsTab(
+                              state: st,
+                              customBankController: _customBankCtrl,
+                              onNavigateHome: () => _selectTab(0),
+                            ),
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -121,7 +159,7 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
         ),
         bottomNavigationBar: GVGlassDock(
           selectedIndex: tabIndex,
-          onSelect: (index) => setState(() => tabIndex = index),
+          onSelect: _selectTab,
           onAdd: () => _openMovementSheet(),
         ),
       ),

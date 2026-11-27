@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../theme/gold_theme.dart';
+import 'gv_motion.dart';
 
 class TrendMonthData {
   final String ym;
@@ -46,18 +47,19 @@ class TrendChartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final data = _computeData();
     final hasData = data.any((d) => d.inc > 0 || d.exp > 0);
 
     if (!hasData) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.auto_awesome_outlined, size: 28, color: c.mut),
+              Icon(Icons.auto_awesome_outlined, size: 24, color: c.mut),
               const SizedBox(height: 8),
-              Text('Aún no hay historial suficiente.', style: GVTxt.sm(c)),
+              Text('Aún no hay historial suficiente.', style: GVTxt.xs(c)),
             ],
           ),
         ),
@@ -69,8 +71,20 @@ class TrendChartWidget extends StatelessWidget {
         SizedBox(
           height: 150,
           width: double.infinity,
-          child: CustomPaint(
-            painter: _TrendBarPainter(data: data, colors: c),
+          child: TweenAnimationBuilder<double>(
+            key: ValueKey('trend-$currentYm'),
+            tween: Tween<double>(begin: reduceMotion ? 1.0 : 0.0, end: 1.0),
+            duration: reduceMotion ? Duration.zero : GVMotion.chart,
+            curve: GVMotion.standard,
+            builder: (context, progress, _) {
+              return CustomPaint(
+                painter: _TrendBarPainter(
+                  data: data,
+                  colors: c,
+                  progress: progress,
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 8),
@@ -105,8 +119,13 @@ class TrendChartWidget extends StatelessWidget {
 class _TrendBarPainter extends CustomPainter {
   final List<TrendMonthData> data;
   final GVColors colors;
+  final double progress;
 
-  _TrendBarPainter({required this.data, required this.colors});
+  _TrendBarPainter({
+    required this.data,
+    required this.colors,
+    required this.progress,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,18 +160,29 @@ class _TrendBarPainter extends CustomPainter {
       final d = data[i];
       final x0 = pad + i * slot;
       final bw = (slot - 12) / 2;
-      final hi = (d.inc / maxVal) * (base - top);
-      final he = (d.exp / maxVal) * (base - top);
+      // Subtle per-month stagger so bars wave smoothly from left to right
+      final localT = ((progress - i * 0.06) / 0.70).clamp(0.0, 1.0);
+      final eased = Curves.easeOutCubic.transform(localT);
+      final hi = (d.inc / maxVal) * (base - top) * eased;
+      final he = (d.exp / maxVal) * (base - top) * eased;
 
-      if (hi > 0) {
+      if (hi > 0.5) {
         canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(x0 + 3, base - hi, bw, hi), const Radius.circular(3)),
+          RRect.fromRectAndCorners(
+            Rect.fromLTWH(x0 + 3, base - hi, bw, hi),
+            topLeft: const Radius.circular(4),
+            topRight: const Radius.circular(4),
+          ),
           incPaint,
         );
       }
-      if (he > 0) {
+      if (he > 0.5) {
         canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(x0 + 5 + bw, base - he, bw, he), const Radius.circular(3)),
+          RRect.fromRectAndCorners(
+            Rect.fromLTWH(x0 + 5 + bw, base - he, bw, he),
+            topLeft: const Radius.circular(4),
+            topRight: const Radius.circular(4),
+          ),
           expPaint,
         );
       }
@@ -171,7 +201,8 @@ class _TrendBarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _TrendBarPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _TrendBarPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.data != data || oldDelegate.colors != colors;
 }
 
 class DonutChartWidget extends StatelessWidget {
@@ -188,6 +219,7 @@ class DonutChartWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (byCat.isEmpty || totalExpense <= 0) return const SizedBox.shrink();
     final c = GVColors.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final sorted = byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top = sorted.take(5).toList();
     final rest = sorted.skip(5).fold<int>(0, (a, e) => a + e.value);
@@ -203,12 +235,21 @@ class DonutChartWidget extends StatelessWidget {
           SizedBox(
             width: 122,
             height: 122,
-            child: CustomPaint(
-              painter: _DonutPainter(
-                segs: segs,
-                total: totalExpense,
-                colors: c,
-              ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: reduceMotion ? 1.0 : 0.0, end: 1.0),
+              duration: reduceMotion ? Duration.zero : GVMotion.chart,
+              curve: GVMotion.standard,
+              builder: (context, progress, child) {
+                return CustomPaint(
+                  painter: _DonutPainter(
+                    segs: segs,
+                    total: totalExpense,
+                    colors: c,
+                    progress: progress,
+                  ),
+                  child: child,
+                );
+              },
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -217,7 +258,7 @@ class DonutChartWidget extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       formatCompact(totalExpense),
-                      style: GVTxt.h3(c).copyWith(fontWeight: FontWeight.w800),
+                      style: GVTxt.h3(c, tabular: true).copyWith(fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -248,7 +289,7 @@ class DonutChartWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('$pct%', style: GVTxt.xs(c, weight: FontWeight.w800, color: c.txt)),
+                      Text('$pct%', style: GVTxt.xs(c, weight: FontWeight.w800, color: c.txt, tabular: true)),
                     ],
                   ),
                 );
@@ -265,28 +306,49 @@ class _DonutPainter extends CustomPainter {
   final List<MapEntry<String, int>> segs;
   final int total;
   final GVColors colors;
+  final double progress;
 
-  _DonutPainter({required this.segs, required this.total, required this.colors});
+  _DonutPainter({
+    required this.segs,
+    required this.total,
+    required this.colors,
+    required this.progress,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width / 2) - 10;
     final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Subtle track underneath so the radial reveal feels crisp
+    final trackPaint = Paint()
+      ..color = colors.card2
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14;
+    canvas.drawCircle(center, radius, trackPaint);
+
     var startAngle = -pi / 2;
+    final totalSweepLimit = 2 * pi * progress;
+    var drawn = 0.0;
 
     for (var i = 0; i < segs.length; i++) {
-      final sweep = (segs[i].value / total) * 2 * pi;
+      final rawSweep = (segs[i].value / total) * 2 * pi;
+      final remaining = totalSweepLimit - drawn;
+      if (remaining <= 0) break;
+      final sweep = min(rawSweep, remaining);
       final paint = Paint()
         ..color = colors.chartPalette[i % colors.chartPalette.length]
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 16
+        ..strokeWidth = 14
         ..strokeCap = StrokeCap.butt;
       canvas.drawArc(rect, startAngle, sweep, false, paint);
-      startAngle += sweep;
+      startAngle += rawSweep;
+      drawn += rawSweep;
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DonutPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.total != total || oldDelegate.colors != colors;
 }

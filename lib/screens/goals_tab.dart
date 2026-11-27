@@ -3,6 +3,7 @@ import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
+import '../widgets/gv_motion.dart';
 import 'space_modals.dart';
 
 class GoalsTab extends StatelessWidget {
@@ -75,14 +76,10 @@ class GoalsTab extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(GVRadius.pill),
-                      child: LinearProgressIndicator(
-                        value: (pct / 100.0).clamp(0.02, 1.0),
-                        minHeight: 6,
-                        backgroundColor: c.card2,
-                        valueColor: AlwaysStoppedAnimation<Color>(accent),
-                      ),
+                    GVAnimatedProgressBar(
+                      value: (pct / 100.0).clamp(0.02, 1.0),
+                      color: accent,
+                      height: 6,
                     ),
                     const SizedBox(height: 10),
                     Row(

@@ -4,6 +4,7 @@ import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/charts.dart';
 import '../widgets/gv_components.dart';
+import '../widgets/gv_motion.dart';
 import 'space_modals.dart';
 
 class HomeTab extends StatefulWidget {
@@ -159,32 +160,66 @@ class _HomeTabState extends State<HomeTab> {
           ],
 
           // 6. Clean Monthly Overview (Categorías | Tendencia | Cuentas)
-          _sectionLabel(c, 'Resumen'),
-          const SizedBox(height: 8),
-          GVCard(
-            padding: const EdgeInsets.all(16),
+          GVFadeSlideIn(
+            index: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GVSegmentedControl<String>(
-                  value: _summaryTab,
-                  items: const [
-                    ('categories', 'Categorías'),
-                    ('trend', 'Tendencia'),
-                    ('accounts', 'Cuentas'),
-                  ],
-                  onChanged: (next) => setState(() => _summaryTab = next),
+                _sectionLabel(c, 'Resumen'),
+                const SizedBox(height: 8),
+                GVCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GVSegmentedControl<String>(
+                        value: _summaryTab,
+                        items: const [
+                          ('categories', 'Categorías'),
+                          ('trend', 'Tendencia'),
+                          ('accounts', 'Cuentas'),
+                        ],
+                        onChanged: (next) => setState(() => _summaryTab = next),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSize(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : GVMotion.medium,
+                        curve: GVMotion.standard,
+                        alignment: Alignment.topCenter,
+                        child: AnimatedSwitcher(
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 240),
+                          switchInCurve: GVMotion.standard,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, anim) => FadeTransition(
+                            opacity: anim,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.03),
+                                end: Offset.zero,
+                              ).animate(anim),
+                              child: child,
+                            ),
+                          ),
+                          child: KeyedSubtree(
+                            key: ValueKey<String>('$_summaryTab-${st.ym}'),
+                            child: _summaryTab == 'categories'
+                                ? _buildCategoriesView(c, st, byCat, catEntries, maxCat)
+                                : _summaryTab == 'trend'
+                                    ? TrendChartWidget(
+                                        spaceMovements: st.spaceMovements,
+                                        currentYm: st.ym,
+                                      )
+                                    : _buildAccountsView(c, st, byAcct),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                if (_summaryTab == 'categories')
-                  _buildCategoriesView(c, st, byCat, catEntries, maxCat)
-                else if (_summaryTab == 'trend')
-                  TrendChartWidget(
-                    spaceMovements: st.spaceMovements,
-                    currentYm: st.ym,
-                  )
-                else
-                  _buildAccountsView(c, st, byAcct),
               ],
             ),
           ),
@@ -209,66 +244,69 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  /// Open, calm balance hero without heavy black slabs or nested boxes.
+  /// Open, calm balance hero with smoothly rolling currency figures and tactile pills.
   Widget _buildCalmHero(BuildContext context, GVColors c, GoldVaultState st) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Disponible este mes',
-          style: GVTxt.sm(c, weight: FontWeight.w500, color: c.mut),
-        ),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            formatMoney(st.monthAvailable),
-            style: GVTxt.display(c).copyWith(fontSize: 42, letterSpacing: -1.6),
+    return GVFadeSlideIn(
+      index: 0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Disponible este mes',
+            style: GVTxt.sm(c, weight: FontWeight.w500, color: c.mut),
           ),
-        ),
-        const SizedBox(height: 18),
-        // Clean inline metric strip separated by delicate hairlines
-        IntrinsicHeight(
-          child: Row(
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: GVAnimatedMoney(
+              amount: st.monthAvailable,
+              style: GVTxt.display(c).copyWith(fontSize: 42, letterSpacing: -1.6),
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Clean inline metric strip separated by delicate hairlines
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                _inlineMetric(c, 'Ingresos', st.monthIncome, Icons.south_west_rounded, c.green),
+                VerticalDivider(width: 24, thickness: 1, color: c.line),
+                _inlineMetric(c, 'Gastos', st.monthExpense, Icons.north_east_rounded, c.red),
+                VerticalDivider(width: 24, thickness: 1, color: c.line),
+                _inlineMetric(c, 'Ahorro', st.monthSaving, Icons.savings_outlined, c.blue),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Revolut-style minimalist action pills with tactile spring press
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              _inlineMetric(c, 'Ingresos', st.monthIncome, Icons.south_west_rounded, c.green),
-              VerticalDivider(width: 24, thickness: 1, color: c.line),
-              _inlineMetric(c, 'Gastos', st.monthExpense, Icons.north_east_rounded, c.red),
-              VerticalDivider(width: 24, thickness: 1, color: c.line),
-              _inlineMetric(c, 'Ahorro', st.monthSaving, Icons.savings_outlined, c.blue),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        // Revolut-style minimalist action pills
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _actionPill(
-              c,
-              icon: Icons.add_rounded,
-              label: 'Registrar',
-              primary: true,
-              onTap: () => widget.onOpenSheet(),
-            ),
-            _actionPill(
-              c,
-              icon: Icons.bolt_rounded,
-              label: 'Rápido',
-              onTap: () => _showQuickEntrySheet(context, c),
-            ),
-            if (st.curSpace.frequents.isNotEmpty)
               _actionPill(
                 c,
-                icon: Icons.repeat_rounded,
-                label: 'Frecuentes',
-                onTap: () => _showFrequentsSheet(context, c, st),
+                icon: Icons.add_rounded,
+                label: 'Registrar',
+                primary: true,
+                onTap: () => widget.onOpenSheet(),
               ),
-          ],
-        ),
-      ],
+              _actionPill(
+                c,
+                icon: Icons.bolt_rounded,
+                label: 'Rápido',
+                onTap: () => _showQuickEntrySheet(context, c),
+              ),
+              if (st.curSpace.frequents.isNotEmpty)
+                _actionPill(
+                  c,
+                  icon: Icons.repeat_rounded,
+                  label: 'Frecuentes',
+                  onTap: () => _showFrequentsSheet(context, c, st),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -295,8 +333,8 @@ class _HomeTabState extends State<HomeTab> {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
-              formatMoney(amount),
+            child: GVAnimatedMoney(
+              amount: amount,
               style: GVTxt.body(c, weight: FontWeight.w600, tabular: true),
             ),
           ),
@@ -314,14 +352,15 @@ class _HomeTabState extends State<HomeTab> {
   }) {
     final bg = primary ? c.acc : c.card;
     final fg = primary ? c.ink : c.txt;
-    return Material(
-      color: bg,
-      shape: StadiumBorder(
-        side: primary ? BorderSide.none : BorderSide(color: c.line),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
+    return GVSpringTap(
+      onTap: onTap,
+      pressedScale: 0.95,
+      haptic: true,
+      child: Material(
+        color: bg,
+        shape: StadiumBorder(
+          side: primary ? BorderSide.none : BorderSide(color: c.line),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Row(
@@ -583,14 +622,10 @@ class _HomeTabState extends State<HomeTab> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(GVRadius.pill),
-                        child: LinearProgressIndicator(
-                          value: ratio,
-                          minHeight: 5,
-                          backgroundColor: c.card2,
-                          valueColor: AlwaysStoppedAnimation<Color>(barCol),
-                        ),
+                      GVAnimatedProgressBar(
+                        value: ratio,
+                        color: barCol,
+                        height: 5,
                       ),
                     ],
                   ),
