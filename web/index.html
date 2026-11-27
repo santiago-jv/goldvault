@@ -171,9 +171,97 @@
       font-size: 0.875rem;
       border: 1px solid var(--gv-line);
     }
+    /* Instant pre-Flutter animated splash screen */
+    #gv-web-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.125rem;
+      background: var(--gv-bg);
+      color: var(--gv-txt);
+      transition: opacity 280ms ease-out, scale 280ms ease-out;
+    }
+    #gv-web-splash.is-done {
+      opacity: 0;
+      scale: 1.02;
+      pointer-events: none;
+    }
+    .gv-splash-badge {
+      width: 4.75rem;
+      height: 4.75rem;
+      border-radius: 1.375rem;
+      background: #0b0b0e;
+      border: 1px solid var(--gv-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gv-splash-wordmark {
+      font-size: 1.625rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .gv-splash-wordmark span {
+      color: var(--gv-mut);
+      font-weight: 500;
+    }
+    .gv-splash-bar {
+      width: 5.5rem;
+      height: 0.1875rem;
+      border-radius: 999px;
+      background: var(--gv-line);
+      overflow: hidden;
+    }
+    .gv-splash-bar-fill {
+      width: 45%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--gv-txt);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .gv-splash-badge {
+        animation: gv-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .gv-splash-wordmark {
+        animation: gv-rise 520ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .gv-splash-bar-fill {
+        animation: gv-slide 1.2s ease-in-out infinite;
+      }
+    }
+    @keyframes gv-pop {
+      from { opacity: 0; scale: 0.86; }
+      to { opacity: 1; scale: 1; }
+    }
+    @keyframes gv-rise {
+      from { opacity: 0; translate: 0 0.5rem; }
+      to { opacity: 1; translate: 0 0; }
+    }
+    @keyframes gv-slide {
+      0% { translate: -110% 0; }
+      100% { translate: 240% 0; }
+    }
   </style>
 </head>
 <body>
+  <div id="gv-web-splash" aria-label="Cargando GoldVault">
+    <div class="gv-splash-badge" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+        <path d="M5.8 4.2L3 8.8L10.8 20.4L13.5 15.8Z" fill="#F5F5F7"/>
+        <path d="M14.5 4.2L10.9 10.4L13.4 14.4L18 6.6L16.7 4.2Z" fill="#F5F5F7" fill-opacity="0.72"/>
+        <path d="M16.7 4.2H19.6L22 8.4L14.8 20.6H11.4L18.4 8.6Z" fill="#F5F5F7"/>
+      </svg>
+    </div>
+    <div class="gv-splash-wordmark">Gold<span>Vault</span></div>
+    <div class="gv-splash-bar" role="progressbar" aria-label="Iniciando">
+      <div class="gv-splash-bar-fill"></div>
+    </div>
+  </div>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -259,6 +347,17 @@
 
         return;
       }
+
+      function dismissWebSplash() {
+        const el = document.getElementById('gv-web-splash');
+        if (!el || el.classList.contains('is-done')) return;
+        el.classList.add('is-done');
+        setTimeout(function() { el.remove(); }, 320);
+      }
+
+      window.addEventListener('flutter-first-frame', dismissWebSplash, { once: true });
+      // Fallback cleanup if the event fires before listener or takes too long
+      setTimeout(dismissWebSplash, 6000);
 
       const script = document.createElement('script');
       script.src = 'flutter_bootstrap.js';

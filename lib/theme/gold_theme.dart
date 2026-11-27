@@ -427,55 +427,100 @@ class GoldVaultLogo extends StatelessWidget {
   }
 }
 
+/// Standalone folded geometric V emblem widget supporting progressive reveal animation.
+class GoldVaultMark extends StatelessWidget {
+  final double size;
+  final Color? color;
+  final double progress;
+
+  const GoldVaultMark({
+    super.key,
+    this.size = 36,
+    this.color,
+    this.progress = 1.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = GVColors.of(context);
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _VaultVMarkPainter(color ?? c.txt, progress: progress),
+    );
+  }
+}
+
 /// Minimalist folded geometric V emblem matching the GoldVault app icon.
 class _VaultVMarkPainter extends CustomPainter {
   final Color color;
-  _VaultVMarkPainter(this.color);
+  final double progress;
+  _VaultVMarkPainter(this.color, {this.progress = 1.0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 24.0;
     final sy = size.height / 24.0;
 
-    final primary = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final fold = Paint()
-      ..color = color.withValues(alpha: 0.72)
-      ..style = PaintingStyle.fill;
+    final pLeft = (progress / 0.45).clamp(0.0, 1.0);
+    final pFold = ((progress - 0.25) / 0.45).clamp(0.0, 1.0);
+    final pRight = ((progress - 0.45) / 0.55).clamp(0.0, 1.0);
 
     // Left ribbon arm
-    final leftArm = Path()
-      ..moveTo(5.8 * sx, 4.2 * sy)
-      ..lineTo(3.0 * sx, 8.8 * sy)
-      ..lineTo(10.8 * sx, 20.4 * sy)
-      ..lineTo(13.5 * sx, 15.8 * sy)
-      ..close();
-    canvas.drawPath(leftArm, primary);
+    if (pLeft > 0) {
+      final leftPaint = Paint()
+        ..color = color.withValues(alpha: pLeft)
+        ..style = PaintingStyle.fill;
+      canvas.save();
+      canvas.translate(0, (1 - pLeft) * 3.0 * sy);
+      final leftArm = Path()
+        ..moveTo(5.8 * sx, 4.2 * sy)
+        ..lineTo(3.0 * sx, 8.8 * sy)
+        ..lineTo(10.8 * sx, 20.4 * sy)
+        ..lineTo(13.5 * sx, 15.8 * sy)
+        ..close();
+      canvas.drawPath(leftArm, leftPaint);
+      canvas.restore();
+    }
 
     // Inner folded ribbon facet
-    final innerFacet = Path()
-      ..moveTo(14.5 * sx, 4.2 * sy)
-      ..lineTo(10.9 * sx, 10.4 * sy)
-      ..lineTo(13.4 * sx, 14.4 * sy)
-      ..lineTo(18.0 * sx, 6.6 * sy)
-      ..lineTo(16.7 * sx, 4.2 * sy)
-      ..close();
-    canvas.drawPath(innerFacet, fold);
+    if (pFold > 0) {
+      final foldPaint = Paint()
+        ..color = color.withValues(alpha: 0.72 * pFold)
+        ..style = PaintingStyle.fill;
+      canvas.save();
+      canvas.translate(0, (1 - pFold) * -2.5 * sy);
+      final innerFacet = Path()
+        ..moveTo(14.5 * sx, 4.2 * sy)
+        ..lineTo(10.9 * sx, 10.4 * sy)
+        ..lineTo(13.4 * sx, 14.4 * sy)
+        ..lineTo(18.0 * sx, 6.6 * sy)
+        ..lineTo(16.7 * sx, 4.2 * sy)
+        ..close();
+      canvas.drawPath(innerFacet, foldPaint);
+      canvas.restore();
+    }
 
     // Right primary ribbon arm
-    final rightArm = Path()
-      ..moveTo(16.7 * sx, 4.2 * sy)
-      ..lineTo(19.6 * sx, 4.2 * sy)
-      ..lineTo(22.0 * sx, 8.4 * sy)
-      ..lineTo(14.8 * sx, 20.6 * sy)
-      ..lineTo(11.4 * sx, 20.6 * sy)
-      ..lineTo(18.4 * sx, 8.6 * sy)
-      ..close();
-    canvas.drawPath(rightArm, primary);
+    if (pRight > 0) {
+      final rightPaint = Paint()
+        ..color = color.withValues(alpha: pRight)
+        ..style = PaintingStyle.fill;
+      canvas.save();
+      canvas.translate(0, (1 - pRight) * 3.0 * sy);
+      final rightArm = Path()
+        ..moveTo(16.7 * sx, 4.2 * sy)
+        ..lineTo(19.6 * sx, 4.2 * sy)
+        ..lineTo(22.0 * sx, 8.4 * sy)
+        ..lineTo(14.8 * sx, 20.6 * sy)
+        ..lineTo(11.4 * sx, 20.6 * sy)
+        ..lineTo(18.4 * sx, 8.6 * sy)
+        ..close();
+      canvas.drawPath(rightArm, rightPaint);
+      canvas.restore();
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _VaultVMarkPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _VaultVMarkPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.progress != progress;
 }
