@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -66,17 +67,13 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      sheetAnimationStyle: AnimationStyle(
+      sheetAnimationStyle: const AnimationStyle(
         duration: GVMotion.medium,
-        reverseDuration: const Duration(milliseconds: 210),
+        reverseDuration: Duration(milliseconds: 210),
         curve: GVMotion.standard,
         reverseCurve: Curves.easeInCubic,
       ),
-      builder: (_) => MovementSheet(
-        state: widget.state,
-        editing: editing,
-        prefilled: prefilled,
-      ),
+      builder: (_) => MovementSheet(state: widget.state, editing: editing, prefilled: prefilled),
     );
   }
 
@@ -132,22 +129,19 @@ class _GoldVaultShellState extends State<GoldVaultShell> with WidgetsBindingObse
                         key: ValueKey<int>(tabIndex),
                         child: switch (tabIndex) {
                           0 => HomeTab(
-                              state: st,
-                              quickController: _quickCtrl,
-                              onSubmitQuickEntry: _submitQuickEntry,
-                              onOpenSheet: _openMovementSheet,
-                              onNavigateMovements: () => _selectTab(1),
-                            ),
-                          1 => MovementsTab(
-                              state: st,
-                              onOpenSheet: _openMovementSheet,
-                            ),
+                            state: st,
+                            quickController: _quickCtrl,
+                            onSubmitQuickEntry: _submitQuickEntry,
+                            onOpenSheet: _openMovementSheet,
+                            onNavigateMovements: () => _selectTab(1),
+                          ),
+                          1 => MovementsTab(state: st, onOpenSheet: _openMovementSheet),
                           2 => GoalsTab(state: st),
                           _ => SettingsTab(
-                              state: st,
-                              customBankController: _customBankCtrl,
-                              onNavigateHome: () => _selectTab(0),
-                            ),
+                            state: st,
+                            customBankController: _customBankCtrl,
+                            onNavigateHome: () => _selectTab(0),
+                          ),
                         },
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -9,12 +10,7 @@ class MovementSheet extends StatefulWidget {
   final MovementModel? editing;
   final MovementModel? prefilled;
 
-  const MovementSheet({
-    super.key,
-    required this.state,
-    this.editing,
-    this.prefilled,
-  });
+  const MovementSheet({super.key, required this.state, this.editing, this.prefilled});
 
   @override
   State<MovementSheet> createState() => _MovementSheetState();
@@ -93,11 +89,7 @@ class _MovementSheetState extends State<MovementSheet> {
             // Movement type segmented control
             GVSegmentedControl<String>(
               value: type,
-              items: const [
-                ('expense', 'Gasto'),
-                ('saving', 'Ahorro'),
-                ('income', 'Ingreso'),
-              ],
+              items: const [('expense', 'Gasto'), ('saving', 'Ahorro'), ('income', 'Ingreso')],
               onChanged: (next) => setState(() => type = next),
             ),
             const SizedBox(height: 16),
@@ -109,10 +101,7 @@ class _MovementSheetState extends State<MovementSheet> {
                   GVSegmentedControl<String>(
                     value: currency,
                     compact: true,
-                    items: const [
-                      ('COP', 'COP'),
-                      ('USD', 'USD'),
-                    ],
+                    items: const [('COP', 'COP'), ('USD', 'USD')],
                     onChanged: (next) => setState(() => currency = next),
                   ),
                   const SizedBox(height: 10),
@@ -151,7 +140,8 @@ class _MovementSheetState extends State<MovementSheet> {
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: GVPillBadge(
-                        label: '≈ ${formatMoney(rawAmt * widget.state.fxRate)} COP · 1 USD = ${formatMoney(widget.state.fxRate)}',
+                        label:
+                            '≈ ${formatMoney(rawAmt * widget.state.fxRate)} COP · 1 USD = ${formatMoney(widget.state.fxRate)}',
                         color: c.acc,
                       ),
                     ),
@@ -192,19 +182,12 @@ class _MovementSheetState extends State<MovementSheet> {
                       decoration: BoxDecoration(
                         color: on ? c.acc.withValues(alpha: 0.14) : c.card2,
                         borderRadius: BorderRadius.circular(GVRadius.control),
-                        border: Border.all(
-                          color: on ? c.acc : c.line,
-                          width: on ? 1.4 : 1,
-                        ),
+                        border: Border.all(color: on ? c.acc : c.line, width: on ? 1.4 : 1),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            categoryIconData(cat.name),
-                            size: 20,
-                            color: on ? c.txt : c.mut,
-                          ),
+                          Icon(categoryIconData(cat.name), size: 20, color: on ? c.txt : c.mut),
                           const SizedBox(height: 5),
                           Text(
                             cat.name,

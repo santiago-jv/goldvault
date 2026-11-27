@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -132,25 +133,29 @@ void showCustomizeSpaceSheet(BuildContext context, GoldVaultState state) {
                 spacing: 8,
                 runSpacing: 8,
                 children: state.curSpace.categories
-                    .map((cat) => Chip(
-                          backgroundColor: c.card2,
-                          side: BorderSide(color: c.line),
-                          shape: const StadiumBorder(),
-                          label: Text('${cat.icon} ${cat.name}', style: GVTxt.xs(c, color: c.txt)),
-                          onDeleted: state.curSpace.categories.length > 1
-                              ? () {
-                                  state.curSpace.categories.remove(cat);
-                                  state.pushSpace(state.curSpace);
-                                  setModal(() {});
-                                }
-                              : null,
-                        ))
+                    .map(
+                      (cat) => Chip(
+                        backgroundColor: c.card2,
+                        side: BorderSide(color: c.line),
+                        shape: const StadiumBorder(),
+                        label: Text('${cat.icon} ${cat.name}', style: GVTxt.xs(c, color: c.txt)),
+                        onDeleted: state.curSpace.categories.length > 1
+                            ? () {
+                                state.curSpace.categories.remove(cat);
+                                state.pushSpace(state.curSpace);
+                                setModal(() {});
+                              }
+                            : null,
+                      ),
+                    )
                     .toList(),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: GVTextField(controller: catCtrl, hintText: 'Nueva categoría')),
+                  Expanded(
+                    child: GVTextField(controller: catCtrl, hintText: 'Nueva categoría'),
+                  ),
                   const SizedBox(width: 8),
                   GVPillButton(
                     label: 'Añadir',
@@ -178,25 +183,29 @@ void showCustomizeSpaceSheet(BuildContext context, GoldVaultState state) {
                 spacing: 8,
                 runSpacing: 8,
                 children: state.curSpace.accounts
-                    .map((a) => Chip(
-                          backgroundColor: c.card2,
-                          side: BorderSide(color: c.line),
-                          shape: const StadiumBorder(),
-                          label: Text(a, style: GVTxt.xs(c, color: c.txt)),
-                          onDeleted: state.curSpace.accounts.length > 1
-                              ? () {
-                                  state.curSpace.accounts.remove(a);
-                                  state.pushSpace(state.curSpace);
-                                  setModal(() {});
-                                }
-                              : null,
-                        ))
+                    .map(
+                      (a) => Chip(
+                        backgroundColor: c.card2,
+                        side: BorderSide(color: c.line),
+                        shape: const StadiumBorder(),
+                        label: Text(a, style: GVTxt.xs(c, color: c.txt)),
+                        onDeleted: state.curSpace.accounts.length > 1
+                            ? () {
+                                state.curSpace.accounts.remove(a);
+                                state.pushSpace(state.curSpace);
+                                setModal(() {});
+                              }
+                            : null,
+                      ),
+                    )
                     .toList(),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: GVTextField(controller: acctCtrl, hintText: 'Nueva cuenta')),
+                  Expanded(
+                    child: GVTextField(controller: acctCtrl, hintText: 'Nueva cuenta'),
+                  ),
                   const SizedBox(width: 8),
                   GVPillButton(
                     label: 'Añadir',

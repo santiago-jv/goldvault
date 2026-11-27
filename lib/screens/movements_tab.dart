@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -8,11 +9,7 @@ class MovementsTab extends StatelessWidget {
   final GoldVaultState state;
   final void Function({MovementModel? editing, MovementModel? prefilled}) onOpenSheet;
 
-  const MovementsTab({
-    super.key,
-    required this.state,
-    required this.onOpenSheet,
-  });
+  const MovementsTab({super.key, required this.state, required this.onOpenSheet});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +17,9 @@ class MovementsTab extends StatelessWidget {
     var list = state.monthMovements.toList()..sort((a, b) => b.date.compareTo(a.date));
     if (state.movFilter != 'all') {
       list = list
-          .where((x) => state.movFilter == 'pending' ? x.status == 'pending' : x.type == state.movFilter)
+          .where(
+            (x) => state.movFilter == 'pending' ? x.status == 'pending' : x.type == state.movFilter,
+          )
           .toList();
     }
     if (state.movQuery.trim().isNotEmpty) {
@@ -127,7 +126,12 @@ class MovementsTab extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 6, bottom: 8),
                     child: Text(
                       dayTitle,
-                      style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+                      style: GVTxt.xs2(
+                        c,
+                        color: c.tertiary,
+                        weight: FontWeight.w700,
+                        letterSpacing: 0.7,
+                      ),
                     ),
                   ),
                   GVCard(

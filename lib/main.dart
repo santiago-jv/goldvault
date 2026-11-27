@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'screens/home_and_shells.dart';
 import 'state/app_state.dart';
 import 'theme/gold_theme.dart';
@@ -9,12 +11,7 @@ import 'widgets/gv_motion.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final appState = GoldVaultState();
-  runApp(
-    GoldVaultApp(
-      state: appState,
-      minSplashDuration: const Duration(milliseconds: 1150),
-    ),
-  );
+  runApp(GoldVaultApp(state: appState, minSplashDuration: const Duration(milliseconds: 1150)));
   appState.bootstrap();
 }
 
@@ -22,11 +19,7 @@ class GoldVaultApp extends StatefulWidget {
   final GoldVaultState state;
   final Duration minSplashDuration;
 
-  const GoldVaultApp({
-    super.key,
-    required this.state,
-    this.minSplashDuration = Duration.zero,
-  });
+  const GoldVaultApp({super.key, required this.state, this.minSplashDuration = Duration.zero});
 
   @override
   State<GoldVaultApp> createState() => _GoldVaultAppState();
@@ -148,10 +141,7 @@ class _StartupSplashScreenState extends State<_StartupSplashScreen>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
     _markReveal = CurvedAnimation(
       parent: _ctrl,
       curve: const Interval(0.0, 0.72, curve: Curves.easeOutCubic),
@@ -166,10 +156,7 @@ class _StartupSplashScreenState extends State<_StartupSplashScreen>
       parent: _ctrl,
       curve: const Interval(0.32, 0.85, curve: Curves.easeOutCubic),
     );
-    _wordmarkSlide = Tween<Offset>(
-      begin: const Offset(0, 0.22),
-      end: Offset.zero,
-    ).animate(
+    _wordmarkSlide = Tween<Offset>(begin: const Offset(0, 0.22), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _ctrl,
         curve: const Interval(0.32, 0.85, curve: Curves.easeOutCubic),
@@ -255,11 +242,7 @@ class _StartupSplashScreenState extends State<_StartupSplashScreen>
                     const SizedBox(height: 14),
                     FadeTransition(
                       opacity: _wordmarkOpacity,
-                      child: Text(
-                        widget.message!,
-                        style: GVTxt.xs(c),
-                        textAlign: TextAlign.center,
-                      ),
+                      child: Text(widget.message!, style: GVTxt.xs(c), textAlign: TextAlign.center),
                     ),
                   ],
                 ],

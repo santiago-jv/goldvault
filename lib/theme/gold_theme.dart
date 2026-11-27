@@ -167,13 +167,7 @@ class GVColors {
   /// Whisper-soft hairline elevation (flat in dark mode, ultra-subtle in light mode).
   List<BoxShadow> get cardShadow => isDark
       ? const []
-      : const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ];
+      : const [BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 2))];
 
   static GVColors of(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark ? dark : light;
@@ -219,9 +213,7 @@ class GVTxt {
       height: height,
       letterSpacing: letterSpacing,
       color: color,
-      fontFamily: _isNativeApple
-          ? (fontSize >= 20.0 ? '.SF Pro Display' : '.SF Pro Text')
-          : null,
+      fontFamily: _isNativeApple ? (fontSize >= 20.0 ? '.SF Pro Display' : '.SF Pro Text') : null,
       fontFamilyFallback: _appleFallbackStack,
       fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
     );
@@ -232,68 +224,66 @@ class GVTxt {
   }
 
   static TextStyle display(GVColors c, {Color? color}) => _font(
-        fontSize: fsDisplay,
-        fontWeight: FontWeight.w700,
-        height: 1.06,
-        letterSpacing: -1.2,
-        color: color ?? c.txt,
-        tabular: true,
-      );
+    fontSize: fsDisplay,
+    fontWeight: FontWeight.w700,
+    height: 1.06,
+    letterSpacing: -1.2,
+    color: color ?? c.txt,
+    tabular: true,
+  );
 
   static TextStyle h1(GVColors c, {Color? color}) => _font(
-        fontSize: fsH1,
-        fontWeight: FontWeight.w700,
-        height: 1.15,
-        letterSpacing: -0.7,
-        color: color ?? c.txt,
-      );
+    fontSize: fsH1,
+    fontWeight: FontWeight.w700,
+    height: 1.15,
+    letterSpacing: -0.7,
+    color: color ?? c.txt,
+  );
 
   static TextStyle h2(GVColors c, {Color? color}) => _font(
-        fontSize: fsH2,
-        fontWeight: FontWeight.w700,
-        height: 1.18,
-        letterSpacing: -0.5,
-        color: color ?? c.txt,
-      );
+    fontSize: fsH2,
+    fontWeight: FontWeight.w700,
+    height: 1.18,
+    letterSpacing: -0.5,
+    color: color ?? c.txt,
+  );
 
   static TextStyle h3(GVColors c, {Color? color, bool tabular = false}) => _font(
-        fontSize: fsH3,
-        fontWeight: FontWeight.w600,
-        height: 1.25,
-        letterSpacing: -0.25,
-        color: color ?? c.txt,
-        tabular: tabular,
-      );
+    fontSize: fsH3,
+    fontWeight: FontWeight.w600,
+    height: 1.25,
+    letterSpacing: -0.25,
+    color: color ?? c.txt,
+    tabular: tabular,
+  );
 
   static TextStyle body(
     GVColors c, {
     FontWeight weight = FontWeight.w500,
     Color? color,
     bool tabular = false,
-  }) =>
-      _font(
-        fontSize: fsBody,
-        fontWeight: weight,
-        height: 1.4,
-        letterSpacing: -0.18,
-        color: color ?? c.txt,
-        tabular: tabular,
-      );
+  }) => _font(
+    fontSize: fsBody,
+    fontWeight: weight,
+    height: 1.4,
+    letterSpacing: -0.18,
+    color: color ?? c.txt,
+    tabular: tabular,
+  );
 
   static TextStyle sm(
     GVColors c, {
     FontWeight weight = FontWeight.w400,
     Color? color,
     bool tabular = false,
-  }) =>
-      _font(
-        fontSize: fsSm,
-        fontWeight: weight,
-        height: 1.45,
-        letterSpacing: -0.12,
-        color: color ?? c.mut,
-        tabular: tabular,
-      );
+  }) => _font(
+    fontSize: fsSm,
+    fontWeight: weight,
+    height: 1.45,
+    letterSpacing: -0.12,
+    color: color ?? c.mut,
+    tabular: tabular,
+  );
 
   static TextStyle xs(
     GVColors c, {
@@ -301,15 +291,14 @@ class GVTxt {
     Color? color,
     double? letterSpacing,
     bool tabular = false,
-  }) =>
-      _font(
-        fontSize: fsXs,
-        fontWeight: weight,
-        height: 1.35,
-        letterSpacing: letterSpacing ?? -0.05,
-        color: color ?? c.mut,
-        tabular: tabular,
-      );
+  }) => _font(
+    fontSize: fsXs,
+    fontWeight: weight,
+    height: 1.35,
+    letterSpacing: letterSpacing ?? -0.05,
+    color: color ?? c.mut,
+    tabular: tabular,
+  );
 
   static TextStyle xs2(
     GVColors c, {
@@ -317,27 +306,25 @@ class GVTxt {
     Color? color,
     double? letterSpacing,
     bool tabular = false,
-  }) =>
-      _font(
-        fontSize: fs2xs,
-        fontWeight: weight,
-        height: 1.2,
-        letterSpacing: letterSpacing ?? 0.2,
-        color: color ?? c.tertiary,
-        tabular: tabular,
-      );
+  }) => _font(
+    fontSize: fs2xs,
+    fontWeight: weight,
+    height: 1.2,
+    letterSpacing: letterSpacing ?? 0.2,
+    color: color ?? c.tertiary,
+    tabular: tabular,
+  );
 }
 
 class GoldTheme {
   static ThemeData build(Brightness brightness) {
     final c = brightness == Brightness.dark ? GVColors.dark : GVColors.light;
     final base = brightness == Brightness.dark ? ThemeData.dark() : ThemeData.light();
-    final isNativeApple = !kIsWeb &&
+    final isNativeApple =
+        !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS);
-    final textFontFamily = isNativeApple
-        ? '.SF Pro Text'
-        : GoogleFonts.inter().fontFamily;
+    final textFontFamily = isNativeApple ? '.SF Pro Text' : GoogleFonts.inter().fontFamily;
     final baseTextTheme = base.textTheme.apply(
       fontFamily: textFontFamily,
       fontFamilyFallback: GVTxt._appleFallbackStack,
@@ -380,12 +367,7 @@ class GoldVaultLogo extends StatelessWidget {
   final Color? textColor;
   final Color? accentColor;
 
-  const GoldVaultLogo({
-    super.key,
-    this.fontSize = GVTxt.fsH2,
-    this.textColor,
-    this.accentColor,
-  });
+  const GoldVaultLogo({super.key, this.fontSize = GVTxt.fsH2, this.textColor, this.accentColor});
 
   @override
   Widget build(BuildContext context) {
@@ -433,12 +415,7 @@ class GoldVaultMark extends StatelessWidget {
   final Color? color;
   final double progress;
 
-  const GoldVaultMark({
-    super.key,
-    this.size = 36,
-    this.color,
-    this.progress = 1.0,
-  });
+  const GoldVaultMark({super.key, this.size = 36, this.color, this.progress = 1.0});
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -41,21 +43,10 @@ class GVCard extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: borderColor ?? const Color(0x24FFFFFF),
-              width: 1,
-            ),
+            border: Border.all(color: borderColor ?? const Color(0x24FFFFFF), width: 1),
             boxShadow: const [
-              BoxShadow(
-                color: Color(0x2E000000),
-                blurRadius: 28,
-                offset: Offset(0, 12),
-              ),
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
+              BoxShadow(color: Color(0x2E000000), blurRadius: 28, offset: Offset(0, 12)),
+              BoxShadow(color: Color(0x12000000), blurRadius: 6, offset: Offset(0, 2)),
             ],
           )
         : BoxDecoration(
@@ -169,35 +160,28 @@ class GVPillButton extends StatelessWidget {
 
     final button = Material(
       color: onPressed == null ? bg.withValues(alpha: 0.45) : bg,
-      shape: StadiumBorder(
-        side: border != null ? BorderSide(color: border) : BorderSide.none,
-      ),
+      shape: StadiumBorder(side: border != null ? BorderSide(color: border) : BorderSide.none),
       child: InkWell(
         onTap: onPressed,
         customBorder: const StadiumBorder(),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 16 : 22,
-            vertical: compact ? 10 : 14,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 22, vertical: compact ? 10 : 14),
           child: Row(
             mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (leading != null) ...[
-                leading!,
-                const SizedBox(width: 8),
-              ],
+              if (leading != null) ...[leading!, const SizedBox(width: 8)],
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: (compact
-                          ? GVTxt.sm(c, weight: FontWeight.w600, color: fg)
-                          : GVTxt.body(c, weight: FontWeight.w600, color: fg))
-                      .copyWith(letterSpacing: -0.15),
+                  style:
+                      (compact
+                              ? GVTxt.sm(c, weight: FontWeight.w600, color: fg)
+                              : GVTxt.body(c, weight: FontWeight.w600, color: fg))
+                          .copyWith(letterSpacing: -0.15),
                 ),
               ),
             ],
@@ -206,11 +190,7 @@ class GVPillButton extends StatelessWidget {
       ),
     );
 
-    final wrapped = GVSpringTap(
-      enabled: onPressed != null,
-      pressedScale: 0.97,
-      child: button,
-    );
+    final wrapped = GVSpringTap(enabled: onPressed != null, pressedScale: 0.97, child: button);
     return fullWidth ? SizedBox(width: double.infinity, child: wrapped) : wrapped;
   }
 }
@@ -330,11 +310,7 @@ class GVSegmentedControl<T> extends StatelessWidget {
                               weight: selected ? FontWeight.w600 : FontWeight.w500,
                               color: selected ? (c.isDark ? c.ink : c.txt) : c.mut,
                             ),
-                            child: Text(
-                              entry.$2,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text(entry.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
                           ),
                         ),
                       ),
@@ -407,13 +383,7 @@ class GVPillBadge extends StatelessWidget {
   final Color? backgroundColor;
   final IconData? icon;
 
-  const GVPillBadge({
-    super.key,
-    required this.label,
-    this.color,
-    this.backgroundColor,
-    this.icon,
-  });
+  const GVPillBadge({super.key, required this.label, this.color, this.backgroundColor, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -422,17 +392,11 @@ class GVPillBadge extends StatelessWidget {
     final bg = backgroundColor ?? fg.withValues(alpha: c.isDark ? 0.16 : 0.11);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(GVRadius.pill),
-      ),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(GVRadius.pill)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11, color: fg),
-            const SizedBox(width: 4),
-          ],
+          if (icon != null) ...[Icon(icon, size: 11, color: fg), const SizedBox(width: 4)],
           Text(
             label,
             style: GVTxt.xs2(c, color: fg, weight: FontWeight.w600, letterSpacing: 0),
@@ -449,12 +413,7 @@ class GVSectionHeader extends StatelessWidget {
   final String? eyebrow;
   final Widget? trailing;
 
-  const GVSectionHeader({
-    super.key,
-    required this.title,
-    this.eyebrow,
-    this.trailing,
-  });
+  const GVSectionHeader({super.key, required this.title, this.eyebrow, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +428,12 @@ class GVSectionHeader extends StatelessWidget {
               if (eyebrow != null) ...[
                 Text(
                   eyebrow!.toUpperCase(),
-                  style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w600, letterSpacing: 0.7),
+                  style: GVTxt.xs2(
+                    c,
+                    color: c.tertiary,
+                    weight: FontWeight.w600,
+                    letterSpacing: 0.7,
+                  ),
                 ),
                 const SizedBox(height: 2),
               ],
@@ -477,10 +441,7 @@ class GVSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: 8),
-          trailing!,
-        ],
+        if (trailing != null) ...[const SizedBox(width: 8), trailing!],
       ],
     );
   }
@@ -558,7 +519,8 @@ class GVSyncBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
-    final message = state.syncError ??
+    final message =
+        state.syncError ??
         '${state.pendingSyncCount} cambio(s) pendiente(s) por sincronizar con la nube.';
     return Container(
       width: double.infinity,
@@ -660,12 +622,8 @@ class GVMovementRow extends StatelessWidget {
                   child: isInc
                       ? Icon(Icons.south_west_rounded, size: 18, color: c.green)
                       : isSav
-                          ? Icon(Icons.savings_outlined, size: 18, color: c.blue)
-                          : Icon(
-                              categoryIconData(movement.category),
-                              size: 18,
-                              color: c.txt,
-                            ),
+                      ? Icon(Icons.savings_outlined, size: 18, color: c.blue)
+                      : Icon(categoryIconData(movement.category), size: 18, color: c.txt),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -761,7 +719,13 @@ class GVGlassDock extends StatelessWidget {
               child: Row(
                 children: [
                   _tabItem(c, 0, Icons.home_outlined, Icons.home_rounded, 'Inicio'),
-                  _tabItem(c, 1, Icons.format_list_bulleted_rounded, Icons.format_list_bulleted_rounded, 'Movs'),
+                  _tabItem(
+                    c,
+                    1,
+                    Icons.format_list_bulleted_rounded,
+                    Icons.format_list_bulleted_rounded,
+                    'Movs',
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Tooltip(
@@ -794,13 +758,7 @@ class GVGlassDock extends StatelessWidget {
     );
   }
 
-  Widget _tabItem(
-    GVColors c,
-    int index,
-    IconData icon,
-    IconData activeIcon,
-    String label,
-  ) {
+  Widget _tabItem(GVColors c, int index, IconData icon, IconData activeIcon, String label) {
     final active = selectedIndex == index;
     final color = active ? c.acc : c.mut;
     return Expanded(
@@ -828,11 +786,7 @@ class GVGlassDock extends StatelessWidget {
                   weight: active ? FontWeight.w700 : FontWeight.w500,
                   letterSpacing: 0,
                 ),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
           ),
@@ -851,10 +805,7 @@ class GoogleGIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: 'Google',
-      child: CustomPaint(
-        size: Size.square(size),
-        painter: _GoogleGPainter(),
-      ),
+      child: CustomPaint(size: Size.square(size), painter: _GoogleGPainter()),
     );
   }
 }
@@ -875,13 +826,37 @@ class _GoogleGPainter extends CustomPainter {
       ..strokeCap = StrokeCap.butt;
 
     // Red top-left arc (-145 deg to -42 deg)
-    canvas.drawArc(rect, -145 * math.pi / 180, 103 * math.pi / 180, false, arcPaint(const Color(0xFFEA4335)));
+    canvas.drawArc(
+      rect,
+      -145 * math.pi / 180,
+      103 * math.pi / 180,
+      false,
+      arcPaint(const Color(0xFFEA4335)),
+    );
     // Yellow left arc (145 deg to 217 deg)
-    canvas.drawArc(rect, 145 * math.pi / 180, 72 * math.pi / 180, false, arcPaint(const Color(0xFFFBBC05)));
+    canvas.drawArc(
+      rect,
+      145 * math.pi / 180,
+      72 * math.pi / 180,
+      false,
+      arcPaint(const Color(0xFFFBBC05)),
+    );
     // Green bottom arc (40 deg to 147 deg)
-    canvas.drawArc(rect, 40 * math.pi / 180, 107 * math.pi / 180, false, arcPaint(const Color(0xFF34A853)));
+    canvas.drawArc(
+      rect,
+      40 * math.pi / 180,
+      107 * math.pi / 180,
+      false,
+      arcPaint(const Color(0xFF34A853)),
+    );
     // Blue right-bottom arc (-5 deg to 43 deg)
-    canvas.drawArc(rect, -5 * math.pi / 180, 48 * math.pi / 180, false, arcPaint(const Color(0xFF4285F4)));
+    canvas.drawArc(
+      rect,
+      -5 * math.pi / 180,
+      48 * math.pi / 180,
+      false,
+      arcPaint(const Color(0xFF4285F4)),
+    );
 
     // Blue horizontal crossbar from center to outer right edge
     final barPaint = Paint()

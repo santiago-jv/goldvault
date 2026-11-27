@@ -30,8 +30,10 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
-      - name: Static analysis
-        run: flutter analyze --no-fatal-infos
+      - name: Check code formatting (dart format)
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis & linting (flutter analyze)
+        run: flutter analyze --fatal-infos
       - name: Run Flutter unit & widget tests
         run: flutter test --reporter expanded
       - name: Verify Node API syntax
@@ -46,7 +48,8 @@ jobs:
         run: |
           {
             echo "### Validation Summary"
-            echo "- **Static analysis**: \`flutter analyze --no-fatal-infos\`"
+            echo "- **Code formatting**: \`dart format --output=none --set-exit-if-changed lib test\`"
+            echo "- **Static analysis & lint**: \`flutter analyze --fatal-infos\`"
             echo "- **Unit & widget tests**: \`flutter test --reporter expanded\`"
             echo "- **Node API lint**: \`server.mjs\` & \`api/bank.js\`"
           } >> "$GITHUB_STEP_SUMMARY"

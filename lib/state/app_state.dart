@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/models.dart';
 
 class CloudSnapshot {
@@ -51,15 +53,9 @@ class SupabaseCloudAdapter implements GoldVaultCloudAdapter {
         .maybeSingle();
 
     return CloudSnapshot(
-      spaces: (resSpaces as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList(),
-      goals: (resGoals as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList(),
-      movements: (resMovs as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList(),
+      spaces: (resSpaces as List).map((e) => Map<String, dynamic>.from(e as Map)).toList(),
+      goals: (resGoals as List).map((e) => Map<String, dynamic>.from(e as Map)).toList(),
+      movements: (resMovs as List).map((e) => Map<String, dynamic>.from(e as Map)).toList(),
       profile: resProf != null ? Map<String, dynamic>.from(resProf as Map) : null,
     );
   }
@@ -134,20 +130,20 @@ class PendingSyncOp {
   }
 
   factory PendingSyncOp.fromJson(Map<String, dynamic> j) => PendingSyncOp(
-        kind: (j['kind'] ?? 'upsert_profile').toString(),
-        entityId: (j['entityId'] ?? 'profile').toString(),
-        payload: j['payload'] is Map
-            ? Map<String, dynamic>.from(j['payload'] as Map)
-            : <String, dynamic>{},
-        queuedAt: (j['queuedAt'] ?? DateTime.now().toIso8601String()).toString(),
-      );
+    kind: (j['kind'] ?? 'upsert_profile').toString(),
+    entityId: (j['entityId'] ?? 'profile').toString(),
+    payload: j['payload'] is Map
+        ? Map<String, dynamic>.from(j['payload'] as Map)
+        : <String, dynamic>{},
+    queuedAt: (j['queuedAt'] ?? DateTime.now().toIso8601String()).toString(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'kind': kind,
-        'entityId': entityId,
-        'payload': payload,
-        'queuedAt': queuedAt,
-      };
+    'kind': kind,
+    'entityId': entityId,
+    'payload': payload,
+    'queuedAt': queuedAt,
+  };
 }
 
 class GoldVaultState extends ChangeNotifier {
@@ -160,18 +156,13 @@ class GoldVaultState extends ChangeNotifier {
   late final GoldVaultCloudAdapter _cloud;
   final Future<bool> Function()? onlineChecker;
 
-  GoldVaultState({
-    GoldVaultCloudAdapter? cloud,
-    this.onlineChecker,
-  }) {
+  GoldVaultState({GoldVaultCloudAdapter? cloud, this.onlineChecker}) {
     _cloud = cloud ?? SupabaseCloudAdapter(() => sb);
   }
 
-  bool get supportsBankNotifications =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  bool get supportsBankNotifications => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-  bool get isNativeIos =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  bool get isNativeIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   SupabaseClient get sb => Supabase.instance.client;
   Session? session;
@@ -236,14 +227,9 @@ class GoldVaultState extends ChangeNotifier {
   /// Only send the user to Onboarding after a verified successful cloud sync
   /// returned zero spaces (never after a sync error or before sync finishes).
   bool get needsOnboarding =>
-      session != null &&
-      !loadingCloud &&
-      cloudSynced &&
-      syncError == null &&
-      spaces.isEmpty;
+      session != null && !loadingCloud && cloudSynced && syncError == null && spaces.isEmpty;
 
-  List<MovementModel> get spaceMovements =>
-      movements.where((m) => m.space == curSpace.id).toList();
+  List<MovementModel> get spaceMovements => movements.where((m) => m.space == curSpace.id).toList();
 
   List<MovementModel> get monthMovements =>
       spaceMovements.where((m) => m.date.startsWith(ym)).toList();
@@ -251,28 +237,31 @@ class GoldVaultState extends ChangeNotifier {
   List<MovementModel> get activeMonthMovements =>
       monthMovements.where((m) => m.status != 'cancelled').toList();
 
-  int get monthIncome => activeMonthMovements
-      .where((m) => m.type == 'income')
-      .fold(0, (a, x) => a + x.amount);
+  int get monthIncome =>
+      activeMonthMovements.where((m) => m.type == 'income').fold(0, (a, x) => a + x.amount);
 
-  int get monthExpense => activeMonthMovements
-      .where((m) => m.type == 'expense')
-      .fold(0, (a, x) => a + x.amount);
+  int get monthExpense =>
+      activeMonthMovements.where((m) => m.type == 'expense').fold(0, (a, x) => a + x.amount);
 
-  int get monthSaving => activeMonthMovements
-      .where((m) => m.type == 'saving')
-      .fold(0, (a, x) => a + x.amount);
+  int get monthSaving =>
+      activeMonthMovements.where((m) => m.type == 'saving').fold(0, (a, x) => a + x.amount);
 
   int get monthAvailable => monthIncome - monthExpense - monthSaving;
 
-  List<MovementModel> get pendingMovements => activeMonthMovements
-      .where((m) => m.status == 'pending' && m.type != 'income')
-      .toList();
+  List<MovementModel> get pendingMovements =>
+      activeMonthMovements.where((m) => m.status == 'pending' && m.type != 'income').toList();
 
-  List<MovementModel> get unreviewedBankMovements => spaceMovements
-      .where((m) => m.autoBank != null && m.autoBank!.isNotEmpty && !m.autoReviewed && m.status != 'cancelled')
-      .toList()
-    ..sort((a, b) => b.date.compareTo(a.date));
+  List<MovementModel> get unreviewedBankMovements =>
+      spaceMovements
+          .where(
+            (m) =>
+                m.autoBank != null &&
+                m.autoBank!.isNotEmpty &&
+                !m.autoReviewed &&
+                m.status != 'cancelled',
+          )
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
 
   int goalSaved(String goalId) => spaceMovements
       .where((m) => m.type == 'saving' && m.goalId == goalId && m.status != 'cancelled')
@@ -428,7 +417,8 @@ class GoldVaultState extends ChangeNotifier {
       final hasError = uri.queryParameters.containsKey('error') || uri.fragment.contains('error=');
 
       if (hasError) {
-        final errDesc = uri.queryParameters['error_description'] ?? 'Autenticación cancelada o inválida';
+        final errDesc =
+            uri.queryParameters['error_description'] ?? 'Autenticación cancelada o inválida';
         authError = errDesc;
         notifyListeners();
         return;
@@ -462,7 +452,8 @@ class GoldVaultState extends ChangeNotifier {
   Future<void> refreshAndroidPermission() async {
     if (!supportsBankNotifications) return;
     try {
-      final enabled = await _bankChannel.invokeMethod<bool>('isNotificationServiceEnabled') ?? false;
+      final enabled =
+          await _bankChannel.invokeMethod<bool>('isNotificationServiceEnabled') ?? false;
       androidPermissionGranted = enabled;
       notifyListeners();
     } catch (_) {}
@@ -511,7 +502,8 @@ class GoldVaultState extends ChangeNotifier {
 
     notifyListeners();
 
-    final shouldRecoverSync = isOnline &&
+    final shouldRecoverSync =
+        isOnline &&
         session != null &&
         (manual || wasOffline || !cloudSynced || hasPendingSync || syncError != null);
     if (shouldRecoverSync) {
@@ -579,10 +571,7 @@ class GoldVaultState extends ChangeNotifier {
     notifyListeners();
     try {
       if (kIsWeb) {
-        await sb.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: Uri.base.origin,
-        );
+        await sb.auth.signInWithOAuth(OAuthProvider.google, redirectTo: Uri.base.origin);
       } else {
         // Use the authorized web origin with ?apk_redirect=1 so Supabase never falls back
         // to the web app even if goldvault:// is not manually added in Supabase Redirect URLs.
@@ -632,13 +621,17 @@ class GoldVaultState extends ChangeNotifier {
         spaces = decoded.map((k, v) {
           final map = Map<String, dynamic>.from(v as Map);
           final goalsRaw = (map['goals'] as List?) ?? [];
-          final goals = goalsRaw.map((g) => GoalItem.fromJson(Map<String, dynamic>.from(g as Map))).toList();
+          final goals = goalsRaw
+              .map((g) => GoalItem.fromJson(Map<String, dynamic>.from(g as Map)))
+              .toList();
           return MapEntry(k, SpaceModel.fromRow(map, goals));
         });
       }
       if (mvRaw != null) {
         final list = jsonDecode(mvRaw) as List;
-        movements = list.map((e) => MovementModel.fromRow(Map<String, dynamic>.from(e as Map))).toList();
+        movements = list
+            .map((e) => MovementModel.fromRow(Map<String, dynamic>.from(e as Map)))
+            .toList();
       }
     } catch (_) {}
   }
@@ -695,10 +688,16 @@ class GoldVaultState extends ChangeNotifier {
 
   String _formatSyncFailure(Object err, {String action = 'sincronizar tus datos'}) {
     final msg = err.toString().toLowerCase();
-    if (msg.contains('jwt') || msg.contains('401') || msg.contains('unauthorized') || msg.contains('expired')) {
+    if (msg.contains('jwt') ||
+        msg.contains('401') ||
+        msg.contains('unauthorized') ||
+        msg.contains('expired')) {
       return 'Tu sesión expiró al $action. Reintenta o vuelve a iniciar sesión.';
     }
-    if (msg.contains('timeout') || msg.contains('socket') || msg.contains('failed host lookup') || msg.contains('connection')) {
+    if (msg.contains('timeout') ||
+        msg.contains('socket') ||
+        msg.contains('failed host lookup') ||
+        msg.contains('connection')) {
       return 'Conexión inestable al $action. Tus cambios locales están a salvo; reintenta cuando mejore la señal.';
     }
     return 'No se pudo $action con la nube. Tus cambios locales siguen guardados.';
@@ -756,7 +755,8 @@ class GoldVaultState extends ChangeNotifier {
       try {
         await _executePendingOp(op);
         _pendingOps.removeWhere(
-          (e) => e.entityFamily == op.entityFamily && e.entityId == op.entityId && e.kind == op.kind,
+          (e) =>
+              e.entityFamily == op.entityFamily && e.entityId == op.entityId && e.kind == op.kind,
         );
         await _savePendingOps();
       } catch (e) {
@@ -896,12 +896,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.upsertProfile(row);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'upsert_profile',
-        entityId: 'profile',
-        payload: row,
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'upsert_profile',
+          entityId: 'profile',
+          payload: row,
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'guardar tu perfil');
       notifyListeners();
     }
@@ -961,12 +963,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.upsertSpace(row);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'upsert_space',
-        entityId: sp.id,
-        payload: row,
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'upsert_space',
+          entityId: sp.id,
+          payload: row,
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'guardar tu espacio');
       notifyListeners();
     }
@@ -995,12 +999,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.upsertGoal(row);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'upsert_goal',
-        entityId: g.id,
-        payload: row,
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'upsert_goal',
+          entityId: g.id,
+          payload: row,
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'guardar la meta');
       notifyListeners();
     }
@@ -1014,12 +1020,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.deleteGoal(goalId);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'delete_goal',
-        entityId: goalId,
-        payload: const {},
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'delete_goal',
+          entityId: goalId,
+          payload: const {},
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'eliminar la meta');
       notifyListeners();
     }
@@ -1035,15 +1043,17 @@ class GoldVaultState extends ChangeNotifier {
       if (saveAsFrequent && mv.type == 'expense' && mv.desc.isNotEmpty) {
         final exists = curSpace.frequents.any((f) => normText(f.desc) == normText(mv.desc));
         if (!exists) {
-          curSpace.frequents.add(FrequentItem(
-            id: genId('fq'),
-            desc: mv.desc,
-            category: mv.category ?? 'Otros',
-            amount: mv.amount,
-            account: mv.account ?? curSpace.accounts.first,
-            day: freqDay,
-            startYm: freqDay != null ? currentYm() : null,
-          ));
+          curSpace.frequents.add(
+            FrequentItem(
+              id: genId('fq'),
+              desc: mv.desc,
+              category: mv.category ?? 'Otros',
+              amount: mv.amount,
+              account: mv.account ?? curSpace.accounts.first,
+              day: freqDay,
+              startYm: freqDay != null ? currentYm() : null,
+            ),
+          );
           await pushSpace(curSpace);
         }
       }
@@ -1057,12 +1067,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.upsertMovement(row);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'upsert_movement',
-        entityId: mv.id,
-        payload: row,
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'upsert_movement',
+          entityId: mv.id,
+          payload: row,
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'guardar el movimiento');
       notifyListeners();
     }
@@ -1078,12 +1090,14 @@ class GoldVaultState extends ChangeNotifier {
     try {
       await _cloud.deleteMovement(id);
     } catch (e) {
-      await _enqueuePendingOp(PendingSyncOp(
-        kind: 'delete_movement',
-        entityId: id,
-        payload: const {},
-        queuedAt: DateTime.now().toIso8601String(),
-      ));
+      await _enqueuePendingOp(
+        PendingSyncOp(
+          kind: 'delete_movement',
+          entityId: id,
+          payload: const {},
+          queuedAt: DateTime.now().toIso8601String(),
+        ),
+      );
       syncError = _formatSyncFailure(e, action: 'eliminar el movimiento');
       notifyListeners();
     }
@@ -1125,11 +1139,13 @@ class GoldVaultState extends ChangeNotifier {
     if (!parsed.ok) return null;
 
     final today = todayIso();
-    final dup = spaceMovements.where((m) =>
-        m.date == today &&
-        m.amount == parsed.amount &&
-        m.autoRaw != null &&
-        m.autoRaw == parsed.raw);
+    final dup = spaceMovements.where(
+      (m) =>
+          m.date == today &&
+          m.amount == parsed.amount &&
+          m.autoRaw != null &&
+          m.autoRaw == parsed.raw,
+    );
     if (dup.isNotEmpty) return dup.first;
 
     final mv = MovementModel(
@@ -1225,7 +1241,24 @@ class GoldVaultState extends ChangeNotifier {
       if (account != null) break;
     }
 
-    final stopWords = {'en', 'con', 'desde', 'de', 'a', 'el', 'la', 'los', 'las', 'un', 'una', 'por', 'del', 'mi', 'me', 'y'};
+    final stopWords = {
+      'en',
+      'con',
+      'desde',
+      'de',
+      'a',
+      'el',
+      'la',
+      'los',
+      'las',
+      'un',
+      'una',
+      'por',
+      'del',
+      'mi',
+      'me',
+      'y',
+    };
     final rest = <String>[];
     for (var i = 0; i < tokens.length; i++) {
       if (!used[i] && !stopWords.contains(norm[i])) rest.add(tokens[i]);

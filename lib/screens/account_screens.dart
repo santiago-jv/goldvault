@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
@@ -31,7 +32,11 @@ class OfflineGuardScreen extends StatelessWidget {
                       child: Icon(Icons.cloud_off_rounded, size: 28, color: c.amber),
                     ),
                     const SizedBox(height: 18),
-                    Text('Sin conexión a internet', style: GVTxt.h2(c), textAlign: TextAlign.center),
+                    Text(
+                      'Sin conexión a internet',
+                      style: GVTxt.h2(c),
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'GoldVault requiere conexión activa para mantener tus cuentas, movimientos y bancos sincronizados sin errores.',
@@ -92,8 +97,7 @@ class SyncErrorScreen extends StatelessWidget {
                     Text('Error al sincronizar', style: GVTxt.h2(c), textAlign: TextAlign.center),
                     const SizedBox(height: 8),
                     Text(
-                      state.syncError ??
-                          'No pudimos cargar tus cuentas desde la nube. Reintenta para evitar perder información.',
+                      state.syncError ?? 'No pudimos cargar tus cuentas desde la nube. Reintenta para evitar perder información.',
                       style: GVTxt.sm(c),
                       textAlign: TextAlign.center,
                     ),
@@ -238,7 +242,10 @@ class OnboardingScreen extends StatelessWidget {
                       style: GVTxt.h1(c),
                       children: [
                         const TextSpan(text: '¿Cómo quieres '),
-                        TextSpan(text: 'empezar?', style: TextStyle(color: c.acc)),
+                        TextSpan(
+                          text: 'empezar?',
+                          style: TextStyle(color: c.acc),
+                        ),
                       ],
                     ),
                   ),

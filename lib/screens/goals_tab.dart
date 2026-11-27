@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -59,11 +60,7 @@ class GoalsTab extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            g.name,
-                            style: GVTxt.h3(c),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(g.name, style: GVTxt.h3(c), overflow: TextOverflow.ellipsis),
                         ),
                         const SizedBox(width: 8),
                         GVPillBadge(label: '${pct.toStringAsFixed(0)}%', color: accent),
@@ -96,7 +93,12 @@ class GoalsTab extends StatelessWidget {
                         Flexible(
                           child: Text(
                             'Meta: ${formatMoney(g.target)}',
-                            style: GVTxt.xs(c, weight: FontWeight.w600, color: c.txt, tabular: true),
+                            style: GVTxt.xs(
+                              c,
+                              weight: FontWeight.w600,
+                              color: c.txt,
+                              tabular: true,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

@@ -1,9 +1,20 @@
 import 'dart:math';
+
 import 'package:intl/intl.dart';
 
 const List<String> kMonthsEs = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
 ];
 
 String genId(String prefix) {
@@ -72,10 +83,8 @@ class CategoryItem {
 
   CategoryItem({required this.name, required this.icon});
 
-  factory CategoryItem.fromJson(Map<String, dynamic> j) => CategoryItem(
-        name: (j['name'] ?? 'Otros').toString(),
-        icon: (j['icon'] ?? '✨').toString(),
-      );
+  factory CategoryItem.fromJson(Map<String, dynamic> j) =>
+      CategoryItem(name: (j['name'] ?? 'Otros').toString(), icon: (j['icon'] ?? '✨').toString());
 
   Map<String, dynamic> toJson() => {'name': name, 'icon': icon};
 }
@@ -102,26 +111,26 @@ class FrequentItem {
   });
 
   factory FrequentItem.fromJson(Map<String, dynamic> j) => FrequentItem(
-        id: (j['id'] ?? genId('fq')).toString(),
-        desc: (j['desc'] ?? '').toString(),
-        category: (j['category'] ?? 'Otros').toString(),
-        amount: (num.tryParse(j['amount']?.toString() ?? '0') ?? 0).round(),
-        account: (j['account'] ?? 'Efectivo').toString(),
-        day: j['day'] != null ? int.tryParse(j['day'].toString()) : null,
-        mode: (j['mode'] ?? 'ask').toString(),
-        startYm: j['startYm']?.toString(),
-      );
+    id: (j['id'] ?? genId('fq')).toString(),
+    desc: (j['desc'] ?? '').toString(),
+    category: (j['category'] ?? 'Otros').toString(),
+    amount: (num.tryParse(j['amount']?.toString() ?? '0') ?? 0).round(),
+    account: (j['account'] ?? 'Efectivo').toString(),
+    day: j['day'] != null ? int.tryParse(j['day'].toString()) : null,
+    mode: (j['mode'] ?? 'ask').toString(),
+    startYm: j['startYm']?.toString(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'desc': desc,
-        'category': category,
-        'amount': amount,
-        'account': account,
-        if (day != null) 'day': day,
-        'mode': mode,
-        if (startYm != null) 'startYm': startYm,
-      };
+    'id': id,
+    'desc': desc,
+    'category': category,
+    'amount': amount,
+    'account': account,
+    if (day != null) 'day': day,
+    'mode': mode,
+    if (startYm != null) 'startYm': startYm,
+  };
 }
 
 class GoalItem {
@@ -130,26 +139,21 @@ class GoalItem {
   int target;
   String? achievedAt;
 
-  GoalItem({
-    required this.id,
-    required this.name,
-    required this.target,
-    this.achievedAt,
-  });
+  GoalItem({required this.id, required this.name, required this.target, this.achievedAt});
 
   factory GoalItem.fromJson(Map<String, dynamic> j) => GoalItem(
-        id: (j['id'] ?? genId('goal')).toString(),
-        name: (j['name'] ?? 'Meta').toString(),
-        target: (num.tryParse(j['target']?.toString() ?? '0') ?? 0).round(),
-        achievedAt: j['achievedAt']?.toString() ?? j['achieved_at']?.toString(),
-      );
+    id: (j['id'] ?? genId('goal')).toString(),
+    name: (j['name'] ?? 'Meta').toString(),
+    target: (num.tryParse(j['target']?.toString() ?? '0') ?? 0).round(),
+    achievedAt: j['achievedAt']?.toString() ?? j['achieved_at']?.toString(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'target': target,
-        'achievedAt': achievedAt,
-      };
+    'id': id,
+    'name': name,
+    'target': target,
+    'achievedAt': achievedAt,
+  };
 }
 
 class SpaceModel {
@@ -222,9 +226,27 @@ class SpaceModel {
       accounts: ['Efectivo', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'Morse'],
       sources: ['Salario', 'Freelance', 'Inversiones', 'Otros'],
       frequents: [
-        FrequentItem(id: genId('fq'), desc: 'Almuerzo', category: 'Comida', amount: 22000, account: 'Nequi'),
-        FrequentItem(id: genId('fq'), desc: 'Café', category: 'Comida', amount: 8000, account: 'Efectivo'),
-        FrequentItem(id: genId('fq'), desc: 'Transporte', category: 'Transporte', amount: 15000, account: 'Nequi'),
+        FrequentItem(
+          id: genId('fq'),
+          desc: 'Almuerzo',
+          category: 'Comida',
+          amount: 22000,
+          account: 'Nequi',
+        ),
+        FrequentItem(
+          id: genId('fq'),
+          desc: 'Café',
+          category: 'Comida',
+          amount: 8000,
+          account: 'Efectivo',
+        ),
+        FrequentItem(
+          id: genId('fq'),
+          desc: 'Transporte',
+          category: 'Transporte',
+          amount: 15000,
+          account: 'Nequi',
+        ),
       ],
       budgets: {},
       recSkipped: [],
@@ -253,10 +275,14 @@ class SpaceModel {
       id: (r['id'] ?? 'space_main').toString(),
       name: (r['name'] ?? 'Mi espacio').toString(),
       emoji: (r['emoji'] ?? '💰').toString(),
-      categories: rawCats.map((e) => CategoryItem.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
+      categories: rawCats
+          .map((e) => CategoryItem.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList(),
       accounts: rawAccts.map((e) => e.toString()).toList(),
       sources: rawSrcs.map((e) => e.toString()).toList(),
-      frequents: rawFreqs.map((e) => FrequentItem.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
+      frequents: rawFreqs
+          .map((e) => FrequentItem.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList(),
       budgets: budgetsMap,
       recSkipped: rawSkipped.map((e) => e.toString()).toList(),
       goals: spaceGoals,
@@ -264,16 +290,16 @@ class SpaceModel {
   }
 
   Map<String, dynamic> toRow() => {
-        'id': id,
-        'name': name,
-        'emoji': emoji,
-        'categories': categories.map((c) => c.toJson()).toList(),
-        'accounts': accounts,
-        'sources': sources,
-        'frequents': frequents.map((f) => f.toJson()).toList(),
-        'budgets': budgets,
-        'rec_skipped': recSkipped,
-      };
+    'id': id,
+    'name': name,
+    'emoji': emoji,
+    'categories': categories.map((c) => c.toJson()).toList(),
+    'accounts': accounts,
+    'sources': sources,
+    'frequents': frequents.map((f) => f.toJson()).toList(),
+    'budgets': budgets,
+    'rec_skipped': recSkipped,
+  };
 }
 
 class FxInfo {
@@ -284,10 +310,10 @@ class FxInfo {
   const FxInfo({required this.ccy, required this.amount, required this.rate});
 
   factory FxInfo.fromJson(Map<String, dynamic> j) => FxInfo(
-        ccy: (j['ccy'] ?? 'USD').toString(),
-        amount: double.tryParse(j['amount']?.toString() ?? '0') ?? 0,
-        rate: double.tryParse(j['rate']?.toString() ?? '4200') ?? 4200,
-      );
+    ccy: (j['ccy'] ?? 'USD').toString(),
+    amount: double.tryParse(j['amount']?.toString() ?? '0') ?? 0,
+    rate: double.tryParse(j['rate']?.toString() ?? '4200') ?? 4200,
+  );
 
   Map<String, dynamic> toJson() => {'ccy': ccy, 'amount': amount, 'rate': rate};
 }
@@ -359,24 +385,24 @@ class MovementModel {
   }
 
   Map<String, dynamic> toRow() => {
-        'id': id,
-        'space_id': space,
-        'date': date,
-        'type': type,
-        'desc': desc.isEmpty ? null : desc,
-        'amount': amount,
-        'category': category,
-        'account': account,
-        'status': status,
-        'goal_id': goalId,
-        'source': source,
-        'orig_currency': fx?.ccy,
-        'orig_amount': fx?.amount,
-        'fx_rate': fx?.rate,
-        'auto_bank': autoBank,
-        'auto_raw': autoRaw,
-        'auto_reviewed': autoReviewed,
-      };
+    'id': id,
+    'space_id': space,
+    'date': date,
+    'type': type,
+    'desc': desc.isEmpty ? null : desc,
+    'amount': amount,
+    'category': category,
+    'account': account,
+    'status': status,
+    'goal_id': goalId,
+    'source': source,
+    'orig_currency': fx?.ccy,
+    'orig_amount': fx?.amount,
+    'fx_rate': fx?.rate,
+    'auto_bank': autoBank,
+    'auto_raw': autoRaw,
+    'auto_reviewed': autoReviewed,
+  };
 }
 
 class BankSample {
@@ -492,13 +518,22 @@ class BankNotificationParser {
     var bank = 'Banco';
     if (RegExp(r'(nequi|com\.nequi)', caseSensitive: false).hasMatch(lower)) {
       bank = 'Nequi';
-    } else if (RegExp(r'(lulobank|lulo\s*bank|\blulo\b|com\.lulobank)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(lulobank|lulo\s*bank|\blulo\b|com\.lulobank)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       bank = 'Lulo Bank';
-    } else if (RegExp(r'(\barq\b|com\.arq|littio|co\.littio)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(\barq\b|com\.arq|littio|co\.littio)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       bank = 'ARQ';
     } else if (RegExp(r'(\bmorse\b|com\.morse)', caseSensitive: false).hasMatch(lower)) {
       bank = 'Morse';
-    } else if (RegExp(r'(nubank|\bnu\b|moradita|com\.nu\.)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(nubank|\bnu\b|moradita|com\.nu\.)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       bank = 'Nu Bank';
     } else if (lower.contains('bancolombia')) {
       bank = 'Bancolombia';
@@ -506,7 +541,11 @@ class BankNotificationParser {
       bank = 'Daviplata';
     }
 
-    final isUsd = RegExp(r'(us\$|\busd\b|\busdc\b|\busdt\b|dolares|dólares)', caseSensitive: false).hasMatch(lower) &&
+    final isUsd =
+        RegExp(
+          r'(us\$|\busd\b|\busdc\b|\busdt\b|dolares|dólares)',
+          caseSensitive: false,
+        ).hasMatch(lower) &&
         !RegExp(r'\bcop\b', caseSensitive: false).hasMatch(lower);
 
     final bodyAndTitle = '$rawText $rawTitle';
@@ -565,30 +604,55 @@ class BankNotificationParser {
     if (desc.length < 2) desc = 'Pago $bank';
 
     var targetCat = 'Otros';
-    if (RegExp(r'(rappi|didi\s*food|uber\s*eats|restaurante|crepes|mcdonald|corral|starbucks|juan\s*valdez|cafe|café|panaderia|almuerzo|cena|pizza|sushi|burger|kfc|subway|frisby|popsy|antojo)', caseSensitive: false).hasMatch(lower)) {
+    if (RegExp(
+      r'(rappi|didi\s*food|uber\s*eats|restaurante|crepes|mcdonald|corral|starbucks|juan\s*valdez|cafe|café|panaderia|almuerzo|cena|pizza|sushi|burger|kfc|subway|frisby|popsy|antojo)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Comida';
-    } else if (RegExp(r'(exito|éxito|carulla|jumbo|olimpica|olímpica|d1|tiendas\s*d1|ara|alkosto|makro|pricesmart|mercado|supermercado|fruver|oxxo|farmatodo)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(exito|éxito|carulla|jumbo|olimpica|olímpica|d1|tiendas\s*d1|ara|alkosto|makro|pricesmart|mercado|supermercado|fruver|oxxo|farmatodo)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Mercado';
-    } else if (RegExp(r'(uber|didi|cabify|indrive|picap|gasolina|terpel|primax|texaco|biomax|peaje|flypass|gopass|transmilenio|metro|civica|cívica|parqueadero|taxi)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(uber|didi|cabify|indrive|picap|gasolina|terpel|primax|texaco|biomax|peaje|flypass|gopass|transmilenio|metro|civica|cívica|parqueadero|taxi)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Transporte';
-    } else if (RegExp(r'(netflix|spotify|youtube|google|apple|icloud|amazon\s*prime|disney|hbo|max|openai|chatgpt|claude|cursor|github|playstation|xbox|steam|canva|adobe|microsoft|suscripcion|suscripción)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(netflix|spotify|youtube|google|apple|icloud|amazon\s*prime|disney|hbo|max|openai|chatgpt|claude|cursor|github|playstation|xbox|steam|canva|adobe|microsoft|suscripcion|suscripción)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Suscripciones';
-    } else if (RegExp(r'(cruz\s*verde|drogueria|droguería|la\s*rebaja|pasteur|cafam|colsubsidio|eps|sura|sanitas|medicina|farmacia|consulta|odontolog|smartfit|bodytech|gym|gimnasio)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(cruz\s*verde|drogueria|droguería|la\s*rebaja|pasteur|cafam|colsubsidio|eps|sura|sanitas|medicina|farmacia|consulta|odontolog|smartfit|bodytech|gym|gimnasio)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Salud';
-    } else if (RegExp(r'(arriendo|epm|enel|codensa|vanti|acueducto|triple\s*a|claro|movistar|tigo|wom|etb|servicios|administracion|administración)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(arriendo|epm|enel|codensa|vanti|acueducto|triple\s*a|claro|movistar|tigo|wom|etb|servicios|administracion|administración)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Vivienda';
-    } else if (RegExp(r'(zara|h&m|adidas|nike|falabella|arturo\s*calle|gef|punto\s*blanco|velez|vélez|shein|ropa|calzado)', caseSensitive: false).hasMatch(lower)) {
+    } else if (RegExp(
+      r'(zara|h&m|adidas|nike|falabella|arturo\s*calle|gef|punto\s*blanco|velez|vélez|shein|ropa|calzado)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
       targetCat = 'Ropa';
     } else if (RegExp(r'(cine|cinecolombia|procinal|cinemark|bar|discoteca|boleta|tuboleta|taquillalive|eticket|concierto|juego)', caseSensitive: false).hasMatch(lower)) {
       targetCat = 'Ocio';
     }
 
     String chosenCat = 'Otros';
-    final catMatch = space.categories.where((c) => normText(c.name) == normText(targetCat)).toList();
+    final catMatch = space.categories
+        .where((c) => normText(c.name) == normText(targetCat))
+        .toList();
     if (catMatch.isNotEmpty) {
       chosenCat = catMatch.first.name;
     } else if (space.categories.isNotEmpty) {
-      final fallback = space.categories.where((c) => ['otros', 'general', 'compras'].contains(normText(c.name))).toList();
+      final fallback = space.categories
+          .where((c) => ['otros', 'general', 'compras'].contains(normText(c.name)))
+          .toList();
       chosenCat = fallback.isNotEmpty ? fallback.first.name : space.categories.first.name;
     }
 

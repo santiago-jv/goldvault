@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
 import 'package:goldvault/state/app_state.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   setUpAll(() {
@@ -92,72 +92,75 @@ void main() {
   });
 
   group('GoldVaultState financial calculations and quick entry', () {
-    test('computes monthly income, expense, saving, available, and goalSaved ignoring cancelled items', () {
-      final st = GoldVaultState();
-      addTearDown(st.dispose);
+    test(
+      'computes monthly income, expense, saving, available, and goalSaved ignoring cancelled items',
+      () {
+        final st = GoldVaultState();
+        addTearDown(st.dispose);
 
-      st.ym = '2026-11';
-      final spaceId = st.curSpace.id;
-      st.movements = [
-        MovementModel(
-          id: 'm1',
-          space: spaceId,
-          date: '2026-11-01',
-          type: 'income',
-          desc: 'Salario',
-          amount: 4000000,
-          source: 'Nómina',
-          status: 'paid',
-        ),
-        MovementModel(
-          id: 'm2',
-          space: spaceId,
-          date: '2026-11-05',
-          type: 'expense',
-          desc: 'Arriendo',
-          amount: 1200000,
-          category: 'Vivienda',
-          account: 'Nu',
-          status: 'paid',
-        ),
-        MovementModel(
-          id: 'm3',
-          space: spaceId,
-          date: '2026-11-08',
-          type: 'saving',
-          desc: 'Abono meta',
-          amount: 500000,
-          goalId: 'goal_emergencia',
-          status: 'paid',
-        ),
-        MovementModel(
-          id: 'm4',
-          space: spaceId,
-          date: '2026-11-10',
-          type: 'expense',
-          desc: 'Compra cancelada',
-          amount: 999000,
-          category: 'Otros',
-          status: 'cancelled',
-        ),
-        MovementModel(
-          id: 'm5',
-          space: spaceId,
-          date: '2026-10-20',
-          type: 'expense',
-          desc: 'Mes anterior',
-          amount: 300000,
-          category: 'Mercado',
-          status: 'paid',
-        ),
-      ];
+        st.ym = '2026-11';
+        final spaceId = st.curSpace.id;
+        st.movements = [
+          MovementModel(
+            id: 'm1',
+            space: spaceId,
+            date: '2026-11-01',
+            type: 'income',
+            desc: 'Salario',
+            amount: 4000000,
+            source: 'Nómina',
+            status: 'paid',
+          ),
+          MovementModel(
+            id: 'm2',
+            space: spaceId,
+            date: '2026-11-05',
+            type: 'expense',
+            desc: 'Arriendo',
+            amount: 1200000,
+            category: 'Vivienda',
+            account: 'Nu',
+            status: 'paid',
+          ),
+          MovementModel(
+            id: 'm3',
+            space: spaceId,
+            date: '2026-11-08',
+            type: 'saving',
+            desc: 'Abono meta',
+            amount: 500000,
+            goalId: 'goal_emergencia',
+            status: 'paid',
+          ),
+          MovementModel(
+            id: 'm4',
+            space: spaceId,
+            date: '2026-11-10',
+            type: 'expense',
+            desc: 'Compra cancelada',
+            amount: 999000,
+            category: 'Otros',
+            status: 'cancelled',
+          ),
+          MovementModel(
+            id: 'm5',
+            space: spaceId,
+            date: '2026-10-20',
+            type: 'expense',
+            desc: 'Mes anterior',
+            amount: 300000,
+            category: 'Mercado',
+            status: 'paid',
+          ),
+        ];
 
-      expect(st.monthIncome, equals(4000000));
-      expect(st.monthExpense, equals(1200000));
-      expect(st.monthSaving, equals(500000));
-      expect(st.monthAvailable, equals(2300000));
-      expect(st.goalSaved('goal_emergencia'), equals(500000));
-    });
+        expect(st.monthIncome, equals(4000000));
+        expect(st.monthExpense, equals(1200000));
+        expect(st.monthSaving, equals(500000));
+        expect(st.monthAvailable, equals(2300000));
+        expect(st.goalSaved('goal_emergencia'), equals(500000));
+      },
+    );
 
     test('shiftMonth crosses year boundaries accurately', () {
       final st = GoldVaultState();
@@ -195,10 +198,7 @@ void main() {
       addTearDown(st.dispose);
 
       await tester.pumpWidget(
-        GoldVaultApp(
-          state: st,
-          minSplashDuration: const Duration(milliseconds: 400),
-        ),
+        GoldVaultApp(state: st, minSplashDuration: const Duration(milliseconds: 400)),
       );
       await tester.pump(const Duration(milliseconds: 150));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

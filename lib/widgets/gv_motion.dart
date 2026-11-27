@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/models.dart';
 import '../theme/gold_theme.dart';
 
@@ -119,10 +120,7 @@ class _GVAnimatedMoneyState extends State<GVAnimatedMoney> {
       duration: widget.duration,
       curve: GVMotion.emphatic,
       builder: (context, value, _) {
-        return Text(
-          '${widget.prefix}${formatMoney(value.round())}',
-          style: widget.style,
-        );
+        return Text('${widget.prefix}${formatMoney(value.round())}', style: widget.style);
       },
     );
   }
@@ -174,12 +172,7 @@ class GVFadeSlideIn extends StatelessWidget {
   final int index;
   final double offsetY;
 
-  const GVFadeSlideIn({
-    super.key,
-    required this.child,
-    this.index = 0,
-    this.offsetY = 10,
-  });
+  const GVFadeSlideIn({super.key, required this.child, this.index = 0, this.offsetY = 10});
 
   @override
   Widget build(BuildContext context) {
@@ -194,10 +187,7 @@ class GVFadeSlideIn extends StatelessWidget {
       builder: (context, t, childWidget) {
         return Opacity(
           opacity: t.clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * offsetY),
-            child: childWidget,
-          ),
+          child: Transform.translate(offset: Offset(0, (1 - t) * offsetY), child: childWidget),
         );
       },
       child: child,

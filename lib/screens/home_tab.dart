@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
@@ -209,11 +210,11 @@ class _HomeTabState extends State<HomeTab> {
                             child: _summaryTab == 'categories'
                                 ? _buildCategoriesView(c, st, byCat, catEntries, maxCat)
                                 : _summaryTab == 'trend'
-                                    ? TrendChartWidget(
-                                        spaceMovements: st.spaceMovements,
-                                        currentYm: st.ym,
-                                      )
-                                    : _buildAccountsView(c, st, byAcct),
+                                ? TrendChartWidget(
+                                    spaceMovements: st.spaceMovements,
+                                    currentYm: st.ym,
+                                  )
+                                : _buildAccountsView(c, st, byAcct),
                           ),
                         ),
                       ),
@@ -358,9 +359,7 @@ class _HomeTabState extends State<HomeTab> {
       haptic: true,
       child: Material(
         color: bg,
-        shape: StadiumBorder(
-          side: primary ? BorderSide.none : BorderSide(color: c.line),
-        ),
+        shape: StadiumBorder(side: primary ? BorderSide.none : BorderSide(color: c.line)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Row(
@@ -409,10 +408,7 @@ class _HomeTabState extends State<HomeTab> {
               const SizedBox(height: 16),
               Text('Registro rápido', style: GVTxt.h3(c)),
               const SizedBox(height: 4),
-              Text(
-                'Escribe el gasto como hablas y lo prellenamos por ti.',
-                style: GVTxt.xs(c),
-              ),
+              Text('Escribe el gasto como hablas y lo prellenamos por ti.', style: GVTxt.xs(c)),
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -506,7 +502,9 @@ class _HomeTabState extends State<HomeTab> {
                         await st.saveMovement(mv);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Registrado: ${f.desc} ${formatMoney(f.amount)}')),
+                            SnackBar(
+                              content: Text('Registrado: ${f.desc} ${formatMoney(f.amount)}'),
+                            ),
                           );
                         }
                       },
@@ -525,10 +523,7 @@ class _HomeTabState extends State<HomeTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(f.desc, style: GVTxt.body(c, weight: FontWeight.w600)),
-                                  Text(
-                                    '${f.category} · ${f.account}',
-                                    style: GVTxt.xs(c),
-                                  ),
+                                  Text('${f.category} · ${f.account}', style: GVTxt.xs(c)),
                                 ],
                               ),
                             ),
@@ -565,9 +560,7 @@ class _HomeTabState extends State<HomeTab> {
     if (catEntries.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Center(
-          child: Text('Sin gastos registrados este mes.', style: GVTxt.xs(c)),
-        ),
+        child: Center(child: Text('Sin gastos registrados este mes.', style: GVTxt.xs(c))),
       );
     }
     return Column(
@@ -622,11 +615,7 @@ class _HomeTabState extends State<HomeTab> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      GVAnimatedProgressBar(
-                        value: ratio,
-                        color: barCol,
-                        height: 5,
-                      ),
+                      GVAnimatedProgressBar(value: ratio, color: barCol, height: 5),
                     ],
                   ),
                 ),

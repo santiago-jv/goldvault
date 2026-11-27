@@ -1,27 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:goldvault/main.dart';
 import 'package:goldvault/models/models.dart';
 import 'package:goldvault/screens/home_and_shells.dart';
 import 'package:goldvault/state/app_state.dart';
 import 'package:goldvault/theme/gold_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Session _fakeSession() => Session(
-      accessToken: 'fake-access-token',
-      tokenType: 'bearer',
-      user: User(
-        id: 'user-123',
-        appMetadata: const {},
-        userMetadata: const {'full_name': 'Santiago Test'},
-        aud: 'authenticated',
-        email: 'santiago@example.com',
-        createdAt: '2026-01-01T00:00:00.000Z',
-      ),
-    );
+  accessToken: 'fake-access-token',
+  tokenType: 'bearer',
+  user: const User(
+    id: 'user-123',
+    appMetadata: {},
+    userMetadata: {'full_name': 'Santiago Test'},
+    aud: 'authenticated',
+    email: 'santiago@example.com',
+    createdAt: '2026-01-01T00:00:00.000Z',
+  ),
+);
 
 class FakeCloudAdapter implements GoldVaultCloudAdapter {
   bool failFetch = false;
@@ -103,7 +103,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Initial sync failure shows SyncErrorScreen (not Onboarding) and recovers on retry', (tester) async {
+  testWidgets('Initial sync failure shows SyncErrorScreen (not Onboarding) and recovers on retry', (
+    tester,
+  ) async {
     final cloud = FakeCloudAdapter()..failFetch = true;
     final remoteSpace = SpaceModel.fromTemplate('complete', first: true);
     cloud.remoteSpaces[remoteSpace.id] = remoteSpace.toRow();
@@ -153,113 +155,124 @@ void main() {
     expect(find.text('Configuración recomendada'), findsOneWidget);
   });
 
-  testWidgets('Failed movement write is queued, preserved across failed syncs, and flushed before pull on recovery', (tester) async {
-    final cloud = FakeCloudAdapter();
-    final space = SpaceModel.fromTemplate('complete', first: true);
-    cloud.remoteSpaces[space.id] = space.toRow();
+  testWidgets(
+    'Failed movement write is queued, preserved across failed syncs, and flushed before pull on recovery',
+    (tester) async {
+      final cloud = FakeCloudAdapter();
+      final space = SpaceModel.fromTemplate('complete', first: true);
+      cloud.remoteSpaces[space.id] = space.toRow();
 
-    final state = GoldVaultState(cloud: cloud, onlineChecker: () async => true)
-      ..initialized = true
-      ..isOnline = true
-      ..session = _fakeSession();
-    addTearDown(state.dispose);
+      final state = GoldVaultState(cloud: cloud, onlineChecker: () async => true)
+        ..initialized = true
+        ..isOnline = true
+        ..session = _fakeSession();
+      addTearDown(state.dispose);
 
-    expect(await state.syncAll(), isTrue);
+      expect(await state.syncAll(), isTrue);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: GoldTheme.build(Brightness.dark),
-        home: GoldVaultShell(state: state),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: GoldTheme.build(Brightness.dark),
+          home: GoldVaultShell(state: state),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // Simulate transient write failure
-    cloud.failWrites = true;
-    final mv = MovementModel(
-      id: 'mv_offline_1',
-      space: space.id,
-      date: todayIso(),
-      type: 'expense',
-      desc: 'Café aeropuerto',
-      amount: 18000,
-      category: 'Comida',
-      account: 'Nequi',
-    );
-    await state.saveMovement(mv);
-    await tester.pumpAndSettle();
+      // Simulate transient write failure
+      cloud.failWrites = true;
+      final mv = MovementModel(
+        id: 'mv_offline_1',
+        space: space.id,
+        date: todayIso(),
+        type: 'expense',
+        desc: 'Café aeropuerto',
+        amount: 18000,
+        category: 'Comida',
+        account: 'Nequi',
+      );
+      await state.saveMovement(mv);
+      await tester.pumpAndSettle();
 
-    expect(state.pendingSyncCount, 1);
-    expect(state.syncError, isNotNull);
-    expect(find.text('Reintentar'), findsOneWidget);
+      expect(state.pendingSyncCount, 1);
+      expect(state.syncError, isNotNull);
+      expect(find.text('Reintentar'), findsOneWidget);
 
-    // Even if syncAll runs while writes are still failing, remote pull MUST NOT wipe local movement
-    expect(await state.syncAll(), isFalse);
-    expect(state.movements.any((m) => m.id == 'mv_offline_1'), isTrue);
+      // Even if syncAll runs while writes are still failing, remote pull MUST NOT wipe local movement
+      expect(await state.syncAll(), isFalse);
+      expect(state.movements.any((m) => m.id == 'mv_offline_1'), isTrue);
 
-    // Cloud recovers -> tap Reintentar in banner
-    cloud.failWrites = false;
-    cloud.callLog.clear();
-    await tester.tap(find.text('Reintentar'));
-    await tester.pumpAndSettle();
+      // Cloud recovers -> tap Reintentar in banner
+      cloud.failWrites = false;
+      cloud.callLog.clear();
+      await tester.tap(find.text('Reintentar'));
+      await tester.pumpAndSettle();
 
-    expect(state.pendingSyncCount, 0);
-    expect(state.syncError, isNull);
-    expect(cloud.remoteMovements.containsKey('mv_offline_1'), isTrue);
-    // Verify flush happened BEFORE fetchAll
-    expect(cloud.callLog.indexOf('upsertMovement:mv_offline_1'), lessThan(cloud.callLog.indexOf('fetchAll')));
-    expect(state.movements.any((m) => m.id == 'mv_offline_1'), isTrue);
-    expect(find.text('Reintentar'), findsNothing);
-  });
+      expect(state.pendingSyncCount, 0);
+      expect(state.syncError, isNull);
+      expect(cloud.remoteMovements.containsKey('mv_offline_1'), isTrue);
+      // Verify flush happened BEFORE fetchAll
+      expect(
+        cloud.callLog.indexOf('upsertMovement:mv_offline_1'),
+        lessThan(cloud.callLog.indexOf('fetchAll')),
+      );
+      expect(state.movements.any((m) => m.id == 'mv_offline_1'), isTrue);
+      expect(find.text('Reintentar'), findsNothing);
+    },
+  );
 
-  test('Delete then undo coalesces pending operations cleanly and offline->online auto-recovers', () async {
-    var online = true;
-    final cloud = FakeCloudAdapter();
-    final space = SpaceModel.fromTemplate('complete', first: true);
-    cloud.remoteSpaces[space.id] = space.toRow();
+  test(
+    'Delete then undo coalesces pending operations cleanly and offline->online auto-recovers',
+    () async {
+      var online = true;
+      final cloud = FakeCloudAdapter();
+      final space = SpaceModel.fromTemplate('complete', first: true);
+      cloud.remoteSpaces[space.id] = space.toRow();
 
-    final mv = MovementModel(
-      id: 'mv_coalesce_1',
-      space: space.id,
-      date: todayIso(),
-      type: 'expense',
-      desc: 'Almuerzo',
-      amount: 25000,
-      category: 'Comida',
-      account: 'Nequi',
-    );
-    cloud.remoteMovements[mv.id] = mv.toRow();
+      final mv = MovementModel(
+        id: 'mv_coalesce_1',
+        space: space.id,
+        date: todayIso(),
+        type: 'expense',
+        desc: 'Almuerzo',
+        amount: 25000,
+        category: 'Comida',
+        account: 'Nequi',
+      );
+      cloud.remoteMovements[mv.id] = mv.toRow();
 
-    final state = GoldVaultState(cloud: cloud, onlineChecker: () async => online)
-      ..initialized = true
-      ..isOnline = true
-      ..session = _fakeSession();
-    addTearDown(state.dispose);
+      final state = GoldVaultState(cloud: cloud, onlineChecker: () async => online)
+        ..initialized = true
+        ..isOnline = true
+        ..session = _fakeSession();
+      addTearDown(state.dispose);
 
-    expect(await state.syncAll(), isTrue);
+      expect(await state.syncAll(), isTrue);
 
-    // Drop writes, delete then undo -> should coalesce to a single upsert_movement
-    cloud.failWrites = true;
-    await state.deleteMovement(mv.id);
-    expect(state.pendingSyncOps.single.kind, 'delete_movement');
+      // Drop writes, delete then undo -> should coalesce to a single upsert_movement
+      cloud.failWrites = true;
+      await state.deleteMovement(mv.id);
+      expect(state.pendingSyncOps.single.kind, 'delete_movement');
 
-    await state.undoDeleteMovement();
-    expect(state.pendingSyncOps.single.kind, 'upsert_movement');
+      await state.undoDeleteMovement();
+      expect(state.pendingSyncOps.single.kind, 'upsert_movement');
 
-    // Go offline then back online -> checkOnlineStatus(manual: false) auto-recovers!
-    online = false;
-    expect(await state.checkOnlineStatus(), isFalse);
-    expect(state.isOnline, isFalse);
+      // Go offline then back online -> checkOnlineStatus(manual: false) auto-recovers!
+      online = false;
+      expect(await state.checkOnlineStatus(), isFalse);
+      expect(state.isOnline, isFalse);
 
-    online = true;
-    cloud.failWrites = false;
-    expect(await state.checkOnlineStatus(), isTrue);
-    expect(state.pendingSyncCount, 0);
-    expect(state.syncError, isNull);
-    expect(cloud.remoteMovements.containsKey(mv.id), isTrue);
-  });
+      online = true;
+      cloud.failWrites = false;
+      expect(await state.checkOnlineStatus(), isTrue);
+      expect(state.pendingSyncCount, 0);
+      expect(state.syncError, isNull);
+      expect(cloud.remoteMovements.containsKey(mv.id), isTrue);
+    },
+  );
 
-  testWidgets('Native iOS Settings hides Android APK download and shows iOS Shortcuts', (tester) async {
+  testWidgets('Native iOS Settings hides Android APK download and shows iOS Shortcuts', (
+    tester,
+  ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     final state = GoldVaultState();
     addTearDown(state.dispose);

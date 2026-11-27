@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
@@ -40,11 +41,7 @@ class SettingsTab extends StatelessWidget {
               const SizedBox(height: 12),
               GVSegmentedControl<String>(
                 value: state.themePref,
-                items: const [
-                  ('auto', 'Automático'),
-                  ('light', 'Claro'),
-                  ('dark', 'Oscuro'),
-                ],
+                items: const [('auto', 'Automático'), ('light', 'Claro'), ('dark', 'Oscuro')],
                 onChanged: state.setThemePref,
               ),
             ],
@@ -106,8 +103,8 @@ class SettingsTab extends StatelessWidget {
                     state.syncError != null
                         ? Icons.sync_problem_rounded
                         : (state.hasPendingSync
-                            ? Icons.cloud_upload_outlined
-                            : Icons.cloud_done_outlined),
+                              ? Icons.cloud_upload_outlined
+                              : Icons.cloud_done_outlined),
                     size: 17,
                     color: state.syncError != null || state.hasPendingSync ? c.amber : c.green,
                   ),
@@ -117,9 +114,9 @@ class SettingsTab extends StatelessWidget {
                       state.loadingCloud
                           ? 'Sincronizando…'
                           : (state.syncError ??
-                              (state.hasPendingSync
-                                  ? '${state.pendingSyncCount} cambio(s) pendiente(s)'
-                                  : 'Sincronizado')),
+                                (state.hasPendingSync
+                                    ? '${state.pendingSyncCount} cambio(s) pendiente(s)'
+                                    : 'Sincronizado')),
                       style: GVTxt.xs(c),
                     ),
                   ),
@@ -154,10 +151,7 @@ class SettingsTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                'Compatible con Nequi, Nu, Lulo, ARQ y Morse.',
-                style: GVTxt.sm(c),
-              ),
+              Text('Compatible con Nequi, Nu, Lulo, ARQ y Morse.', style: GVTxt.sm(c)),
               const SizedBox(height: 14),
               if (state.supportsBankNotifications)
                 _buildAndroidNativePanel(c)
@@ -297,9 +291,8 @@ class SettingsTab extends StatelessWidget {
           leading: Icon(Icons.copy_rounded, color: c.txt, size: 15),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: webhookUrl));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Enlace copiado al portapapeles')),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('Enlace copiado al portapapeles')));
           },
         ),
       ],

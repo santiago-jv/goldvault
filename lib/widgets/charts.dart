@@ -1,5 +1,7 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../theme/gold_theme.dart';
 import 'gv_motion.dart';
@@ -16,11 +18,7 @@ class TrendChartWidget extends StatelessWidget {
   final List<MovementModel> spaceMovements;
   final String currentYm;
 
-  const TrendChartWidget({
-    super.key,
-    required this.spaceMovements,
-    required this.currentYm,
-  });
+  const TrendChartWidget({super.key, required this.spaceMovements, required this.currentYm});
 
   List<TrendMonthData> _computeData() {
     final parts = currentYm.split('-');
@@ -78,11 +76,7 @@ class TrendChartWidget extends StatelessWidget {
             curve: GVMotion.standard,
             builder: (context, progress, _) {
               return CustomPaint(
-                painter: _TrendBarPainter(
-                  data: data,
-                  colors: c,
-                  progress: progress,
-                ),
+                painter: _TrendBarPainter(data: data, colors: c, progress: progress),
               );
             },
           ),
@@ -121,11 +115,7 @@ class _TrendBarPainter extends CustomPainter {
   final GVColors colors;
   final double progress;
 
-  _TrendBarPainter({
-    required this.data,
-    required this.colors,
-    required this.progress,
-  });
+  _TrendBarPainter({required this.data, required this.colors, required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -209,11 +199,7 @@ class DonutChartWidget extends StatelessWidget {
   final Map<String, int> byCat;
   final int totalExpense;
 
-  const DonutChartWidget({
-    super.key,
-    required this.byCat,
-    required this.totalExpense,
-  });
+  const DonutChartWidget({super.key, required this.byCat, required this.totalExpense});
 
   @override
   Widget build(BuildContext context) {
@@ -223,10 +209,7 @@ class DonutChartWidget extends StatelessWidget {
     final sorted = byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top = sorted.take(5).toList();
     final rest = sorted.skip(5).fold<int>(0, (a, e) => a + e.value);
-    final segs = <MapEntry<String, int>>[
-      ...top,
-      if (rest > 0) MapEntry('Otras', rest),
-    ];
+    final segs = <MapEntry<String, int>>[...top, if (rest > 0) MapEntry('Otras', rest)];
 
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 14),
@@ -279,7 +262,10 @@ class DonutChartWidget extends StatelessWidget {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: BoxDecoration(color: col, borderRadius: BorderRadius.circular(2)),
+                        decoration: BoxDecoration(
+                          color: col,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -289,7 +275,10 @@ class DonutChartWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text('$pct%', style: GVTxt.xs(c, weight: FontWeight.w800, color: c.txt, tabular: true)),
+                      Text(
+                        '$pct%',
+                        style: GVTxt.xs(c, weight: FontWeight.w800, color: c.txt, tabular: true),
+                      ),
                     ],
                   ),
                 );
@@ -350,5 +339,7 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.total != total || oldDelegate.colors != colors;
+      oldDelegate.progress != progress ||
+      oldDelegate.total != total ||
+      oldDelegate.colors != colors;
 }
