@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_and_shells.dart';
@@ -8,16 +9,52 @@ import 'widgets/gv_motion.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final appState = GoldVaultState();
-  runApp(GoldVaultApp(state: appState));
+  runApp(
+    GoldVaultApp(
+      state: appState,
+      minSplashDuration: const Duration(milliseconds: 1150),
+    ),
+  );
   appState.bootstrap();
 }
 
-class GoldVaultApp extends StatelessWidget {
+class GoldVaultApp extends StatefulWidget {
   final GoldVaultState state;
-  const GoldVaultApp({super.key, required this.state});
+  final Duration minSplashDuration;
+
+  const GoldVaultApp({
+    super.key,
+    required this.state,
+    this.minSplashDuration = Duration.zero,
+  });
+
+  @override
+  State<GoldVaultApp> createState() => _GoldVaultAppState();
+}
+
+class _GoldVaultAppState extends State<GoldVaultApp> {
+  late bool _splashHoldActive = widget.minSplashDuration > Duration.zero;
+  Timer? _splashTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_splashHoldActive) {
+      _splashTimer = Timer(widget.minSplashDuration, () {
+        if (mounted) setState(() => _splashHoldActive = false);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _splashTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = widget.state;
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
@@ -40,7 +77,7 @@ class GoldVaultApp extends StatelessWidget {
             builder: (ctx) {
               final reduceMotion = MediaQuery.disableAnimationsOf(ctx);
               return AnimatedSwitcher(
-                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 360),
+                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 380),
                 switchInCurve: GVMotion.standard,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (child, animation) {
@@ -60,7 +97,8 @@ class GoldVaultApp extends StatelessWidget {
   }
 
   Widget _buildRootGate(BuildContext context) {
-    if (!state.initialized) {
+    final state = widget.state;
+    if (!state.initialized || _splashHoldActive) {
       return const _StartupSplashScreen(key: ValueKey('splash-init'));
     }
     if (!state.isOnline) {
