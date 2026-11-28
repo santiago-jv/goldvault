@@ -117,19 +117,8 @@ class SettingsTab extends StatelessWidget {
                           : (state.syncError ??
                                 (state.hasPendingSync
                                     ? '${state.pendingSyncCount} cambio(s) pendiente(s)'
-                                    : 'Sincronizado')),
+                                    : 'Sincronización automática activa')),
                       style: GVTxt.xs(c),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: state.loadingCloud ? null : () => state.retrySync(),
-                    borderRadius: BorderRadius.circular(GVRadius.pill),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      child: Text(
-                        'Sincronizar',
-                        style: GVTxt.xs(c, color: c.blue, weight: FontWeight.w600),
-                      ),
                     ),
                   ),
                 ],
@@ -152,7 +141,7 @@ class SettingsTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text('Compatible con Nequi, Nu, Lulo, ARQ y Morse.', style: GVTxt.sm(c)),
+              Text('Compatible con Nequi, Nu, Lulo, ARQ y MORSE.', style: GVTxt.sm(c)),
               const SizedBox(height: 14),
               if (state.supportsBankNotifications)
                 _buildAndroidNativePanel(c)
