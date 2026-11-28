@@ -138,3 +138,29 @@ DROP POLICY IF EXISTS "reports_select_own" ON public.reports;
 CREATE POLICY "reports_select_own" ON public.reports
   FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
+
+-- 6. PER-USER API KEYS FOR REST API & MCP AGENTS (api_keys)
+-- Only the SHA-256 hex digest (key_hash) and non-secret prefix (key_prefix) are stored.
+CREATE TABLE IF NOT EXISTS public.api_keys (
+  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid        NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+  name         text        NOT NULL,
+  key_prefix   text        NOT NULL,
+  key_hash     text        NOT NULL UNIQUE,
+  scopes       text[]      NOT NULL DEFAULT ARRAY['read', 'write']::text[],
+  expires_at   timestamptz NULL,
+  revoked_at   timestamptz NULL,
+  last_used_at timestamptz NULL,
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id  ON public.api_keys (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON public.api_keys (key_hash);
+
+ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "api_keys_owner_all" ON public.api_keys;
+CREATE POLICY "api_keys_owner_all" ON public.api_keys
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);

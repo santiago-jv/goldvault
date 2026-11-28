@@ -161,6 +161,51 @@ class GoalItem {
   };
 }
 
+class ApiKeyItem {
+  final String id;
+  final String name;
+  final String keyPrefix;
+  final List<String> scopes;
+  final DateTime? expiresAt;
+  final DateTime? revokedAt;
+  final DateTime? lastUsedAt;
+  final DateTime createdAt;
+
+  const ApiKeyItem({
+    required this.id,
+    required this.name,
+    required this.keyPrefix,
+    required this.scopes,
+    required this.createdAt,
+    this.expiresAt,
+    this.revokedAt,
+    this.lastUsedAt,
+  });
+
+  bool get isRevoked => revokedAt != null;
+  bool get isExpired => expiresAt != null && expiresAt!.isBefore(DateTime.now());
+  bool get isActive => !isRevoked && !isExpired;
+
+  factory ApiKeyItem.fromRow(Map<String, dynamic> r) {
+    final rawScopes = r['scopes'];
+    final parsedScopes = rawScopes is List
+        ? rawScopes.map((e) => e.toString()).toList()
+        : const ['read', 'write'];
+    return ApiKeyItem(
+      id: (r['id'] ?? '').toString(),
+      name: (r['name'] ?? 'API Key').toString(),
+      keyPrefix: (r['key_prefix'] ?? 'gv_live_').toString(),
+      scopes: parsedScopes,
+      expiresAt: r['expires_at'] != null ? DateTime.tryParse(r['expires_at'].toString()) : null,
+      revokedAt: r['revoked_at'] != null ? DateTime.tryParse(r['revoked_at'].toString()) : null,
+      lastUsedAt: r['last_used_at'] != null
+          ? DateTime.tryParse(r['last_used_at'].toString())
+          : null,
+      createdAt: DateTime.tryParse((r['created_at'] ?? '').toString()) ?? DateTime.now(),
+    );
+  }
+}
+
 class SpaceModel {
   String id;
   String name;

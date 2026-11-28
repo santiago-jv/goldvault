@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
+import 'api_keys_sheet.dart';
 import 'space_modals.dart';
 
 class SettingsTab extends StatelessWidget {
@@ -161,7 +162,52 @@ class SettingsTab extends StatelessWidget {
           ),
         ),
 
-        // 4. Space Structure
+        // 4. AI Agents (API Keys & MCP Docs)
+        GVCard(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GVSectionHeader(
+                title: 'Agentes IA (API y MCP)',
+                trailing: GVPillBadge(label: 'API Key', color: c.blue),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Conecta Claude, Antigravity o Cursor a tu bóveda para registrar y consultar movimientos.',
+                style: GVTxt.sm(c),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: GVPillButton(
+                      label: 'API Keys',
+                      compact: true,
+                      leading: Icon(Icons.vpn_key_outlined, size: 16, color: c.ink),
+                      onPressed: () => showApiKeysSheet(context, state),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GVPillButton(
+                      label: 'Documentación',
+                      variant: GVPillButtonVariant.secondary,
+                      compact: true,
+                      leading: Icon(Icons.menu_book_outlined, size: 16, color: c.txt),
+                      onPressed: () => launchUrl(
+                        Uri.parse(GoldVaultState.apiDocsUrl),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // 5. Space Structure
         GVCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

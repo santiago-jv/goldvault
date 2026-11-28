@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1280,5 +1281,105 @@ class GoldVaultState extends ChangeNotifier {
       source: source ?? (sp.sources.isNotEmpty ? sp.sources.first : 'Salario'),
       goalId: goalId ?? (sp.goals.isNotEmpty ? sp.goals.first.id : null),
     );
+  }
+
+  // ── Per-user API Keys (for REST API & MCP Agents) ─────────────────────────
+
+  static const String apiDocsUrl = 'https://goldvault-api.santiago-jv.workers.dev/docs';
+
+  List<ApiKeyItem> apiKeys = [];
+  bool loadingApiKeys = false;
+  String? apiKeysError;
+
+  String _generateRawApiKey() {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
+    final rng = Random.secure();
+    final token = List.generate(40, (_) => alphabet[rng.nextInt(alphabet.length)]).join();
+    return 'gv_live_$token';
+  }
+
+  String _hashApiKey(String rawKey) {
+    return sha256.convert(utf8.encode(rawKey)).toString();
+  }
+
+  Future<void> loadApiKeys() async {
+    if (session == null || !_supabaseReady) return;
+    loadingApiKeys = true;
+    apiKeysError = null;
+    notifyListeners();
+    try {
+      final rows = await Supabase.instance.client
+          .from('api_keys')
+          .select('id,name,key_prefix,scopes,expires_at,revoked_at,last_used_at,created_at')
+          .eq('user_id', session!.user.id)
+          .order('created_at', ascending: false);
+      apiKeys = (rows as List)
+          .map((e) => ApiKeyItem.fromRow(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (e) {
+      apiKeysError = 'No se pudieron cargar tus API Keys ($e)';
+    } finally {
+      loadingApiKeys = false;
+      notifyListeners();
+    }
+  }
+
+  /// Creates a new per-user API key. Returns the plaintext secret ONCE (never persisted).
+  Future<String?> createApiKey({required String name, int? expiresInDays}) async {
+    if (session == null || !_supabaseReady) return null;
+    final cleanName = name.trim().isEmpty ? 'Agente IA' : name.trim();
+    final rawKey = _generateRawApiKey();
+    final keyHash = _hashApiKey(rawKey);
+    final keyPrefix = rawKey.substring(0, 16);
+    final expiresAt = expiresInDays != null && expiresInDays > 0
+        ? DateTime.now().toUtc().add(Duration(days: expiresInDays)).toIso8601String()
+        : null;
+
+    await Supabase.instance.client.from('api_keys').insert({
+      'user_id': session!.user.id,
+      'name': cleanName,
+      'key_prefix': keyPrefix,
+      'key_hash': keyHash,
+      'scopes': const ['read', 'write'],
+      'expires_at': expiresAt,
+    });
+    await loadApiKeys();
+    return rawKey;
+  }
+
+  /// Atomically rotates an existing API key by replacing its SHA-256 hash and prefix.
+  Future<String?> rotateApiKey(String keyId) async {
+    if (session == null || !_supabaseReady) return null;
+    final rawKey = _generateRawApiKey();
+    final keyHash = _hashApiKey(rawKey);
+    final keyPrefix = rawKey.substring(0, 16);
+
+    await Supabase.instance.client
+        .from('api_keys')
+        .update({'key_prefix': keyPrefix, 'key_hash': keyHash, 'revoked_at': null})
+        .eq('id', keyId)
+        .eq('user_id', session!.user.id);
+    await loadApiKeys();
+    return rawKey;
+  }
+
+  Future<void> revokeApiKey(String keyId) async {
+    if (session == null || !_supabaseReady) return;
+    await Supabase.instance.client
+        .from('api_keys')
+        .update({'revoked_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', keyId)
+        .eq('user_id', session!.user.id);
+    await loadApiKeys();
+  }
+
+  Future<void> deleteApiKey(String keyId) async {
+    if (session == null || !_supabaseReady) return;
+    await Supabase.instance.client
+        .from('api_keys')
+        .delete()
+        .eq('id', keyId)
+        .eq('user_id', session!.user.id);
+    await loadApiKeys();
   }
 }
