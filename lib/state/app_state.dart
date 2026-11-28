@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -275,9 +274,9 @@ class GoldVaultState extends ChangeNotifier {
 
   static const String apiBaseUrl = String.fromEnvironment(
     'GOLDVAULT_API_URL',
-    defaultValue: 'https://goldvault-api.santiago-jv.workers.dev',
+    defaultValue: 'https://goldvault-api.santiagojv-work.workers.dev',
   );
-  static const bool useApiBackend = bool.fromEnvironment('GOLDVAULT_USE_API', defaultValue: false);
+  static const bool useApiBackend = bool.fromEnvironment('GOLDVAULT_USE_API', defaultValue: true);
 
   late final GoldVaultCloudAdapter _cloud;
   final Future<bool> Function()? onlineChecker;
@@ -1426,37 +1425,40 @@ class GoldVaultState extends ChangeNotifier {
     );
   }
 
-  // ── Per-user API Keys (for REST API & MCP Agents) ─────────────────────────
+  // ── Per-user API Keys (managed through goldvault-api with Supabase JWT) ───
 
-  static const String apiDocsUrl = 'https://goldvault-api.santiago-jv.workers.dev/docs';
+  static String get apiDocsUrl => '$apiBaseUrl/docs';
 
   List<ApiKeyItem> apiKeys = [];
   bool loadingApiKeys = false;
   String? apiKeysError;
 
-  String _generateRawApiKey() {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
-    final rng = Random.secure();
-    final token = List.generate(40, (_) => alphabet[rng.nextInt(alphabet.length)]).join();
-    return 'gv_live_$token';
-  }
-
-  String _hashApiKey(String rawKey) {
-    return sha256.convert(utf8.encode(rawKey)).toString();
+  Map<String, String> _apiAuthHeaders() {
+    final token = session?.accessToken;
+    if (token == null || token.isEmpty) {
+      throw StateError('Sesión no autenticada.');
+    }
+    return {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
   }
 
   Future<void> loadApiKeys() async {
-    if (session == null || !_supabaseReady) return;
+    if (session == null) return;
     loadingApiKeys = true;
     apiKeysError = null;
     notifyListeners();
     try {
-      final rows = await Supabase.instance.client
-          .from('api_keys')
-          .select('id,name,key_prefix,scopes,expires_at,revoked_at,last_used_at,created_at')
-          .eq('user_id', session!.user.id)
-          .order('created_at', ascending: false);
-      apiKeys = (rows as List)
+      final res = await http
+          .get(Uri.parse('$apiBaseUrl/api/v1/api-keys'), headers: _apiAuthHeaders())
+          .timeout(const Duration(seconds: 10));
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode >= 400 || data['ok'] == false) {
+        throw Exception(data['error'] ?? 'Error (${res.statusCode})');
+      }
+      apiKeys = (data['api_keys'] as List? ?? [])
           .map((e) => ApiKeyItem.fromRow(Map<String, dynamic>.from(e as Map)))
           .toList();
     } catch (e) {
@@ -1467,62 +1469,66 @@ class GoldVaultState extends ChangeNotifier {
     }
   }
 
-  /// Creates a new per-user API key. Returns the plaintext secret ONCE (never persisted).
+  /// Creates a new per-user API key server-side via goldvault-api. Returns plaintext secret ONCE.
   Future<String?> createApiKey({required String name, int? expiresInDays}) async {
-    if (session == null || !_supabaseReady) return null;
+    if (session == null) return null;
     final cleanName = name.trim().isEmpty ? 'Agente IA' : name.trim();
-    final rawKey = _generateRawApiKey();
-    final keyHash = _hashApiKey(rawKey);
-    final keyPrefix = rawKey.substring(0, 16);
-    final expiresAt = expiresInDays != null && expiresInDays > 0
-        ? DateTime.now().toUtc().add(Duration(days: expiresInDays)).toIso8601String()
-        : null;
-
-    await Supabase.instance.client.from('api_keys').insert({
-      'user_id': session!.user.id,
-      'name': cleanName,
-      'key_prefix': keyPrefix,
-      'key_hash': keyHash,
-      'scopes': const ['read', 'write'],
-      'expires_at': expiresAt,
-    });
+    final res = await http
+        .post(
+          Uri.parse('$apiBaseUrl/api/v1/api-keys'),
+          headers: _apiAuthHeaders(),
+          body: jsonEncode({
+            'name': cleanName,
+            if (expiresInDays != null && expiresInDays > 0) 'expires_in_days': expiresInDays,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode >= 400 || data['ok'] == false) {
+      throw Exception(data['error'] ?? 'Error (${res.statusCode})');
+    }
     await loadApiKeys();
-    return rawKey;
+    return data['secret']?.toString();
   }
 
-  /// Atomically rotates an existing API key by replacing its SHA-256 hash and prefix.
+  /// Atomically rotates an existing API key server-side via goldvault-api.
   Future<String?> rotateApiKey(String keyId) async {
-    if (session == null || !_supabaseReady) return null;
-    final rawKey = _generateRawApiKey();
-    final keyHash = _hashApiKey(rawKey);
-    final keyPrefix = rawKey.substring(0, 16);
-
-    await Supabase.instance.client
-        .from('api_keys')
-        .update({'key_prefix': keyPrefix, 'key_hash': keyHash, 'revoked_at': null})
-        .eq('id', keyId)
-        .eq('user_id', session!.user.id);
+    if (session == null) return null;
+    final id = Uri.encodeComponent(keyId);
+    final res = await http
+        .post(Uri.parse('$apiBaseUrl/api/v1/api-keys/$id/rotate'), headers: _apiAuthHeaders())
+        .timeout(const Duration(seconds: 10));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode >= 400 || data['ok'] == false) {
+      throw Exception(data['error'] ?? 'Error (${res.statusCode})');
+    }
     await loadApiKeys();
-    return rawKey;
+    return data['secret']?.toString();
   }
 
   Future<void> revokeApiKey(String keyId) async {
-    if (session == null || !_supabaseReady) return;
-    await Supabase.instance.client
-        .from('api_keys')
-        .update({'revoked_at': DateTime.now().toUtc().toIso8601String()})
-        .eq('id', keyId)
-        .eq('user_id', session!.user.id);
+    if (session == null) return;
+    final id = Uri.encodeComponent(keyId);
+    final res = await http
+        .post(Uri.parse('$apiBaseUrl/api/v1/api-keys/$id/revoke'), headers: _apiAuthHeaders())
+        .timeout(const Duration(seconds: 10));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode >= 400 || data['ok'] == false) {
+      throw Exception(data['error'] ?? 'Error (${res.statusCode})');
+    }
     await loadApiKeys();
   }
 
   Future<void> deleteApiKey(String keyId) async {
-    if (session == null || !_supabaseReady) return;
-    await Supabase.instance.client
-        .from('api_keys')
-        .delete()
-        .eq('id', keyId)
-        .eq('user_id', session!.user.id);
+    if (session == null) return;
+    final id = Uri.encodeComponent(keyId);
+    final res = await http
+        .delete(Uri.parse('$apiBaseUrl/api/v1/api-keys/$id'), headers: _apiAuthHeaders())
+        .timeout(const Duration(seconds: 10));
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode >= 400 || data['ok'] == false) {
+      throw Exception(data['error'] ?? 'Error (${res.statusCode})');
+    }
     await loadApiKeys();
   }
 }
