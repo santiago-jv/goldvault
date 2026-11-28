@@ -140,19 +140,21 @@ jobs:
       - run: flutter pub get
       - name: Build macOS release app
         run: flutter build macos --release
-      - name: Package macOS bundle
+      - name: Package macOS DMG installer
         run: |
-          mkdir -p dist-macos
+          mkdir -p dist-macos dmg-stage
           APP_BUNDLE="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' | head -n 1)"
           if [ -z "$APP_BUNDLE" ]; then
             echo "ERROR: macOS .app bundle not found in build/macos/Build/Products/Release" >&2
             exit 1
           fi
-          ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" dist-macos/GoldVault-macOS.zip
+          cp -R "$APP_BUNDLE" dmg-stage/GoldVault.app
+          ln -s /Applications dmg-stage/Applications
+          hdiutil create -volname "GoldVault" -srcfolder dmg-stage -ov -format UDZO dist-macos/GoldVault-macOS.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: GoldVault-macOS
-          path: dist-macos/GoldVault-macOS.zip
+          path: dist-macos/GoldVault-macOS.dmg
           if-no-files-found: error
 
   build-windows:
@@ -169,15 +171,20 @@ jobs:
       - run: flutter pub get
       - name: Build Windows release app
         run: flutter build windows --release
-      - name: Package Windows release
+      - name: Package Windows Setup EXE (Inno Setup)
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist-windows | Out-Null
-          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "dist-windows\GoldVault-Windows.zip" -Force
+          $ver = (Select-String -Path pubspec.yaml -Pattern '^version:\s*([0-9]+\.[0-9]+\.[0-9]+)').Matches.Groups[1].Value
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          & $iscc "/DMyAppVersion=$ver" "windows\installer.iss"
       - uses: actions/upload-artifact@v4
         with:
           name: GoldVault-Windows
-          path: dist-windows/GoldVault-Windows.zip
+          path: dist-windows/GoldVault-Setup.exe
           if-no-files-found: error
 
   deploy-web:
@@ -279,6 +286,6 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/GoldVault.apk
-            release-assets/GoldVault-macOS.zip
-            release-assets/GoldVault-Windows.zip
+            release-assets/GoldVault-macOS.dmg
+            release-assets/GoldVault-Setup.exe
           fail_on_unmatched_files: true
