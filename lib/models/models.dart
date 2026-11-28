@@ -34,19 +34,24 @@ String currentYm() => todayIso().substring(0, 7);
 String formatMoney(num val) {
   final rounded = val.round();
   final fmt = NumberFormat.decimalPattern('es_CO');
+  if (rounded < 0) {
+    return '−\$${fmt.format(rounded.abs())}';
+  }
   return '\$${fmt.format(rounded)}';
 }
 
 String formatCompact(num val) {
   final n = val.round();
-  if (n.abs() >= 1000000) {
-    final m = n / 1000000.0;
-    return '\$${m.toStringAsFixed(n.abs() >= 10000000 ? 0 : 1).replaceAll('.', ',')}M';
+  final sign = n < 0 ? '−' : '';
+  final abs = n.abs();
+  if (abs >= 1000000) {
+    final m = abs / 1000000.0;
+    return '$sign\$${m.toStringAsFixed(abs >= 10000000 ? 0 : 1).replaceAll('.', ',')}M';
   }
-  if (n.abs() >= 1000) {
-    return '\$${(n / 1000.0).round()}k';
+  if (abs >= 1000) {
+    return '$sign\$${(abs / 1000.0).round()}k';
   }
-  return '\$$n';
+  return '$sign\$$abs';
 }
 
 String monthShortLabel(String ym) {

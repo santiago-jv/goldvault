@@ -25,8 +25,14 @@ class GVSpacing {
 /// without inconsistent or monochrome platform emoji glyphs.
 IconData categoryIconData(String? category) {
   final name = (category ?? '').toLowerCase();
-  if (name.contains('vivienda') || name.contains('arriendo') || name.contains('hogar')) {
+  if (name.contains('vivienda') || name.contains('arriendo')) {
     return Icons.home_outlined;
+  }
+  if (name.contains('hogar')) {
+    return Icons.chair_outlined;
+  }
+  if (name.contains('familia')) {
+    return Icons.people_outline_rounded;
   }
   if (name.contains('mercado') || name.contains('super')) {
     return Icons.shopping_cart_outlined;
@@ -409,95 +415,155 @@ class GoldVaultLogo extends StatelessWidget {
   }
 }
 
-/// Standalone folded geometric V emblem widget supporting progressive reveal animation.
+/// Standalone folded geometric V emblem widget supporting choreographed
+/// wireframe-trace, solid-fill, and specular sheen reveal animation.
 class GoldVaultMark extends StatelessWidget {
   final double size;
   final Color? color;
   final double progress;
+  final double sheenProgress;
 
-  const GoldVaultMark({super.key, this.size = 36, this.color, this.progress = 1.0});
+  const GoldVaultMark({
+    super.key,
+    this.size = 36,
+    this.color,
+    this.progress = 1.0,
+    this.sheenProgress = 0.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = GVColors.of(context);
     return CustomPaint(
       size: Size.square(size),
-      painter: _VaultVMarkPainter(color ?? c.txt, progress: progress),
+      painter: _VaultVMarkPainter(color ?? c.txt, progress: progress, sheenProgress: sheenProgress),
     );
   }
 }
 
 /// Minimalist folded geometric V emblem matching the GoldVault app icon.
+/// Animates from precision wireframe path tracing into solid folded facets with a
+/// diagonal light sheen sweep.
 class _VaultVMarkPainter extends CustomPainter {
   final Color color;
   final double progress;
-  _VaultVMarkPainter(this.color, {this.progress = 1.0});
+  final double sheenProgress;
+
+  _VaultVMarkPainter(this.color, {this.progress = 1.0, this.sheenProgress = 0.0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 24.0;
     final sy = size.height / 24.0;
 
-    final pLeft = (progress / 0.45).clamp(0.0, 1.0);
-    final pFold = ((progress - 0.25) / 0.45).clamp(0.0, 1.0);
-    final pRight = ((progress - 0.45) / 0.55).clamp(0.0, 1.0);
+    final leftArm = Path()
+      ..moveTo(5.8 * sx, 4.2 * sy)
+      ..lineTo(3.0 * sx, 8.8 * sy)
+      ..lineTo(10.8 * sx, 20.4 * sy)
+      ..lineTo(13.5 * sx, 15.8 * sy)
+      ..close();
 
-    // Left ribbon arm
-    if (pLeft > 0) {
-      final leftPaint = Paint()
-        ..color = color.withValues(alpha: pLeft)
+    final innerFacet = Path()
+      ..moveTo(14.5 * sx, 4.2 * sy)
+      ..lineTo(10.9 * sx, 10.4 * sy)
+      ..lineTo(13.4 * sx, 14.4 * sy)
+      ..lineTo(18.0 * sx, 6.6 * sy)
+      ..lineTo(16.7 * sx, 4.2 * sy)
+      ..close();
+
+    final rightArm = Path()
+      ..moveTo(16.7 * sx, 4.2 * sy)
+      ..lineTo(19.6 * sx, 4.2 * sy)
+      ..lineTo(22.0 * sx, 8.4 * sy)
+      ..lineTo(14.8 * sx, 20.6 * sy)
+      ..lineTo(11.4 * sx, 20.6 * sy)
+      ..lineTo(18.4 * sx, 8.6 * sy)
+      ..close();
+
+    // Fast path for static rendering (in-app header / completed state without sheen)
+    if (progress >= 0.999 && sheenProgress <= 0.001) {
+      final primary = Paint()
+        ..color = color
         ..style = PaintingStyle.fill;
-      canvas.save();
-      canvas.translate(0, (1 - pLeft) * 3.0 * sy);
-      final leftArm = Path()
-        ..moveTo(5.8 * sx, 4.2 * sy)
-        ..lineTo(3.0 * sx, 8.8 * sy)
-        ..lineTo(10.8 * sx, 20.4 * sy)
-        ..lineTo(13.5 * sx, 15.8 * sy)
-        ..close();
-      canvas.drawPath(leftArm, leftPaint);
-      canvas.restore();
+      final fold = Paint()
+        ..color = color.withValues(alpha: 0.72)
+        ..style = PaintingStyle.fill;
+      canvas.drawPath(leftArm, primary);
+      canvas.drawPath(innerFacet, fold);
+      canvas.drawPath(rightArm, primary);
+      return;
     }
 
-    // Inner folded ribbon facet
-    if (pFold > 0) {
-      final foldPaint = Paint()
-        ..color = color.withValues(alpha: 0.72 * pFold)
-        ..style = PaintingStyle.fill;
-      canvas.save();
-      canvas.translate(0, (1 - pFold) * -2.5 * sy);
-      final innerFacet = Path()
-        ..moveTo(14.5 * sx, 4.2 * sy)
-        ..lineTo(10.9 * sx, 10.4 * sy)
-        ..lineTo(13.4 * sx, 14.4 * sy)
-        ..lineTo(18.0 * sx, 6.6 * sy)
-        ..lineTo(16.7 * sx, 4.2 * sy)
-        ..close();
-      canvas.drawPath(innerFacet, foldPaint);
-      canvas.restore();
+    // Phase 1: Wireframe blueprint stroke tracing (0.0 -> 0.58)
+    final traceT = (progress / 0.58).clamp(0.0, 1.0);
+    // Phase 2: Solid facet fill-in (0.42 -> 1.0)
+    final fillT = ((progress - 0.42) / 0.58).clamp(0.0, 1.0);
+
+    void drawFacet(Path path, double targetAlpha, double delay) {
+      final localTrace = ((traceT - delay) / (1.0 - delay)).clamp(0.0, 1.0);
+      final localFill = ((fillT - delay * 0.5) / (1.0 - delay * 0.5)).clamp(0.0, 1.0);
+
+      if (localTrace > 0 && localFill < 0.98) {
+        final strokeAlpha = (1.0 - localFill * 0.85).clamp(0.0, 1.0);
+        final strokePaint = Paint()
+          ..color = color.withValues(alpha: strokeAlpha * 0.92)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.15 * sx
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round;
+
+        for (final metric in path.computeMetrics()) {
+          final partial = metric.extractPath(0, metric.length * localTrace);
+          canvas.drawPath(partial, strokePaint);
+        }
+      }
+
+      if (localFill > 0) {
+        final fillPaint = Paint()
+          ..color = color.withValues(alpha: targetAlpha * localFill)
+          ..style = PaintingStyle.fill;
+        canvas.drawPath(path, fillPaint);
+      }
     }
 
-    // Right primary ribbon arm
-    if (pRight > 0) {
-      final rightPaint = Paint()
-        ..color = color.withValues(alpha: pRight)
-        ..style = PaintingStyle.fill;
+    drawFacet(leftArm, 1.0, 0.0);
+    drawFacet(innerFacet, 0.72, 0.14);
+    drawFacet(rightArm, 1.0, 0.24);
+
+    // Phase 3: Diagonal specular sheen sweep across the assembled mark
+    if (sheenProgress > 0.0 && sheenProgress < 1.0 && fillT > 0.5) {
+      final combined = Path()
+        ..addPath(leftArm, Offset.zero)
+        ..addPath(innerFacet, Offset.zero)
+        ..addPath(rightArm, Offset.zero);
       canvas.save();
-      canvas.translate(0, (1 - pRight) * 3.0 * sy);
-      final rightArm = Path()
-        ..moveTo(16.7 * sx, 4.2 * sy)
-        ..lineTo(19.6 * sx, 4.2 * sy)
-        ..lineTo(22.0 * sx, 8.4 * sy)
-        ..lineTo(14.8 * sx, 20.6 * sy)
-        ..lineTo(11.4 * sx, 20.6 * sy)
-        ..lineTo(18.4 * sx, 8.6 * sy)
-        ..close();
-      canvas.drawPath(rightArm, rightPaint);
+      canvas.clipPath(combined);
+      final sweepX = -size.width + (size.width * 3.0 * sheenProgress);
+      final sheenRect = Rect.fromLTWH(
+        sweepX,
+        -size.height * 0.2,
+        size.width * 0.7,
+        size.height * 1.4,
+      );
+      final sheenPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.0),
+            Colors.white.withValues(alpha: 0.55),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(sheenRect);
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), sheenPaint);
       canvas.restore();
     }
   }
 
   @override
   bool shouldRepaint(covariant _VaultVMarkPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.progress != progress;
+      oldDelegate.color != color ||
+      oldDelegate.progress != progress ||
+      oldDelegate.sheenProgress != sheenProgress;
 }

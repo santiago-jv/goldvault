@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 import '../models/models.dart';
 import '../theme/gold_theme.dart';
 
-/// Shared Apple-inspired motion durations and curves across GoldVault.
+/// Shared Apple-inspired motion durations, curves, and spring physics across GoldVault.
 class GVMotion {
   static const Duration fast = Duration(milliseconds: 160);
   static const Duration medium = Duration(milliseconds: 280);
@@ -13,10 +14,17 @@ class GVMotion {
 
   static const Curve standard = Curves.easeOutCubic;
   static const Curve emphatic = Curves.easeOutExpo;
+
+  /// Tactile iOS-like spring physics (snappy bounce with gentle settle).
+  static const SpringDescription snappySpring = SpringDescription(
+    mass: 1.0,
+    stiffness: 480.0,
+    damping: 22.0,
+  );
 }
 
-/// Tactile pressable wrapper that applies a subtle spring-like scale-down on press
-/// and optional light haptic feedback, respecting reduced-motion preferences.
+/// Tactile pressable wrapper driven by real [SpringSimulation] physics on release
+/// with optional light haptic feedback, respecting reduced-motion preferences.
 class GVSpringTap extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -29,7 +37,7 @@ class GVSpringTap extends StatefulWidget {
     required this.child,
     this.onTap,
     this.enabled = true,
-    this.pressedScale = 0.96,
+    this.pressedScale = 0.95,
     this.haptic = false,
   });
 
@@ -37,28 +45,53 @@ class GVSpringTap extends StatefulWidget {
   State<GVSpringTap> createState() => _GVSpringTapState();
 }
 
-class _GVSpringTapState extends State<GVSpringTap> {
-  bool _pressed = false;
+class _GVSpringTapState extends State<GVSpringTap> with SingleTickerProviderStateMixin {
+  late final AnimationController _scaleCtrl;
 
-  void _setPressed(bool value) {
-    if (_pressed == value) return;
-    setState(() => _pressed = value);
+  @override
+  void initState() {
+    super.initState();
+    _scaleCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
+  }
+
+  @override
+  void dispose() {
+    _scaleCtrl.dispose();
+    super.dispose();
+  }
+
+  void _pressDown(bool reduceMotion) {
+    if (reduceMotion) return;
+    _scaleCtrl.animateTo(
+      widget.pressedScale,
+      duration: const Duration(milliseconds: 95),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _releaseSpring(bool reduceMotion) {
+    if (reduceMotion) {
+      _scaleCtrl.value = 1.0;
+      return;
+    }
+    final sim = SpringSimulation(GVMotion.snappySpring, _scaleCtrl.value, 1.0, 0.0);
+    _scaleCtrl.animateWith(sim);
   }
 
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final active = widget.enabled && (widget.onTap != null || widget.enabled);
-    final scaled = AnimatedScale(
-      scale: (!reduceMotion && _pressed) ? widget.pressedScale : 1.0,
-      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 120),
-      curve: Curves.easeOutCubic,
+    final scaled = AnimatedBuilder(
+      animation: _scaleCtrl,
+      builder: (context, child) => Transform.scale(scale: _scaleCtrl.value, child: child),
       child: widget.child,
     );
+
     return Listener(
-      onPointerDown: active ? (_) => _setPressed(true) : null,
-      onPointerUp: (_) => _setPressed(false),
-      onPointerCancel: (_) => _setPressed(false),
+      onPointerDown: active ? (_) => _pressDown(reduceMotion) : null,
+      onPointerUp: (_) => _releaseSpring(reduceMotion),
+      onPointerCancel: (_) => _releaseSpring(reduceMotion),
       child: widget.onTap != null
           ? GestureDetector(
               behavior: HitTestBehavior.translucent,

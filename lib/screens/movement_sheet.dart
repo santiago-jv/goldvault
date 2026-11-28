@@ -4,6 +4,7 @@ import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
+import '../widgets/gv_motion.dart';
 
 class MovementSheet extends StatefulWidget {
   final GoldVaultState state;
@@ -114,14 +115,14 @@ class _MovementSheetState extends State<MovementSheet> {
                         currency == 'USD' ? 'US\$' : 'COP \$',
                         style: GVTxt.h2(c, color: c.tertiary),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       IntrinsicWidth(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 56, maxWidth: 240),
+                          constraints: const BoxConstraints(minWidth: 28, maxWidth: 240),
                           child: TextField(
                             controller: amountCtrl,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.start,
                             style: GVTxt.display(c, color: c.txt),
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
@@ -173,12 +174,13 @@ class _MovementSheetState extends State<MovementSheet> {
                 childAspectRatio: 1.0,
                 children: sp.categories.map((cat) {
                   final on = category == cat.name;
-                  return InkWell(
+                  return GVSpringTap(
                     onTap: () => setState(() => category = cat.name),
-                    borderRadius: BorderRadius.circular(GVRadius.control),
+                    pressedScale: 0.94,
+                    haptic: true,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                       decoration: BoxDecoration(
                         color: on ? c.acc.withValues(alpha: 0.14) : c.card2,
                         borderRadius: BorderRadius.circular(GVRadius.control),
@@ -189,15 +191,17 @@ class _MovementSheetState extends State<MovementSheet> {
                         children: [
                           Icon(categoryIconData(cat.name), size: 20, color: on ? c.txt : c.mut),
                           const SizedBox(height: 5),
-                          Text(
-                            cat.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GVTxt.xs2(
-                              c,
-                              color: on ? c.txt : c.mut,
-                              weight: on ? FontWeight.w700 : FontWeight.w500,
-                              letterSpacing: 0,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              cat.name,
+                              maxLines: 1,
+                              style: GVTxt.xs2(
+                                c,
+                                color: on ? c.txt : c.mut,
+                                weight: on ? FontWeight.w700 : FontWeight.w500,
+                                letterSpacing: 0,
+                              ),
                             ),
                           ),
                         ],
@@ -237,23 +241,18 @@ class _MovementSheetState extends State<MovementSheet> {
             ],
             const SizedBox(height: 16),
 
-            // Payment account horizontal pills
+            // Payment account pills (wrapped so no chip clips awkwardly at screen edges)
             Text(
               'CUENTA',
               style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: sp.accounts.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final acc = sp.accounts[i];
-                  return _selectPill(c, acc, account == acc, () => setState(() => account = acc));
-                },
-              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: sp.accounts.map((acc) {
+                return _selectPill(c, acc, account == acc, () => setState(() => account = acc));
+              }).toList(),
             ),
             const SizedBox(height: 20),
 
@@ -306,9 +305,10 @@ class _MovementSheetState extends State<MovementSheet> {
   }
 
   Widget _selectPill(GVColors c, String label, bool selected, VoidCallback onTap) {
-    return InkWell(
+    return GVSpringTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(GVRadius.pill),
+      pressedScale: 0.95,
+      haptic: true,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

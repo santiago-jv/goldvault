@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/models.dart';
 import '../theme/gold_theme.dart';
@@ -150,7 +151,6 @@ class _TrendBarPainter extends CustomPainter {
       final d = data[i];
       final x0 = pad + i * slot;
       final bw = (slot - 12) / 2;
-      // Subtle per-month stagger so bars wave smoothly from left to right
       final localT = ((progress - i * 0.06) / 0.70).clamp(0.0, 1.0);
       final eased = Curves.easeOutCubic.transform(localT);
       final hi = (d.inc / maxVal) * (base - top) * eased;
@@ -195,91 +195,198 @@ class _TrendBarPainter extends CustomPainter {
       oldDelegate.progress != progress || oldDelegate.data != data || oldDelegate.colors != colors;
 }
 
-class DonutChartWidget extends StatelessWidget {
+/// Interactive radial donut chart: tapping a slice or legend item expands that
+/// slice outward and morphs the center readout to display the selected category.
+class DonutChartWidget extends StatefulWidget {
   final Map<String, int> byCat;
   final int totalExpense;
 
   const DonutChartWidget({super.key, required this.byCat, required this.totalExpense});
 
   @override
+  State<DonutChartWidget> createState() => _DonutChartWidgetState();
+}
+
+class _DonutChartWidgetState extends State<DonutChartWidget> {
+  int? _selectedIndex;
+
+  void _toggleIndex(int index) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedIndex = _selectedIndex == index ? null : index;
+    });
+  }
+
+  void _handleRingTap(TapUpDetails details, List<MapEntry<String, int>> segs) {
+    const center = Offset(64, 64);
+    final dx = details.localPosition.dx - center.dx;
+    final dy = details.localPosition.dy - center.dy;
+    final dist = sqrt(dx * dx + dy * dy);
+    if (dist < 32 || dist > 64) {
+      if (_selectedIndex != null) setState(() => _selectedIndex = null);
+      return;
+    }
+    var angle = atan2(dy, dx) + pi / 2;
+    if (angle < 0) angle += 2 * pi;
+
+    var cursor = 0.0;
+    for (var i = 0; i < segs.length; i++) {
+      final sweep = (segs[i].value / widget.totalExpense) * 2 * pi;
+      if (angle >= cursor && angle <= cursor + sweep) {
+        _toggleIndex(i);
+        return;
+      }
+      cursor += sweep;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (byCat.isEmpty || totalExpense <= 0) return const SizedBox.shrink();
+    if (widget.byCat.isEmpty || widget.totalExpense <= 0) return const SizedBox.shrink();
     final c = GVColors.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final sorted = byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = widget.byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top = sorted.take(5).toList();
     final rest = sorted.skip(5).fold<int>(0, (a, e) => a + e.value);
     final segs = <MapEntry<String, int>>[...top, if (rest > 0) MapEntry('Otras', rest)];
+
+    final activeIdx = (_selectedIndex != null && _selectedIndex! < segs.length)
+        ? _selectedIndex
+        : null;
+    final activeSeg = activeIdx != null ? segs[activeIdx] : null;
 
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 14),
       child: Row(
         children: [
-          SizedBox(
-            width: 122,
-            height: 122,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: reduceMotion ? 1.0 : 0.0, end: 1.0),
-              duration: reduceMotion ? Duration.zero : GVMotion.chart,
-              curve: GVMotion.standard,
-              builder: (context, progress, child) {
-                return CustomPaint(
-                  painter: _DonutPainter(
-                    segs: segs,
-                    total: totalExpense,
-                    colors: c,
-                    progress: progress,
-                  ),
-                  child: child,
-                );
-              },
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('TOTAL', style: GVTxt.xs2(c, letterSpacing: 1.0)),
-                    const SizedBox(height: 2),
-                    Text(
-                      formatCompact(totalExpense),
-                      style: GVTxt.h3(c, tabular: true).copyWith(fontWeight: FontWeight.w800),
+          GestureDetector(
+            onTapUp: (details) => _handleRingTap(details, segs),
+            child: SizedBox(
+              width: 128,
+              height: 128,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: reduceMotion ? 1.0 : 0.0, end: 1.0),
+                duration: reduceMotion ? Duration.zero : GVMotion.chart,
+                curve: GVMotion.standard,
+                builder: (context, progress, child) {
+                  return TweenAnimationBuilder<double>(
+                    key: ValueKey<int?>(activeIdx),
+                    tween: Tween<double>(begin: 0.0, end: 1.0),
+                    duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 240),
+                    curve: Curves.easeOutBack,
+                    builder: (context, selectT, _) {
+                      return CustomPaint(
+                        painter: _DonutPainter(
+                          segs: segs,
+                          total: widget.totalExpense,
+                          colors: c,
+                          progress: progress,
+                          selectedIndex: activeIdx,
+                          selectT: selectT,
+                        ),
+                        child: child,
+                      );
+                    },
+                  );
+                },
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: AnimatedSwitcher(
+                      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 200),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: ScaleTransition(
+                          scale: Tween<double>(begin: 0.90, end: 1.0).animate(anim),
+                          child: child,
+                        ),
+                      ),
+                      child: Column(
+                        key: ValueKey<String>(activeSeg?.key ?? 'total'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            activeSeg != null ? activeSeg.key.toUpperCase() : 'TOTAL',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GVTxt.xs2(
+                              c,
+                              letterSpacing: 0.8,
+                              color: activeIdx != null
+                                  ? c.chartPalette[activeIdx % c.chartPalette.length]
+                                  : c.tertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            formatCompact(activeSeg?.value ?? widget.totalExpense),
+                            style: GVTxt.h3(c, tabular: true).copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 18),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               children: List.generate(segs.length, (i) {
                 final seg = segs[i];
-                final pct = ((seg.value / totalExpense) * 100).round();
+                final pct = ((seg.value / widget.totalExpense) * 100).round();
                 final col = c.chartPalette[i % c.chartPalette.length];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: col,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                final isSelected = activeIdx == i;
+                final dimmed = activeIdx != null && !isSelected;
+                return InkWell(
+                  onTap: () => _toggleIndex(i),
+                  borderRadius: BorderRadius.circular(8),
+                  child: AnimatedOpacity(
+                    duration: reduceMotion ? Duration.zero : GVMotion.fast,
+                    opacity: dimmed ? 0.42 : 1.0,
+                    child: AnimatedContainer(
+                      duration: reduceMotion ? Duration.zero : GVMotion.fast,
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? col.withValues(alpha: 0.10) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          seg.key,
-                          style: GVTxt.xs(c, color: c.mut),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      child: Row(
+                        children: [
+                          AnimatedContainer(
+                            duration: reduceMotion ? Duration.zero : GVMotion.fast,
+                            width: isSelected ? 10 : 8,
+                            height: isSelected ? 10 : 8,
+                            decoration: BoxDecoration(
+                              color: col,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              seg.key,
+                              style: GVTxt.xs(
+                                c,
+                                color: isSelected ? c.txt : c.mut,
+                                weight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '$pct%',
+                            style: GVTxt.xs(
+                              c,
+                              weight: FontWeight.w800,
+                              color: c.txt,
+                              tabular: true,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '$pct%',
-                        style: GVTxt.xs(c, weight: FontWeight.w800, color: c.txt, tabular: true),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               }),
@@ -296,26 +403,28 @@ class _DonutPainter extends CustomPainter {
   final int total;
   final GVColors colors;
   final double progress;
+  final int? selectedIndex;
+  final double selectT;
 
   _DonutPainter({
     required this.segs,
     required this.total,
     required this.colors,
     required this.progress,
+    required this.selectedIndex,
+    required this.selectT,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width / 2) - 10;
-    final rect = Rect.fromCircle(center: center, radius: radius);
+    final baseRadius = (size.width / 2) - 14;
 
-    // Subtle track underneath so the radial reveal feels crisp
     final trackPaint = Paint()
       ..color = colors.card2
       ..style = PaintingStyle.stroke
       ..strokeWidth = 14;
-    canvas.drawCircle(center, radius, trackPaint);
+    canvas.drawCircle(center, baseRadius, trackPaint);
 
     var startAngle = -pi / 2;
     final totalSweepLimit = 2 * pi * progress;
@@ -326,11 +435,20 @@ class _DonutPainter extends CustomPainter {
       final remaining = totalSweepLimit - drawn;
       if (remaining <= 0) break;
       final sweep = min(rawSweep, remaining);
+      final isSelected = selectedIndex == i;
+      final dimmed = selectedIndex != null && !isSelected;
+
+      final radius = isSelected ? baseRadius + (3.5 * selectT) : baseRadius;
+      final stroke = isSelected ? 14.0 + (3.5 * selectT) : 14.0;
+      final baseColor = colors.chartPalette[i % colors.chartPalette.length];
+
       final paint = Paint()
-        ..color = colors.chartPalette[i % colors.chartPalette.length]
+        ..color = dimmed ? baseColor.withValues(alpha: 0.30) : baseColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 14
+        ..strokeWidth = stroke
         ..strokeCap = StrokeCap.butt;
+
+      final rect = Rect.fromCircle(center: center, radius: radius);
       canvas.drawArc(rect, startAngle, sweep, false, paint);
       startAngle += rawSweep;
       drawn += rawSweep;
@@ -341,5 +459,7 @@ class _DonutPainter extends CustomPainter {
   bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
       oldDelegate.progress != progress ||
       oldDelegate.total != total ||
-      oldDelegate.colors != colors;
+      oldDelegate.colors != colors ||
+      oldDelegate.selectedIndex != selectedIndex ||
+      oldDelegate.selectT != selectT;
 }

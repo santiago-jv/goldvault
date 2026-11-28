@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/models.dart';
 import '../state/app_state.dart';
@@ -602,7 +603,7 @@ class GVMovementRow extends StatelessWidget {
         ? (movement.source ?? 'Ingreso')
         : (isSav ? state.goalName(movement.goalId) : (movement.category ?? 'Otros'));
 
-    return InkWell(
+    final rowContent = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Column(
@@ -637,18 +638,32 @@ class GVMovementRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            '$sub${movement.account != null ? ' · ${movement.account}' : ''}${movement.fx != null ? ' · US\$${movement.fx!.amount}' : ''}',
-                            style: GVTxt.xs(c),
-                          ),
-                          if (movement.autoBank != null && movement.autoBank!.isNotEmpty)
-                            GVPillBadge(label: '⚡ ${movement.autoBank!}'),
-                        ],
+                      Builder(
+                        builder: (_) {
+                          final meta = <String>[
+                            if (movement.desc.isNotEmpty) sub,
+                            if (movement.account != null && movement.account!.isNotEmpty)
+                              movement.account!,
+                            if (movement.fx != null) 'US\$${movement.fx!.amount}',
+                          ].join(' · ');
+                          return Row(
+                            children: [
+                              if (meta.isNotEmpty)
+                                Flexible(
+                                  child: Text(
+                                    meta,
+                                    style: GVTxt.xs(c),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              if (movement.autoBank != null && movement.autoBank!.isNotEmpty) ...[
+                                if (meta.isNotEmpty) const SizedBox(width: 6),
+                                GVPillBadge(label: '⚡ ${movement.autoBank!}'),
+                              ],
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -663,9 +678,13 @@ class GVMovementRow extends StatelessWidget {
                     ),
                     if (!isInc) ...[
                       const SizedBox(height: 4),
-                      GVPillBadge(
-                        label: movement.status == 'paid' ? 'Pagado' : 'Pendiente',
-                        color: movement.status == 'paid' ? c.green : c.amber,
+                      AnimatedSwitcher(
+                        duration: GVMotion.fast,
+                        child: GVPillBadge(
+                          key: ValueKey<String>(movement.status),
+                          label: movement.status == 'paid' ? 'Pagado' : 'Pendiente',
+                          color: movement.status == 'paid' ? c.green : c.amber,
+                        ),
                       ),
                     ],
                   ],
@@ -681,11 +700,91 @@ class GVMovementRow extends StatelessWidget {
         ],
       ),
     );
+
+    final canTogglePaid = !isInc;
+    return Dismissible(
+      key: ValueKey<String>('mv-row-${movement.id}'),
+      direction: canTogglePaid ? DismissDirection.horizontal : DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        HapticFeedback.mediumImpact();
+        if (direction == DismissDirection.startToEnd && canTogglePaid) {
+          final toggled = MovementModel.fromRow(movement.toRow())
+            ..status = movement.status == 'paid' ? 'pending' : 'paid';
+          await state.saveMovement(toggled);
+          return false;
+        }
+        return true;
+      },
+      onDismissed: (_) async {
+        final deleted = MovementModel.fromRow(movement.toRow());
+        await state.deleteMovement(deleted.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Eliminado: ${deleted.desc.isNotEmpty ? deleted.desc : sub}'),
+              action: SnackBarAction(
+                label: 'Deshacer',
+                textColor: Colors.white,
+                onPressed: () => state.saveMovement(deleted),
+              ),
+            ),
+          );
+        }
+      },
+      background: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: (movement.status == 'paid' ? c.amber : c.green).withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              movement.status == 'paid' ? Icons.schedule_rounded : Icons.check_circle_rounded,
+              color: movement.status == 'paid' ? c.amber : c.green,
+              size: 18,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              movement.status == 'paid' ? 'Pendiente' : 'Pagado',
+              style: GVTxt.xs(
+                c,
+                color: movement.status == 'paid' ? c.amber : c.green,
+                weight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: c.red.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Eliminar',
+              style: GVTxt.xs(c, color: c.red, weight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.delete_outline_rounded, color: c.red, size: 18),
+          ],
+        ),
+      ),
+      child: rowContent,
+    );
   }
 }
 
-/// Frosted Apple-style glass bottom dock with integrated central quick-add action.
-/// Replaces the generic Material NavigationBar + overlapping FAB.
+/// Frosted Apple-style glass bottom dock with elastic active pill and spring quick-add button.
 class GVGlassDock extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
@@ -718,8 +817,9 @@ class GVGlassDock extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 520),
               child: Row(
                 children: [
-                  _tabItem(c, 0, Icons.home_outlined, Icons.home_rounded, 'Inicio'),
+                  _tabItem(context, c, 0, Icons.home_outlined, Icons.home_rounded, 'Inicio'),
                   _tabItem(
+                    context,
                     c,
                     1,
                     Icons.format_list_bulleted_rounded,
@@ -730,25 +830,25 @@ class GVGlassDock extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Tooltip(
                       message: 'Nuevo movimiento',
-                      child: GVSpringTap(
-                        onTap: onAdd,
-                        pressedScale: 0.90,
-                        haptic: true,
-                        child: Material(
-                          color: c.acc,
-                          shape: const CircleBorder(),
-                          elevation: 0,
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: Icon(Icons.add_rounded, color: c.ink, size: 22),
-                          ),
-                        ),
-                      ),
+                      child: _DockAddButton(colors: c, onAdd: onAdd),
                     ),
                   ),
-                  _tabItem(c, 2, Icons.track_changes_rounded, Icons.track_changes_rounded, 'Metas'),
-                  _tabItem(c, 3, Icons.settings_outlined, Icons.settings_rounded, 'Ajustes'),
+                  _tabItem(
+                    context,
+                    c,
+                    2,
+                    Icons.track_changes_rounded,
+                    Icons.track_changes_rounded,
+                    'Metas',
+                  ),
+                  _tabItem(
+                    context,
+                    c,
+                    3,
+                    Icons.settings_outlined,
+                    Icons.settings_rounded,
+                    'Ajustes',
+                  ),
                 ],
               ),
             ),
@@ -758,28 +858,43 @@ class GVGlassDock extends StatelessWidget {
     );
   }
 
-  Widget _tabItem(GVColors c, int index, IconData icon, IconData activeIcon, String label) {
+  Widget _tabItem(
+    BuildContext context,
+    GVColors c,
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+  ) {
     final active = selectedIndex == index;
     final color = active ? c.acc : c.mut;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Expanded(
       child: GVSpringTap(
         onTap: () => onSelect(index),
-        pressedScale: 0.93,
+        pressedScale: 0.91,
         haptic: true,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+        child: AnimatedContainer(
+          duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 240),
+          curve: GVMotion.standard,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          decoration: BoxDecoration(
+            color: active ? c.txt.withValues(alpha: c.isDark ? 0.10 : 0.06) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedScale(
-                scale: active ? 1.08 : 1.0,
-                duration: GVMotion.fast,
-                curve: GVMotion.standard,
+                scale: active ? 1.10 : 1.0,
+                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+                curve: Curves.easeOutBack,
                 child: Icon(active ? activeIcon : icon, size: 22, color: color),
               ),
               const SizedBox(height: 3),
               AnimatedDefaultTextStyle(
-                duration: GVMotion.fast,
+                duration: reduceMotion ? Duration.zero : GVMotion.fast,
                 style: GVTxt.xs2(
                   c,
                   color: color,
@@ -789,6 +904,51 @@ class GVGlassDock extends StatelessWidget {
                 child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DockAddButton extends StatefulWidget {
+  final GVColors colors;
+  final VoidCallback onAdd;
+
+  const _DockAddButton({required this.colors, required this.onAdd});
+
+  @override
+  State<_DockAddButton> createState() => _DockAddButtonState();
+}
+
+class _DockAddButtonState extends State<_DockAddButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.colors;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return Listener(
+      onPointerDown: (_) => setState(() => _pressed = true),
+      onPointerUp: (_) => setState(() => _pressed = false),
+      onPointerCancel: (_) => setState(() => _pressed = false),
+      child: GVSpringTap(
+        onTap: widget.onAdd,
+        pressedScale: 0.88,
+        haptic: true,
+        child: Material(
+          color: c.acc,
+          shape: const CircleBorder(),
+          elevation: 0,
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: AnimatedRotation(
+              turns: (!reduceMotion && _pressed) ? 0.125 : 0.0,
+              duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+              curve: GVMotion.standard,
+              child: Icon(Icons.add_rounded, color: c.ink, size: 22),
+            ),
           ),
         ),
       ),

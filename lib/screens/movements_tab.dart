@@ -4,6 +4,7 @@ import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/gold_theme.dart';
 import '../widgets/gv_components.dart';
+import '../widgets/gv_motion.dart';
 
 class MovementsTab extends StatelessWidget {
   final GoldVaultState state;
@@ -61,38 +62,34 @@ class MovementsTab extends StatelessWidget {
           onChanged: state.setMovQuery,
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: filters.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              final f = filters[i];
-              final on = state.movFilter == f.$1;
-              return InkWell(
-                onTap: () => state.setMovFilter(f.$1),
-                borderRadius: BorderRadius.circular(GVRadius.pill),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: on ? c.acc : c.card,
-                    borderRadius: BorderRadius.circular(GVRadius.pill),
-                    border: Border.all(color: on ? c.acc : c.line),
-                  ),
-                  child: Text(
-                    f.$2,
-                    style: GVTxt.xs(
-                      c,
-                      weight: on ? FontWeight.w700 : FontWeight.w500,
-                      color: on ? c.ink : c.txt,
-                    ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: filters.map((f) {
+            final on = state.movFilter == f.$1;
+            return GVSpringTap(
+              onTap: () => state.setMovFilter(f.$1),
+              pressedScale: 0.95,
+              haptic: true,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: on ? c.acc : c.card,
+                  borderRadius: BorderRadius.circular(GVRadius.pill),
+                  border: Border.all(color: on ? c.acc : c.line),
+                ),
+                child: Text(
+                  f.$2,
+                  style: GVTxt.xs(
+                    c,
+                    weight: on ? FontWeight.w700 : FontWeight.w500,
+                    color: on ? c.ink : c.txt,
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 16),
         if (grouped.isEmpty)
@@ -113,41 +110,46 @@ class MovementsTab extends StatelessWidget {
             ),
           )
         else
-          ...grouped.entries.map((entry) {
+          ...grouped.entries.toList().asMap().entries.map((groupItem) {
+            final groupIdx = groupItem.key;
+            final entry = groupItem.value;
             final dt = DateTime.tryParse(entry.key) ?? DateTime.now();
             final dayTitle = '${dt.day} DE ${kMonthsEs[dt.month - 1].toUpperCase()}';
             final items = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 6, bottom: 8),
-                    child: Text(
-                      dayTitle,
-                      style: GVTxt.xs2(
-                        c,
-                        color: c.tertiary,
-                        weight: FontWeight.w700,
-                        letterSpacing: 0.7,
+            return GVFadeSlideIn(
+              index: groupIdx,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6, bottom: 8),
+                      child: Text(
+                        dayTitle,
+                        style: GVTxt.xs2(
+                          c,
+                          color: c.tertiary,
+                          weight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                        ),
                       ),
                     ),
-                  ),
-                  GVCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    child: Column(
-                      children: items.asMap().entries.map((rowEntry) {
-                        return GVMovementRow(
-                          state: state,
-                          movement: rowEntry.value,
-                          onTap: () => onOpenSheet(editing: rowEntry.value),
-                          showDivider: rowEntry.key < items.length - 1,
-                        );
-                      }).toList(),
+                    GVCard(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      child: Column(
+                        children: items.asMap().entries.map((rowEntry) {
+                          return GVMovementRow(
+                            state: state,
+                            movement: rowEntry.value,
+                            onTap: () => onOpenSheet(editing: rowEntry.value),
+                            showDivider: rowEntry.key < items.length - 1,
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }),

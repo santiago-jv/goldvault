@@ -11,17 +11,19 @@ void main() {
   });
 
   group('Formatting and text normalization helpers', () {
-    test('formatMoney formats Colombian peso amounts cleanly', () {
+    test('formatMoney formats Colombian peso amounts cleanly including negatives', () {
       expect(formatMoney(0), equals('\$0'));
       expect(formatMoney(9979), equals('\$9.979'));
       expect(formatMoney(1250000), equals('\$1.250.000'));
+      expect(formatMoney(-3054825), equals('−\$3.054.825'));
     });
 
-    test('formatCompact abbreviates thousands and millions', () {
+    test('formatCompact abbreviates thousands and millions including negatives', () {
       expect(formatCompact(850), equals('\$850'));
       expect(formatCompact(25000), equals('\$25k'));
       expect(formatCompact(2500000), equals('\$2,5M'));
       expect(formatCompact(12000000), equals('\$12M'));
+      expect(formatCompact(-2500000), equals('−\$2,5M'));
     });
 
     test('monthShortLabel and monthFullLabel format Spanish months', () {
