@@ -481,19 +481,33 @@ class GoldVaultState extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _consecutiveOfflineChecks = 0;
+
   Future<bool> checkOnlineStatus({bool manual = false}) async {
     final wasOffline = !isOnline;
+    var reachable = false;
     try {
       if (onlineChecker != null) {
-        isOnline = await onlineChecker!();
+        reachable = await onlineChecker!();
       } else {
         final res = await http
-            .get(Uri.parse('$sbUrl/rest/v1/'), headers: {'apikey': sbKey})
-            .timeout(const Duration(seconds: 5));
-        isOnline = res.statusCode < 500;
+            .get(Uri.parse('$sbUrl/auth/v1/health'), headers: {'apikey': sbKey})
+            .timeout(const Duration(seconds: 8));
+        reachable = res.statusCode < 500;
       }
     } catch (_) {
-      isOnline = false;
+      reachable = false;
+    }
+
+    if (reachable) {
+      _consecutiveOfflineChecks = 0;
+      isOnline = true;
+    } else {
+      _consecutiveOfflineChecks += 1;
+      // Avoid kicking Android users to OfflineGuardScreen on a single transient cellular/Wi-Fi blip.
+      if (onlineChecker != null || manual || !initialized || _consecutiveOfflineChecks >= 3) {
+        isOnline = false;
+      }
     }
 
     if (isOnline && !_supabaseReady && _cloud is SupabaseCloudAdapter) {
