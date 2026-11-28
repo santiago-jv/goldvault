@@ -92,6 +92,125 @@ class SupabaseCloudAdapter implements GoldVaultCloudAdapter {
   }
 }
 
+/// Cloud adapter that routes 100% of GoldVault data operations through `goldvault-api`
+/// (Cloudflare Workers) authenticated with the user's Supabase Google OAuth session JWT.
+class ApiCloudAdapter implements GoldVaultCloudAdapter {
+  final String baseUrl;
+  final String? Function() tokenProvider;
+  final http.Client _http;
+
+  ApiCloudAdapter({required this.baseUrl, required this.tokenProvider, http.Client? client})
+    : _http = client ?? http.Client();
+
+  Map<String, String> _headers() {
+    final token = tokenProvider();
+    if (token == null || token.isEmpty) {
+      throw StateError('Missing authenticated session token for GoldVault API.');
+    }
+    return {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+  }
+
+  Uri _uri(String path) => Uri.parse('${baseUrl.replaceAll(RegExp(r'/+$'), '')}$path');
+
+  Future<Map<String, dynamic>> _decodeOrThrow(http.Response res) async {
+    final decoded = res.body.isNotEmpty
+        ? Map<String, dynamic>.from(jsonDecode(res.body) as Map)
+        : <String, dynamic>{};
+    if (res.statusCode >= 400 || decoded['ok'] == false) {
+      throw Exception(decoded['error'] ?? 'GoldVault API error (${res.statusCode})');
+    }
+    return decoded;
+  }
+
+  @override
+  Future<CloudSnapshot> fetchAll() async {
+    final res = await _http.get(_uri('/api/v1/bootstrap'), headers: _headers());
+    final data = await _decodeOrThrow(res);
+    return CloudSnapshot(
+      spaces: (data['spaces'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      goals: (data['goals'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      movements: (data['movements'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      profile: data['profile'] != null ? Map<String, dynamic>.from(data['profile'] as Map) : null,
+    );
+  }
+
+  @override
+  Future<void> upsertProfile(Map<String, dynamic> row) async {
+    final res = await _http.put(
+      _uri('/api/v1/profile'),
+      headers: _headers(),
+      body: jsonEncode({'display_name': row['display_name'], 'avatar': row['avatar']}),
+    );
+    await _decodeOrThrow(res);
+  }
+
+  @override
+  Future<void> upsertSpace(Map<String, dynamic> row) async {
+    final id = Uri.encodeComponent((row['id'] ?? '').toString());
+    final body = Map<String, dynamic>.from(row)
+      ..remove('id')
+      ..remove('user_id');
+    final res = await _http.put(
+      _uri('/api/v1/spaces/$id'),
+      headers: _headers(),
+      body: jsonEncode(body),
+    );
+    await _decodeOrThrow(res);
+  }
+
+  @override
+  Future<void> upsertGoal(Map<String, dynamic> row) async {
+    final id = Uri.encodeComponent((row['id'] ?? '').toString());
+    final body = Map<String, dynamic>.from(row)
+      ..remove('id')
+      ..remove('user_id');
+    final res = await _http.put(
+      _uri('/api/v1/goals/$id'),
+      headers: _headers(),
+      body: jsonEncode(body),
+    );
+    await _decodeOrThrow(res);
+  }
+
+  @override
+  Future<void> deleteGoal(String goalId) async {
+    final id = Uri.encodeComponent(goalId);
+    final res = await _http.delete(_uri('/api/v1/goals/$id'), headers: _headers());
+    await _decodeOrThrow(res);
+  }
+
+  @override
+  Future<void> upsertMovement(Map<String, dynamic> row) async {
+    final id = Uri.encodeComponent((row['id'] ?? '').toString());
+    final body = Map<String, dynamic>.from(row)
+      ..remove('id')
+      ..remove('user_id');
+    final res = await _http.put(
+      _uri('/api/v1/movements/$id'),
+      headers: _headers(),
+      body: jsonEncode(body),
+    );
+    await _decodeOrThrow(res);
+  }
+
+  @override
+  Future<void> deleteMovement(String movementId) async {
+    final id = Uri.encodeComponent(movementId);
+    final res = await _http.delete(_uri('/api/v1/movements/$id'), headers: _headers());
+    await _decodeOrThrow(res);
+  }
+}
+
 class PendingSyncOp {
   final String kind;
   final String entityId;
@@ -154,11 +273,21 @@ class GoldVaultState extends ChangeNotifier {
   static const MethodChannel _bankChannel = MethodChannel('app.goldvault/bank_notifications');
   static const String _pendingOpsKey = 'gv_pending_sync_ops';
 
+  static const String apiBaseUrl = String.fromEnvironment(
+    'GOLDVAULT_API_URL',
+    defaultValue: 'https://goldvault-api.santiago-jv.workers.dev',
+  );
+  static const bool useApiBackend = bool.fromEnvironment('GOLDVAULT_USE_API', defaultValue: false);
+
   late final GoldVaultCloudAdapter _cloud;
   final Future<bool> Function()? onlineChecker;
 
   GoldVaultState({GoldVaultCloudAdapter? cloud, this.onlineChecker}) {
-    _cloud = cloud ?? SupabaseCloudAdapter(() => sb);
+    _cloud =
+        cloud ??
+        (useApiBackend
+            ? ApiCloudAdapter(baseUrl: apiBaseUrl, tokenProvider: () => session?.accessToken)
+            : SupabaseCloudAdapter(() => sb));
   }
 
   bool get supportsBankNotifications => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
