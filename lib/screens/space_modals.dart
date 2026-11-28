@@ -96,6 +96,7 @@ void showCustomizeSpaceSheet(BuildContext context, GoldVaultState state) {
   final c = GVColors.of(context);
   final catCtrl = TextEditingController();
   final acctCtrl = TextEditingController();
+  final cardCtrl = TextEditingController();
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -221,6 +222,68 @@ void showCustomizeSpaceSheet(BuildContext context, GoldVaultState state) {
                   ),
                 ],
               ),
+              const SizedBox(height: 18),
+              Text(
+                'TARJETAS DE CRÉDITO',
+                style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
+              ),
+              const SizedBox(height: 8),
+              if (state.curSpace.creditCards.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Aún no has agregado tarjetas de crédito.',
+                    style: GVTxt.xs(c, color: c.mut),
+                  ),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: state.curSpace.creditCards
+                      .map(
+                        (card) => Chip(
+                          backgroundColor: c.card2,
+                          side: BorderSide(color: c.line),
+                          shape: const StadiumBorder(),
+                          avatar: Icon(Icons.credit_card_outlined, size: 15, color: c.mut),
+                          label: Text(card, style: GVTxt.xs(c, color: c.txt)),
+                          onDeleted: () {
+                            state.curSpace.creditCards.remove(card);
+                            state.pushSpace(state.curSpace);
+                            setModal(() {});
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: GVTextField(
+                      controller: cardCtrl,
+                      hintText: 'Nueva tarjeta (ej: Nu Crédito, Visa)',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GVPillButton(
+                    label: 'Añadir',
+                    fullWidth: false,
+                    compact: true,
+                    onPressed: () {
+                      final name = cardCtrl.text.trim();
+                      if (name.isEmpty) return;
+                      if (!state.curSpace.creditCards.any((e) => normText(e) == normText(name))) {
+                        state.curSpace.creditCards.add(name);
+                        state.pushSpace(state.curSpace);
+                      }
+                      cardCtrl.clear();
+                      setModal(() {});
+                    },
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -229,6 +292,7 @@ void showCustomizeSpaceSheet(BuildContext context, GoldVaultState state) {
   ).whenComplete(() {
     catCtrl.dispose();
     acctCtrl.dispose();
+    cardCtrl.dispose();
   });
 }
 

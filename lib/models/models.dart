@@ -212,6 +212,7 @@ class SpaceModel {
   String emoji;
   List<CategoryItem> categories;
   List<String> accounts;
+  List<String> creditCards;
   List<String> sources;
   List<FrequentItem> frequents;
   Map<String, int> budgets;
@@ -224,12 +225,13 @@ class SpaceModel {
     required this.emoji,
     required this.categories,
     required this.accounts,
+    List<String>? creditCards,
     required this.sources,
     required this.frequents,
     required this.budgets,
     required this.recSkipped,
     required this.goals,
-  });
+  }) : creditCards = creditCards ?? [];
 
   String iconForCategory(String? catName) {
     if (catName == null) return '✨';
@@ -247,7 +249,8 @@ class SpaceModel {
         name: customName ?? 'Mi espacio',
         emoji: '✨',
         categories: [CategoryItem(name: 'General', icon: '✨')],
-        accounts: ['Principal', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'Morse'],
+        accounts: ['Principal', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'MORSE'],
+        creditCards: [],
         sources: ['Ingreso'],
         frequents: [],
         budgets: {},
@@ -273,7 +276,8 @@ class SpaceModel {
         CategoryItem(name: 'Regalos', icon: '🎁'),
         CategoryItem(name: 'Otros', icon: '✨'),
       ],
-      accounts: ['Efectivo', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'Morse'],
+      accounts: ['Efectivo', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'MORSE'],
+      creditCards: [],
       sources: ['Salario', 'Freelance', 'Inversiones', 'Otros'],
       frequents: [
         FrequentItem(
@@ -310,6 +314,7 @@ class SpaceModel {
   factory SpaceModel.fromRow(Map<String, dynamic> r, List<GoalItem> spaceGoals) {
     final rawCats = (r['categories'] as List?) ?? [];
     final rawAccts = (r['accounts'] as List?) ?? [];
+    final rawCards = (r['credit_cards'] as List?) ?? (r['creditCards'] as List?) ?? [];
     final rawSrcs = (r['sources'] as List?) ?? [];
     final rawFreqs = (r['frequents'] as List?) ?? [];
     final rawBudgets = (r['budgets'] as Map?) ?? {};
@@ -329,6 +334,7 @@ class SpaceModel {
           .map((e) => CategoryItem.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
       accounts: rawAccts.map((e) => e.toString()).toList(),
+      creditCards: rawCards.map((e) => e.toString()).toList(),
       sources: rawSrcs.map((e) => e.toString()).toList(),
       frequents: rawFreqs
           .map((e) => FrequentItem.fromJson(Map<String, dynamic>.from(e as Map)))
@@ -345,6 +351,7 @@ class SpaceModel {
     'emoji': emoji,
     'categories': categories.map((c) => c.toJson()).toList(),
     'accounts': accounts,
+    'credit_cards': creditCards,
     'sources': sources,
     'frequents': frequents.map((f) => f.toJson()).toList(),
     'budgets': budgets,
@@ -377,6 +384,7 @@ class MovementModel {
   int amount;
   String? category;
   String? account;
+  String paymentMethod; // 'account' | 'credit_card'
   String status; // 'paid' | 'pending' | 'cancelled'
   String? goalId;
   String? source;
@@ -394,6 +402,7 @@ class MovementModel {
     required this.amount,
     this.category,
     this.account,
+    this.paymentMethod = 'account',
     this.status = 'paid',
     this.goalId,
     this.source,
@@ -424,6 +433,7 @@ class MovementModel {
       amount: (num.tryParse(r['amount']?.toString() ?? '0') ?? 0).round(),
       category: r['category']?.toString(),
       account: r['account']?.toString(),
+      paymentMethod: (r['payment_method'] ?? r['paymentMethod'] ?? 'account').toString(),
       status: (r['status'] ?? 'paid').toString(),
       goalId: (r['goal_id'] ?? r['goalId'])?.toString(),
       source: r['source']?.toString(),
@@ -443,6 +453,7 @@ class MovementModel {
     'amount': amount,
     'category': category,
     'account': account,
+    'payment_method': paymentMethod,
     'status': status,
     'goal_id': goalId,
     'source': source,
@@ -495,10 +506,10 @@ const List<BankSample> kBankSamples = [
     text: 'Compra aprobada por US\$ 14.99 en NETFLIX.COM con tu tarjeta ARQ',
   ),
   BankSample(
-    bank: 'Morse',
+    bank: 'MORSE',
     pkg: 'com.morse.app',
-    title: 'Morse',
-    text: 'Pago realizado por \$ 35.000 en RAPPI con Morse',
+    title: 'MORSE',
+    text: 'Pago realizado por \$ 35.000 en RAPPI con MORSE',
   ),
 ];
 
@@ -578,8 +589,11 @@ class BankNotificationParser {
       caseSensitive: false,
     ).hasMatch(lower)) {
       bank = 'ARQ';
-    } else if (RegExp(r'(\bmorse\b|com\.morse)', caseSensitive: false).hasMatch(lower)) {
-      bank = 'Morse';
+    } else if (RegExp(
+      r'(\bmorse\b|com\.morse|dolarapp|dollar\s*app)',
+      caseSensitive: false,
+    ).hasMatch(lower)) {
+      bank = 'MORSE';
     } else if (RegExp(
       r'(nubank|\bnu\b|moradita|com\.nu\.)',
       caseSensitive: false,

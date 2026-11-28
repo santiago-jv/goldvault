@@ -640,6 +640,7 @@ class GVMovementRow extends StatelessWidget {
                       const SizedBox(height: 3),
                       Builder(
                         builder: (_) {
+                          final isCard = movement.paymentMethod == 'credit_card';
                           final meta = <String>[
                             if (movement.desc.isNotEmpty) sub,
                             if (movement.account != null && movement.account!.isNotEmpty)
@@ -648,6 +649,10 @@ class GVMovementRow extends StatelessWidget {
                           ].join(' · ');
                           return Row(
                             children: [
+                              if (isCard) ...[
+                                Icon(Icons.credit_card_outlined, size: 13, color: c.mut),
+                                const SizedBox(width: 4),
+                              ],
                               if (meta.isNotEmpty)
                                 Flexible(
                                   child: Text(

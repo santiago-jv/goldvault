@@ -24,6 +24,7 @@ class _MovementSheetState extends State<MovementSheet> {
   late TextEditingController descCtrl;
   late String? category;
   late String? account;
+  late String paymentMethod;
   late String? source;
   late String? goalId;
   late String status;
@@ -42,7 +43,12 @@ class _MovementSheetState extends State<MovementSheet> {
     );
     descCtrl = TextEditingController(text: src?.desc ?? '');
     category = src?.category ?? (sp.categories.isNotEmpty ? sp.categories.first.name : 'Otros');
-    account = src?.account ?? (sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo');
+    paymentMethod = type == 'income' ? 'account' : (src?.paymentMethod ?? 'account');
+    account =
+        src?.account ??
+        (paymentMethod == 'credit_card'
+            ? (sp.creditCards.isNotEmpty ? sp.creditCards.first : null)
+            : (sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo'));
     source = src?.source ?? (sp.sources.isNotEmpty ? sp.sources.first : 'Salario');
     goalId = src?.goalId ?? (sp.goals.isNotEmpty ? sp.goals.first.id : null);
     status = src?.status ?? 'paid';
@@ -91,7 +97,13 @@ class _MovementSheetState extends State<MovementSheet> {
             GVSegmentedControl<String>(
               value: type,
               items: const [('expense', 'Gasto'), ('saving', 'Ahorro'), ('income', 'Ingreso')],
-              onChanged: (next) => setState(() => type = next),
+              onChanged: (next) => setState(() {
+                type = next;
+                if (next == 'income' && paymentMethod == 'credit_card') {
+                  paymentMethod = 'account';
+                  account = sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo';
+                }
+              }),
             ),
             const SizedBox(height: 16),
 
@@ -241,19 +253,60 @@ class _MovementSheetState extends State<MovementSheet> {
             ],
             const SizedBox(height: 16),
 
-            // Payment account pills (wrapped so no chip clips awkwardly at screen edges)
+            // Payment method selector: bank account or credit card
             Text(
-              'CUENTA',
+              type == 'income' ? 'CUENTA DESTINO' : 'MÉTODO DE PAGO',
               style: GVTxt.xs2(c, color: c.tertiary, weight: FontWeight.w700, letterSpacing: 0.7),
             ),
+            if (type != 'income') ...[
+              const SizedBox(height: 8),
+              GVSegmentedControl<String>(
+                value: paymentMethod,
+                items: const [
+                  ('account', 'Cuenta bancaria'),
+                  ('credit_card', 'Tarjeta de crédito'),
+                ],
+                onChanged: (next) => setState(() {
+                  paymentMethod = next;
+                  if (next == 'credit_card') {
+                    account = sp.creditCards.isNotEmpty ? sp.creditCards.first : null;
+                  } else {
+                    account = sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo';
+                  }
+                }),
+              ),
+            ],
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: sp.accounts.map((acc) {
-                return _selectPill(c, acc, account == acc, () => setState(() => account = acc));
-              }).toList(),
-            ),
+            if (type == 'income' || paymentMethod == 'account')
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: sp.accounts.map((acc) {
+                  return _selectPill(c, acc, account == acc, () => setState(() => account = acc));
+                }).toList(),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ...sp.creditCards.map((card) {
+                    return _selectPill(
+                      c,
+                      card,
+                      account == card,
+                      () => setState(() => account = card),
+                      icon: Icons.credit_card_outlined,
+                    );
+                  }),
+                  _selectPill(
+                    c,
+                    '+ Nueva tarjeta',
+                    false,
+                    () => _showQuickAddCardDialog(context, sp),
+                  ),
+                ],
+              ),
             const SizedBox(height: 20),
 
             // Save / delete actions
@@ -264,6 +317,12 @@ class _MovementSheetState extends State<MovementSheet> {
                 final finalCop = currency == 'USD'
                     ? (rawAmt * widget.state.fxRate).round()
                     : rawAmt.round();
+                final effectiveMethod = type == 'income' ? 'account' : paymentMethod;
+                final effectiveAccount = (account != null && account!.trim().isNotEmpty)
+                    ? account!.trim()
+                    : (effectiveMethod == 'credit_card'
+                          ? 'Tarjeta de crédito'
+                          : (sp.accounts.isNotEmpty ? sp.accounts.first : 'Efectivo'));
                 final mv = MovementModel(
                   id: widget.editing?.id ?? genId('mv'),
                   space: sp.id,
@@ -272,7 +331,8 @@ class _MovementSheetState extends State<MovementSheet> {
                   desc: descCtrl.text.trim(),
                   amount: finalCop,
                   category: type == 'expense' ? category : null,
-                  account: account,
+                  account: effectiveAccount,
+                  paymentMethod: effectiveMethod,
                   status: type == 'income' ? 'paid' : status,
                   goalId: type == 'saving' ? goalId : null,
                   source: type == 'income' ? source : null,
@@ -304,7 +364,63 @@ class _MovementSheetState extends State<MovementSheet> {
     );
   }
 
-  Widget _selectPill(GVColors c, String label, bool selected, VoidCallback onTap) {
+  Future<void> _showQuickAddCardDialog(BuildContext context, SpaceModel sp) async {
+    final c = GVColors.of(context);
+    final ctrl = TextEditingController();
+    final created = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Nueva tarjeta de crédito', style: GVTxt.h3(c)),
+        content: GVTextField(
+          controller: ctrl,
+          hintText: 'Ej: Nu Crédito, Visa Bancolombia',
+          onSubmitted: (val) {
+            if (val.trim().isNotEmpty) Navigator.pop(ctx, val.trim());
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancelar', style: GVTxt.sm(c, color: c.mut)),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = ctrl.text.trim();
+              if (name.isNotEmpty) Navigator.pop(ctx, name);
+            },
+            child: Text(
+              'Agregar',
+              style: GVTxt.sm(c, weight: FontWeight.w700, color: c.txt),
+            ),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (created != null && created.isNotEmpty) {
+      final exists = sp.creditCards.any((e) => normText(e) == normText(created));
+      if (!exists) {
+        sp.creditCards.add(created);
+        await widget.state.pushSpace(sp);
+      }
+      if (mounted) {
+        setState(() {
+          paymentMethod = 'credit_card';
+          account = created;
+        });
+      }
+    }
+  }
+
+  Widget _selectPill(
+    GVColors c,
+    String label,
+    bool selected,
+    VoidCallback onTap, {
+    IconData? icon,
+  }) {
     return GVSpringTap(
       onTap: onTap,
       pressedScale: 0.95,
@@ -317,13 +433,22 @@ class _MovementSheetState extends State<MovementSheet> {
           borderRadius: BorderRadius.circular(GVRadius.pill),
           border: Border.all(color: selected ? c.acc : c.line, width: selected ? 1.3 : 1),
         ),
-        child: Text(
-          label,
-          style: GVTxt.sm(
-            c,
-            weight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? c.txt : c.mut,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: selected ? c.txt : c.mut),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: GVTxt.sm(
+                c,
+                weight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? c.txt : c.mut,
+              ),
+            ),
+          ],
         ),
       ),
     );

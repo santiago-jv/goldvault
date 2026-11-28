@@ -164,3 +164,34 @@ CREATE POLICY "api_keys_owner_all" ON public.api_keys
   FOR ALL TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- =============================================================================
+-- 7. CREDIT CARDS & PAYMENT METHOD + DOLARAPP -> MORSE / ARQ MIGRATION
+-- =============================================================================
+ALTER TABLE public.spaces
+  ADD COLUMN IF NOT EXISTS credit_cards jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE public.movements
+  ADD COLUMN IF NOT EXISTS payment_method text NOT NULL DEFAULT 'account';
+
+-- Idempotent migration: rename Dollar App / DolarApp -> MORSE and ensure ARQ exists
+UPDATE public.movements
+SET account = regexp_replace(account, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g')
+WHERE account ~* '(dolar\s*app|dollar\s*app)';
+
+UPDATE public.movements
+SET auto_bank = regexp_replace(auto_bank, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g')
+WHERE auto_bank ~* '(dolar\s*app|dollar\s*app)';
+
+UPDATE public.spaces s
+SET accounts = (
+  SELECT jsonb_agg(DISTINCT elem)
+  FROM (
+    SELECT regexp_replace(val, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g') AS elem
+    FROM jsonb_array_elements_text(s.accounts) AS val
+    UNION
+    SELECT 'MORSE'
+    UNION
+    SELECT 'ARQ'
+  ) t
+);
