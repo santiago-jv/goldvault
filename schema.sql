@@ -174,23 +174,24 @@ ALTER TABLE public.spaces
 ALTER TABLE public.movements
   ADD COLUMN IF NOT EXISTS payment_method text NOT NULL DEFAULT 'account';
 
--- Idempotent migration: rename Dollar App / DolarApp -> MORSE and ensure ARQ exists
+-- Idempotent migration: normalize Dollar App / DolarApp / MORSE / Morse Mamá -> Morse and ensure ARQ exists
 UPDATE public.movements
-SET account = regexp_replace(account, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g')
-WHERE account ~* '(dolar\s*app|dollar\s*app)';
+SET account = 'Morse'
+WHERE account ~* '(dolar\s*app|dollar\s*app|morse)';
 
 UPDATE public.movements
-SET auto_bank = regexp_replace(auto_bank, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g')
-WHERE auto_bank ~* '(dolar\s*app|dollar\s*app)';
+SET auto_bank = 'Morse'
+WHERE auto_bank ~* '(dolar\s*app|dollar\s*app|morse)';
 
 UPDATE public.spaces s
 SET accounts = (
   SELECT jsonb_agg(DISTINCT elem)
   FROM (
-    SELECT regexp_replace(val, '(?i)dolar\s*app|dollar\s*app', 'MORSE', 'g') AS elem
+    SELECT val AS elem
     FROM jsonb_array_elements_text(s.accounts) AS val
+    WHERE val !~* '(dolar\s*app|dollar\s*app|morse)'
     UNION
-    SELECT 'MORSE'
+    SELECT 'Morse'
     UNION
     SELECT 'ARQ'
   ) t

@@ -249,7 +249,7 @@ class SpaceModel {
         name: customName ?? 'Mi espacio',
         emoji: '✨',
         categories: [CategoryItem(name: 'General', icon: '✨')],
-        accounts: ['Principal', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'MORSE'],
+        accounts: ['Principal', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'Morse'],
         creditCards: [],
         sources: ['Ingreso'],
         frequents: [],
@@ -276,7 +276,7 @@ class SpaceModel {
         CategoryItem(name: 'Regalos', icon: '🎁'),
         CategoryItem(name: 'Otros', icon: '✨'),
       ],
-      accounts: ['Efectivo', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'MORSE'],
+      accounts: ['Efectivo', 'Nequi', 'Nu Bank', 'Lulo Bank', 'ARQ', 'Morse'],
       creditCards: [],
       sources: ['Salario', 'Freelance', 'Inversiones', 'Otros'],
       frequents: [
@@ -506,10 +506,10 @@ const List<BankSample> kBankSamples = [
     text: 'Compra aprobada por US\$ 14.99 en NETFLIX.COM con tu tarjeta ARQ',
   ),
   BankSample(
-    bank: 'MORSE',
+    bank: 'Morse',
     pkg: 'com.morse.app',
-    title: 'MORSE',
-    text: 'Pago realizado por \$ 35.000 en RAPPI con MORSE',
+    title: 'Morse',
+    text: 'Pago realizado por \$ 35.000 en RAPPI con Morse',
   ),
 ];
 
@@ -593,7 +593,7 @@ class BankNotificationParser {
       r'(\bmorse\b|com\.morse|dolarapp|dollar\s*app)',
       caseSensitive: false,
     ).hasMatch(lower)) {
-      bank = 'MORSE';
+      bank = 'Morse';
     } else if (RegExp(
       r'(nubank|\bnu\b|moradita|com\.nu\.)',
       caseSensitive: false,

@@ -141,7 +141,7 @@ class SettingsTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text('Compatible con Nequi, Nu, Lulo, ARQ y MORSE.', style: GVTxt.sm(c)),
+              Text('Compatible con Nequi, Nu, Lulo, ARQ y Morse.', style: GVTxt.sm(c)),
               const SizedBox(height: 14),
               if (state.supportsBankNotifications)
                 _buildAndroidNativePanel(c)
